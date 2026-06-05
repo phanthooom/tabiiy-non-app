@@ -12,6 +12,7 @@ import { useT } from '@/utils/i18n'
 import { useBackButton } from '@/hooks/useTelegram'
 import { useTelegram } from '@/hooks/useTelegram'
 import type { DeliveryType } from '@/types'
+import { AddressMapModal } from '@/components/ui/AddressMapModal'
 
 export function CheckoutPage() {
   const navigate = useNavigate()
@@ -25,6 +26,7 @@ export function CheckoutPage() {
   const [deliveryType, setDeliveryType] = useState<DeliveryType>(savedDeliveryType ?? 'delivery')
   const [address, setAddress] = useState('')
   const [comment, setComment] = useState('')
+  const [isMapOpen, setIsMapOpen] = useState(false)
   const idempotencyKey = useRef(crypto.randomUUID())
 
   useBackButton(() => navigate('/cart'))
@@ -128,22 +130,37 @@ export function CheckoutPage() {
             style={{ overflow: 'hidden', marginBottom: 24 }}
           >
             <label style={labelStyle}>{t('address')}</label>
-            <div style={{ position: 'relative' }}>
+            <div 
+              style={{ position: 'relative', cursor: 'pointer' }}
+              onClick={() => setIsMapOpen(true)}
+            >
               <input
-                style={{ ...inputStyle, paddingRight: 40 }}
+                style={{ ...inputStyle, paddingRight: 40, pointerEvents: 'none' }}
                 placeholder={t('addressPlaceholder')}
                 value={address}
-                onChange={e => setAddress(e.target.value)}
+                readOnly
               />
               <MapPin
                 size={18}
-                color="#64748b"
+                color="#e8751a"
                 style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)' }}
               />
             </div>
+            {address && (
+              <p style={{ fontSize: 12, color: '#64748b', marginTop: 8 }}>
+                {language === 'uz' ? 'Aniqroq manzilni izohda qoldirishingiz mumkin' : 'Можете уточнить адрес в комментарии (квартира, подъезд)'}
+              </p>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
+
+      <AddressMapModal
+        isOpen={isMapOpen}
+        onClose={() => setIsMapOpen(false)}
+        onConfirm={(addr) => setAddress(addr)}
+        apiKey="YOUR_YANDEX_API_KEY_HERE"
+      />
 
       <label style={labelStyle}>{t('comment')}</label>
       <textarea
