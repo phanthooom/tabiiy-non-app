@@ -151,6 +151,8 @@ export const cartApi = {
 
 // ── Orders ────────────────────────────────────────────────────────────────
 
+import { mockOrders } from '@/lib/mock-data'
+
 export const ordersApi = {
   create: (params: {
     delivery_type: DeliveryType
@@ -158,17 +160,21 @@ export const ordersApi = {
     address_comment?: string
   }, config?: RequestConfig): Promise<Order> => {
     if (import.meta.env.VITE_BYPASS_AUTH === 'true') {
-      return new Promise(resolve => setTimeout(() => resolve({
-        id: Math.floor(Math.random() * 10000),
-        status: 'accepted',
-        status_label: 'Accepted',
-        total_amount: 12000,
-        delivery_type: params.delivery_type,
-        address: params.address || null,
-        yandex_claim_id: null,
-        created_at: new Date().toISOString(),
-        items: []
-      }), 800))
+      return new Promise(resolve => setTimeout(() => {
+        const order: Order = {
+          id: Math.floor(Math.random() * 10000),
+          status: 'accepted',
+          status_label: 'Accepted',
+          total_amount: 12000,
+          delivery_type: params.delivery_type,
+          address: params.address || null,
+          yandex_claim_id: null,
+          created_at: new Date().toISOString(),
+          items: [{ product_name: 'Mock Item', quantity: 1, unit_price: 12000, subtotal: 12000 }]
+        }
+        mockOrders.unshift(order)
+        resolve(order)
+      }, 800))
     }
     return api.post<ApiEnvelope<Order>>('/api/orders', params, config)
       .then(r => validateEnvelope(r, orderSchema, 'order'))
