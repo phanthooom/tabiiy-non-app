@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react'
+import { lazy, Suspense, useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { AnimatePresence } from 'framer-motion'
@@ -37,6 +37,13 @@ export default function App() {
 function AppShell() {
   const { pathname } = useLocation()
   const { deliveryType } = useDeliveryStore()
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
+      window.Telegram.WebApp.expand()
+    }
+  }, [])
+
   const isAdmin = pathname.startsWith('/admin')
   const isWelcome = pathname === '/welcome'
   const isDeliveryLocation = pathname === '/delivery-location'
