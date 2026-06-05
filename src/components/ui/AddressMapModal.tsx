@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { YMaps, Map as YandexMap } from '@pbe/react-yandex-maps'
 import { MapPin, ArrowLeft } from 'lucide-react'
@@ -101,6 +101,7 @@ export function AddressMapModal({ isOpen, onClose, onConfirm, apiKey }: AddressM
 
           {/* Map Area */}
           <div style={{ flex: 1, position: 'relative' }}>
+            {/* @ts-expect-error Yandex Maps supports uz_UZ but react-yandex-maps types do not */}
             <YMaps query={{ apikey: apiKey, lang: language === 'uz' ? 'uz_UZ' : 'ru_RU' }}>
               <YandexMap
                 defaultState={{ center: TASHKENT_CENTER, zoom: 14 }}
