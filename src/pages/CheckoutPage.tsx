@@ -61,31 +61,31 @@ export function CheckoutPage() {
 
   const inputStyle: React.CSSProperties = {
     width: '100%',
-    background: 'var(--surface)',
-    border: '1px solid var(--border)',
-    borderRadius: 'var(--radius)',
+    background: '#ffffff',
+    border: '1px solid #e2e8f0',
+    borderRadius: 8,
     padding: '14px 16px',
-    fontSize: 15,
-    color: 'var(--text)',
+    fontSize: 14,
+    color: '#0f172a',
     fontFamily: 'var(--font-body)',
     transition: 'border-color 0.2s',
   }
 
-  return (
-    <div style={{ padding: '16px 16px 140px' }}>
-      <motion.h1
-        initial={{ opacity: 0, y: -8 }}
-        animate={{ opacity: 1, y: 0 }}
-        style={{ fontFamily: 'var(--font-display)', fontSize: 26, fontWeight: 700, marginBottom: 24 }}
-      >
-        {t('checkout')}
-      </motion.h1>
+  const labelStyle: React.CSSProperties = {
+    display: 'block',
+    fontWeight: 800,
+    marginBottom: 8,
+    fontSize: 11,
+    textTransform: 'uppercase',
+    letterSpacing: '0.05em',
+    color: '#475569',
+  }
 
+  return (
+    <div style={{ padding: '16px 16px 40px' }}>
       {/* Delivery type */}
-      <p style={{ fontWeight: 700, marginBottom: 10, color: 'var(--text-2)', fontSize: 13, textTransform: 'uppercase', letterSpacing: 0.5 }}>
-        {t('deliveryType')}
-      </p>
-      <div style={{ display: 'flex', gap: 10, marginBottom: 24 }}>
+      <label style={labelStyle}>{t('deliveryType')}</label>
+      <div style={{ display: 'flex', gap: 12, marginBottom: 24 }}>
         {(['delivery', 'pickup'] as DeliveryType[]).map((type) => {
           const active = deliveryType === type
           const Icon = type === 'delivery' ? MapPin : Store
@@ -99,17 +99,17 @@ export function CheckoutPage() {
                 display: 'flex', flexDirection: 'column',
                 alignItems: 'center', gap: 8,
                 padding: '16px 12px',
-                border: `2px solid ${active ? 'var(--accent)' : 'var(--border)'}`,
-                borderRadius: 'var(--radius)',
-                background: active ? 'var(--accent-light)' : 'var(--surface)',
+                border: active ? '1px solid #e8751a' : '1px solid #e2e8f0',
+                borderRadius: 8,
+                background: active ? '#fff6ef' : '#ffffff',
                 cursor: 'pointer',
                 transition: 'all 0.2s',
               }}
             >
-              <Icon size={22} color={active ? 'var(--accent)' : 'var(--text-3)'} />
+              <Icon size={20} color={active ? '#e8751a' : '#0f172a'} />
               <span style={{
                 fontSize: 13, fontWeight: 700,
-                color: active ? 'var(--accent)' : 'var(--text-2)',
+                color: active ? '#e8751a' : '#0f172a',
               }}>
                 {t(type)}
               </span>
@@ -125,26 +125,29 @@ export function CheckoutPage() {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
-            style={{ overflow: 'hidden', marginBottom: 16 }}
+            style={{ overflow: 'hidden', marginBottom: 24 }}
           >
-            <label style={{ display: 'block', fontWeight: 700, marginBottom: 8, fontSize: 13, textTransform: 'uppercase', letterSpacing: 0.5, color: 'var(--text-2)' }}>
-              {t('address')}
-            </label>
-            <input
-              style={inputStyle}
-              placeholder={t('addressPlaceholder')}
-              value={address}
-              onChange={e => setAddress(e.target.value)}
-            />
+            <label style={labelStyle}>{t('address')}</label>
+            <div style={{ position: 'relative' }}>
+              <input
+                style={{ ...inputStyle, paddingRight: 40 }}
+                placeholder={t('addressPlaceholder')}
+                value={address}
+                onChange={e => setAddress(e.target.value)}
+              />
+              <MapPin
+                size={18}
+                color="#64748b"
+                style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)' }}
+              />
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      <label style={{ display: 'block', fontWeight: 700, marginBottom: 8, fontSize: 13, textTransform: 'uppercase', letterSpacing: 0.5, color: 'var(--text-2)' }}>
-        {t('comment')}
-      </label>
+      <label style={labelStyle}>{t('comment')}</label>
       <textarea
-        style={{ ...inputStyle, minHeight: 80, resize: 'none' }}
+        style={{ ...inputStyle, minHeight: 90, resize: 'none' }}
         placeholder={t('commentPlaceholder')}
         value={comment}
         onChange={e => setComment(e.target.value)}
@@ -152,48 +155,73 @@ export function CheckoutPage() {
 
       {/* Order summary */}
       <div style={{
-        background: 'var(--surface)',
-        border: '1px solid var(--border)',
-        borderRadius: 'var(--radius)',
-        padding: 16,
-        marginTop: 20,
+        background: '#ffffff',
+        border: '1px solid #e2e8f0',
+        borderRadius: 16,
+        padding: '24px',
+        marginTop: 32,
+        boxShadow: '0 4px 20px rgba(0,0,0,0.02)',
       }}>
-        <p style={{ fontWeight: 700, marginBottom: 10 }}>
+        <p style={{ fontWeight: 800, fontSize: 18, color: '#0f172a', marginBottom: 20 }}>
           {language === 'uz' ? 'Buyurtma tarkibi' : 'Состав заказа'}
         </p>
-        {(cart?.items ?? []).map(item => (
-          <div key={item.product_id} style={{
-            display: 'flex', justifyContent: 'space-between',
-            marginBottom: 8, fontSize: 14,
-          }}>
-            <span style={{ color: 'var(--text-2)' }}>{item.product_name} × {item.quantity}</span>
-            <span style={{ fontWeight: 600 }}>{item.subtotal.toLocaleString('ru-RU')} {t('sum')}</span>
-          </div>
-        ))}
-        <div style={{ borderTop: '1px solid var(--border)', paddingTop: 10, marginTop: 4, display: 'flex', justifyContent: 'space-between' }}>
-          <span style={{ fontWeight: 700 }}>{t('total')}</span>
-          <span style={{ fontWeight: 700, color: 'var(--accent)', fontSize: 16 }}>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 20 }}>
+          {(cart?.items ?? []).map((item, i, arr) => (
+            <div key={item.product_id} style={{
+              display: 'flex', justifyContent: 'space-between',
+              fontSize: 14,
+              borderBottom: i < arr.length - 1 ? '1px solid #f1f5f9' : 'none',
+              paddingBottom: i < arr.length - 1 ? 16 : 0,
+            }}>
+              <span style={{ color: '#0f172a', fontWeight: 500 }}>{item.product_name} × {item.quantity}</span>
+              <span style={{ fontWeight: 600, color: '#0f172a' }}>{item.subtotal.toLocaleString('ru-RU')} {t('sum')}</span>
+            </div>
+          ))}
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, fontSize: 13, color: '#475569' }}>
+          <span>{language === 'uz' ? 'Oraliq jami' : 'Сумма'}</span>
+          <span style={{ fontWeight: 600 }}>{(cart?.total ?? 0).toLocaleString('ru-RU')} {t('sum')}</span>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16, fontSize: 13, color: '#475569' }}>
+          <span>{language === 'uz' ? 'Yetkazib berish' : 'Доставка'}</span>
+          <span style={{ fontWeight: 600 }}>0 {t('sum')}</span>
+        </div>
+
+        <div style={{ borderTop: '1px dashed #cbd5e1', marginBottom: 20 }} />
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 28 }}>
+          <span style={{ fontWeight: 800, fontSize: 18, color: '#0f172a' }}>{language === 'uz' ? 'Jami' : 'Итого'}</span>
+          <span style={{ fontWeight: 800, color: '#e8751a', fontSize: 18 }}>
             {(cart?.total ?? 0).toLocaleString('ru-RU')} {t('sum')}
           </span>
         </div>
-      </div>
 
-      {/* Submit button */}
-      <div style={{
-        position: 'fixed', bottom: 'var(--nav-height)',
-        left: 0, right: 0,
-        padding: '12px 16px',
-        background: 'var(--surface)',
-        borderTop: '1px solid var(--border)',
-      }}>
-        <Button
-          fullWidth size="lg"
-          disabled={!canSubmit}
-          loading={orderMutation.isPending}
+        <motion.button
+          whileTap={{ scale: 0.96 }}
+          disabled={!canSubmit || orderMutation.isPending}
           onClick={() => orderMutation.mutate()}
+          style={{
+            width: '100%',
+            background: canSubmit ? '#e8751a' : '#cbd5e1',
+            color: '#fff',
+            border: 'none',
+            borderRadius: 8,
+            padding: '14px',
+            fontWeight: 700,
+            fontSize: 14,
+            fontFamily: 'var(--font-body)',
+            cursor: canSubmit ? 'pointer' : 'not-allowed',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 8,
+          }}
         >
+          {orderMutation.isPending && <span className="spinner" style={{ width: 16, height: 16, borderTopColor: '#fff' }} />}
           {t('placeOrder')}
-        </Button>
+        </motion.button>
       </div>
     </div>
   )
