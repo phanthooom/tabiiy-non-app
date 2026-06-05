@@ -156,9 +156,25 @@ export const ordersApi = {
     delivery_type: DeliveryType
     address?: string
     address_comment?: string
-  }, config?: RequestConfig): Promise<Order> =>
-    api.post<ApiEnvelope<Order>>('/api/orders', params, config)
-      .then(r => validateEnvelope(r, orderSchema, 'order')),
+  }, config?: RequestConfig): Promise<Order> => {
+    if (import.meta.env.VITE_BYPASS_AUTH === 'true') {
+      return new Promise(resolve => setTimeout(() => resolve({
+        id: Math.floor(Math.random() * 10000),
+        user_id: 1,
+        status: 'accepted',
+        status_label: 'Accepted',
+        total_amount: 12000,
+        delivery_type: params.delivery_type,
+        address: params.address || null,
+        address_comment: params.address_comment || null,
+        yandex_claim_id: null,
+        created_at: new Date().toISOString(),
+        items: []
+      }), 800))
+    }
+    return api.post<ApiEnvelope<Order>>('/api/orders', params, config)
+      .then(r => validateEnvelope(r, orderSchema, 'order'))
+  },
 
   list: async (
     params?: { page?: number; size?: number },
