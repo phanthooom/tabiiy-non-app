@@ -30,8 +30,8 @@ export function BottomNav() {
         position: 'fixed',
         bottom: 0, left: 0, right: 0,
         height: 'var(--nav-height)',
-        background: 'var(--bg)',
-        borderTop: '1px solid var(--border)',
+        background: '#f1f8f8',
+        borderTop: 'none',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-around',
@@ -39,8 +39,9 @@ export function BottomNav() {
         paddingLeft: 4,
         paddingRight: 4,
         zIndex: 100,
-        borderTopLeftRadius: 12,
-        borderTopRightRadius: 12,
+        borderTopLeftRadius: 16,
+        borderTopRightRadius: 16,
+        boxShadow: '0 -4px 20px rgba(0,0,0,0.03)',
       }}
     >
       {tabs.map(({ path, icon: Icon, key }) => {
@@ -56,28 +57,28 @@ export function BottomNav() {
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: 2,
-              padding: active ? '4px 12px' : '8px 4px',
-              borderRadius: 'var(--radius-full)',
-              background: active ? 'var(--nav-active-bg)' : 'transparent',
-              color: active ? 'var(--nav-active-text)' : 'var(--text-3)',
+              gap: 4,
+              padding: active ? '8px 16px' : '10px 4px',
+              borderRadius: 14,
+              background: active ? '#faebd7' : 'transparent',
+              color: active ? '#9a3412' : '#94a3b8',
               border: 'none',
               cursor: 'pointer',
               position: 'relative',
               transition: 'all 0.2s ease',
-              transform: active ? 'scale(0.92)' : 'scale(1)',
+              transform: active ? 'scale(0.96)' : 'scale(1)',
               maxWidth: 80,
             }}
           >
             <div style={{ position: 'relative' }}>
               <Icon
                 size={22}
-                strokeWidth={active ? 2.5 : 1.8}
+                strokeWidth={active ? 2.5 : 2}
               />
               {showBadge && (
                 <span style={{
-                  position: 'absolute', top: -5, right: -7,
-                  background: 'var(--accent)',
+                  position: 'absolute', top: -4, right: -6,
+                  background: '#e8751a',
                   color: '#fff',
                   borderRadius: '50%',
                   minWidth: 16, height: 16,
@@ -91,8 +92,9 @@ export function BottomNav() {
             </div>
             <span style={{
               fontSize: 11,
-              fontWeight: 600,
+              fontWeight: 700,
               lineHeight: 1,
+              textTransform: 'capitalize',
             }}>
               {t(key)}
             </span>
@@ -111,20 +113,20 @@ export function BottomNav() {
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: 2,
-              padding: active ? '4px 12px' : '8px 4px',
-              borderRadius: 'var(--radius-full)',
-              background: active ? 'var(--nav-active-bg)' : 'transparent',
-              color: active ? 'var(--nav-active-text)' : 'var(--text-3)',
+              gap: 4,
+              padding: active ? '8px 16px' : '10px 4px',
+              borderRadius: 14,
+              background: active ? '#faebd7' : 'transparent',
+              color: active ? '#9a3412' : '#94a3b8',
               border: 'none',
               cursor: 'pointer',
               transition: 'all 0.2s ease',
-              transform: active ? 'scale(0.92)' : 'scale(1)',
+              transform: active ? 'scale(0.96)' : 'scale(1)',
               maxWidth: 80,
             }}
           >
             <span style={{ fontSize: 20, lineHeight: 1 }}>🔧</span>
-            <span style={{ fontSize: 11, fontWeight: 600, lineHeight: 1 }}>Админ</span>
+            <span style={{ fontSize: 11, fontWeight: 700, lineHeight: 1 }}>Админ</span>
           </button>
         )
       })()}

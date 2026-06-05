@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { ShoppingCart } from 'lucide-react'
 import type { HTMLMotionProps } from 'framer-motion'
 import { BASE_URL, photoUrl } from '@/api'
 import type { Product } from '@/types'
@@ -160,10 +161,10 @@ export function ProductCard({ product, onAdd, cartQty, addLabel, outLabel, sumLa
         animate={{ opacity: 1, y: 0 }}
         style={{
           background: '#ffffff',
-          borderRadius: 24,
+          borderRadius: 16,
           overflow: 'hidden',
-          border: '1px solid rgba(0,0,0,0.03)',
-          boxShadow: '0 8px 30px rgba(0,0,0,0.04)',
+          border: '1px solid #e2e8f0',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.03)',
         }}
       >
         {/* Photo */}
@@ -217,21 +218,20 @@ export function ProductCard({ product, onAdd, cartQty, addLabel, outLabel, sumLa
             >i</button>
           )}
 
-          {/* Availability badge */}
+          {/* Availability / Best Seller badge */}
           <div style={{
-            position: 'absolute', top: 10, right: 10,
-            background: product.is_available
-              ? 'rgba(45, 157, 92, 0.9)'
-              : 'rgba(4,22,39,0.6)',
-            backdropFilter: 'blur(8px)',
-            color: '#fff',
-            borderRadius: 20,
-            padding: '3px 10px',
-            fontSize: 12,
-            fontWeight: 600,
-            letterSpacing: '0.02em',
+            position: 'absolute', top: 12, left: 12,
+            background: 'rgba(255, 255, 255, 0.9)',
+            backdropFilter: 'blur(4px)',
+            color: '#1e293b',
+            borderRadius: 4,
+            padding: '4px 8px',
+            fontSize: 10,
+            fontWeight: 800,
+            letterSpacing: '0.05em',
+            textTransform: 'uppercase',
           }}>
-            {product.is_available ? `${product.quantity} шт` : outLabel}
+            {product.is_available ? (cartQty > 0 ? 'IN CART' : 'BEST SELLER') : outLabel}
           </div>
 
           {cartQty > 0 && (
@@ -250,54 +250,63 @@ export function ProductCard({ product, onAdd, cartQty, addLabel, outLabel, sumLa
         </div>
 
         {/* Info */}
-        <div style={{ padding: '16px 20px 20px' }}>
+        <div style={{ padding: '16px' }}>
           <h3 style={{
-            fontSize: 19,
+            fontSize: 18,
             fontWeight: 700,
             marginBottom: 6,
-            lineHeight: 1.3,
-            color: '#1a1a1a',
-            letterSpacing: '-0.02em',
+            color: '#0f172a',
           }}>
             {product.name}
           </h3>
 
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            marginTop: 12,
+          <p style={{
+            fontSize: 13,
+            color: '#64748b',
+            lineHeight: 1.4,
+            marginBottom: 16,
+            display: '-webkit-box',
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: 'vertical',
+            overflow: 'hidden',
           }}>
-            <span style={{
-              fontSize: 20,
-              fontWeight: 800,
-              color: '#1a1a1a',
-              letterSpacing: '-0.02em',
-            }}>
-              {price} <span style={{ fontSize: 13, color: 'var(--text-2)', fontWeight: 500 }}>{sumLabel}</span>
-            </span>
+            {product.description || 'Svejiy, issiq va mazali tandoor noni...'}
+          </p>
 
-            <motion.button
-              whileTap={{ scale: 0.93 }}
-              onClick={() => onAdd(product)}
-              disabled={!product.is_available || addDisabled}
-              style={{
-                background: product.is_available && !addDisabled ? '#f07c34' : '#f1f5f9',
-                color: product.is_available && !addDisabled ? '#fff' : '#94a3b8',
-                border: 'none',
-                borderRadius: 14,
-                padding: '10px 20px',
-                fontWeight: 700,
-                fontSize: 14,
-                fontFamily: 'var(--font-body)',
-                letterSpacing: '0.02em',
-                cursor: product.is_available && !addDisabled ? 'pointer' : 'not-allowed',
-                boxShadow: product.is_available && !addDisabled ? '0 4px 12px rgba(240, 124, 52, 0.3)' : 'none',
-              }}
-            >
-              {product.is_available ? addLabel : outLabel}
-            </motion.button>
+          <div style={{
+            fontSize: 18,
+            fontWeight: 700,
+            color: '#0f172a',
+            marginBottom: 16,
+          }}>
+            {price} <span style={{ fontSize: 13, color: '#64748b', fontWeight: 500 }}>{sumLabel}</span>
           </div>
+
+          <motion.button
+            whileTap={{ scale: 0.96 }}
+            onClick={() => onAdd(product)}
+            disabled={!product.is_available || addDisabled}
+            style={{
+              width: '100%',
+              background: product.is_available && !addDisabled ? '#e8751a' : '#cbd5e1',
+              color: '#fff',
+              border: 'none',
+              borderRadius: 8,
+              padding: '12px',
+              fontWeight: 700,
+              fontSize: 14,
+              fontFamily: 'var(--font-body)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8,
+              cursor: product.is_available && !addDisabled ? 'pointer' : 'not-allowed',
+              boxShadow: product.is_available && !addDisabled ? '0 4px 12px rgba(232, 117, 26, 0.2)' : 'none',
+            }}
+          >
+            <ShoppingCart size={18} strokeWidth={2.5} />
+            {product.is_available ? addLabel : outLabel}
+          </motion.button>
         </div>
       </motion.div>
 

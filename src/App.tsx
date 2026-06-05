@@ -67,7 +67,7 @@ function AppShell() {
     return <Navigate to="/welcome" replace />
   }
 
-  const showTopBar = !isAdmin && !isPreAuth && !isInsideTelegram()
+  const showTopBar = !isAdmin && !isPreAuth
 
   return (
     <div
