@@ -53,11 +53,16 @@ export async function createFirebaseOrder(orderData: Partial<Order> & { telegram
   // Generate a random ID like #54629707
   const shortId = Math.floor(Math.random() * 90000000) + 10000000
   
-  await addDoc(collection(db, 'orders'), {
+  // Fire and forget to prevent UI lag while waiting for Firebase server acknowledgement
+  addDoc(collection(db, 'orders'), {
     ...orderData,
     id: shortId,
     created_at: serverTimestamp(),
-  })
+  }).catch(err => console.error('Firebase order creation error:', err))
+
+  // Simulate a tiny delay for natural feel, but mostly instant
+  await new Promise(resolve => setTimeout(resolve, 300))
+
   return { id: shortId }
 }
 
