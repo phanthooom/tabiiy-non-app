@@ -40,6 +40,7 @@ function AppShell() {
 
   useEffect(() => {
     if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
+      window.Telegram.WebApp.ready()
       window.Telegram.WebApp.expand()
       
       // Попытка запустить абсолютный Fullscreen (Telegram v7.7+)
