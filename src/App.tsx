@@ -41,6 +41,11 @@ function AppShell() {
   useEffect(() => {
     if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
       window.Telegram.WebApp.expand()
+      
+      // Попытка запустить абсолютный Fullscreen (Telegram v7.7+)
+      if (typeof window.Telegram.WebApp.requestFullscreen === 'function') {
+        window.Telegram.WebApp.requestFullscreen()
+      }
     }
   }, [])
 
