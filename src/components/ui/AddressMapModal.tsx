@@ -29,10 +29,13 @@ export function AddressMapModal({ isOpen, onClose, onConfirm, apiKey }: AddressM
     if (!ymapsRef.current) return
     setIsFetching(true)
     try {
-      const res = await ymapsRef.current.geocode(coords, { results: 1, kind: 'house' })
+      // Allow any kind of result (house, street, district) so it doesn't fail
+      const res = await ymapsRef.current.geocode(coords, { results: 1 })
       const firstGeoObject = res.geoObjects.get(0)
       if (firstGeoObject) {
-        const addr = firstGeoObject.getAddressLine()
+        let addr = firstGeoObject.getAddressLine()
+        // Optional: Remove "Узбекистан, Ташкент, " prefix to make it shorter and cleaner
+        addr = addr.replace('Узбекистан, Ташкент, ', '').replace('Oʻzbekiston, Toshkent, ', '')
         setAddress(addr)
       } else {
         setAddress(`${coords[0].toFixed(5)}, ${coords[1].toFixed(5)}`)
@@ -119,11 +122,11 @@ export function AddressMapModal({ isOpen, onClose, onConfirm, apiKey }: AddressM
           {/* Top Bar Floating */}
           <div style={{
             position: 'absolute',
-            top: 'calc(env(safe-area-inset-top, 0px) + 16px)',
+            top: 'calc(env(safe-area-inset-top, 0px) + 60px)', // Pushed down further
             left: 16,
             right: 16,
             display: 'flex',
-            alignItems: 'center',
+            alignItems: 'flex-start', // Align to top in case text wraps
             gap: 12,
             zIndex: 10,
           }}>
@@ -150,9 +153,11 @@ export function AddressMapModal({ isOpen, onClose, onConfirm, apiKey }: AddressM
               fontSize: 14,
               fontWeight: 600,
               color: address === detectingLabel ? '#64748b' : '#0f172a',
+              lineHeight: 1.4,
+              display: '-webkit-box',
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: 'vertical',
               overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              whiteSpace: 'nowrap',
             }}>
               {address}
             </div>
@@ -164,7 +169,7 @@ export function AddressMapModal({ isOpen, onClose, onConfirm, apiKey }: AddressM
             disabled={locating}
             style={{
               position: 'absolute',
-              top: 'calc(env(safe-area-inset-top, 0px) + 76px)',
+              top: 'calc(env(safe-area-inset-top, 0px) + 120px)', // Pushed down to clear the address bubble
               right: 16,
               width: 44, height: 44,
               borderRadius: '50%',
