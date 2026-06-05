@@ -14,6 +14,7 @@ import { CatalogPage } from '@/pages/CatalogPage'
 import { CartPage } from '@/pages/CartPage'
 import { CheckoutPage } from '@/pages/CheckoutPage'
 import { OrdersPage, OrderDetailPage, OrderSuccessPage } from '@/pages/OrdersPage'
+import { AdminOrdersPage } from '@/pages/AdminOrdersPage'
 import { ProfilePage } from '@/pages/ProfilePage'
 import { WelcomePage } from '@/pages/WelcomePage'
 import { DeliveryLocationPage } from '@/pages/DeliveryLocationPage'
@@ -105,6 +106,7 @@ function AppShell() {
             <Route path="/orders" element={<OrdersPage />} />
             <Route path="/orders/:id" element={<OrderDetailPage />} />
             <Route path="/order-success/:id" element={<OrderSuccessPage />} />
+            <Route path="/admin-orders" element={<AdminOrdersPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

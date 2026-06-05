@@ -1,18 +1,14 @@
 import { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
 import { useNavigate, useParams } from 'react-router-dom'
 import { CheckCircle } from 'lucide-react'
-import { ordersApi } from '@/api'
 import { Button, Spinner } from '@/components/ui'
-import { BYPASS_MODE, mockOrders } from '@/lib/mock-data'
-import { queryKeys, STALE_TIME } from '@/lib/query-keys'
-import { useLangStore } from '@/store'
+import { BYPASS_MODE, mockUser } from '@/lib/mock-data'
+import { useLangStore, useAuthStore } from '@/store'
 import { useT } from '@/utils/i18n'
 import { useBackButton } from '@/hooks/useTelegram'
+import { useFirebaseOrders } from '@/hooks/useFirebaseOrders'
 import type { Order } from '@/types'
-
-// ── Order Success ─────────────────────────────────────────────────────────
 
 export function OrderSuccessPage() {
   const { id } = useParams<{ id: string }>()
@@ -239,28 +235,21 @@ function OrderCard({ order, onClick, language }: { order: Order; onClick: () => 
 
 // ── Orders List ───────────────────────────────────────────────────────────
 
-const ORDERS_PAGE_SIZE = 20
-
 export function OrdersPage() {
   const { language } = useLangStore()
   const t = useT(language)
   const navigate = useNavigate()
   const [tab, setTab] = useState<'active' | 'history'>('active')
 
-  const { data: ordersPage, isLoading, isError, isFetching, refetch } = useQuery({
-    queryKey: queryKeys.orders(1),
-    queryFn: ({ signal }) =>
-      BYPASS_MODE
-        ? Promise.resolve({ items: mockOrders, meta: { page: 1, size: ORDERS_PAGE_SIZE, total_count: 0, has_next: false, has_prev: false } })
-        : ordersApi.list({ page: 1, size: ORDERS_PAGE_SIZE }, { signal }),
-    staleTime: STALE_TIME.orders,
-    retry: false,
-    refetchInterval: BYPASS_MODE ? false : 30_000,
-  })
+  const telegramUser = window.Telegram?.WebApp?.initDataUnsafe?.user
+  const { user } = useAuthStore()
+  const displayUser = BYPASS_MODE ? mockUser : user
+  const telegramId = telegramUser?.id || displayUser?.id
 
-  const allOrders = ordersPage?.items ?? []
-  const activeOrders = allOrders.filter(o => ACTIVE_STATUSES.has(o.status))
-  const historyOrders = allOrders.filter(o => !ACTIVE_STATUSES.has(o.status))
+  const { orders: allOrders, loading: isLoading } = useFirebaseOrders(telegramId)
+  const isError = false
+  const activeOrders = allOrders.filter((o: Order) => ACTIVE_STATUSES.has(o.status))
+  const historyOrders = allOrders.filter((o: Order) => !ACTIVE_STATUSES.has(o.status))
   const visibleOrders = tab === 'active' ? activeOrders : historyOrders
 
   if (isError) {
@@ -270,7 +259,7 @@ export function OrdersPage() {
         alignItems: 'center', padding: '48px 24px 100px', gap: 16, textAlign: 'center',
       }}>
         <p style={{ color: 'var(--text-2)', fontWeight: 600 }}>{t('error')}</p>
-        <Button onClick={() => { void refetch() }} loading={isFetching}>
+        <Button onClick={() => window.location.reload()}>
           {language === 'uz' ? 'Qayta urinish' : 'Повторить'}
         </Button>
       </div>
@@ -368,14 +357,14 @@ export function OrderDetailPage() {
   const orderId = id ? Number(id) : NaN
   const idValid = Number.isFinite(orderId) && orderId > 0
 
-  const { data: order, isLoading, isError, isFetching, refetch } = useQuery({
-    queryKey: queryKeys.order(id ?? ''),
-    queryFn: ({ signal }) => ordersApi.get(orderId, { signal }),
-    enabled: idValid,
-    staleTime: STALE_TIME.orders,
-    retry: false,
-    refetchInterval: 15_000,
-  })
+  const telegramUser = window.Telegram?.WebApp?.initDataUnsafe?.user
+  const { user } = useAuthStore()
+  const displayUser = BYPASS_MODE ? mockUser : user
+  const telegramId = telegramUser?.id || displayUser?.id
+
+  const { orders, loading: isLoading } = useFirebaseOrders(telegramId)
+  const order = orders.find((o: Order) => o.id === orderId)
+  const isError = false
 
   if (!idValid) {
     return (
@@ -395,7 +384,7 @@ export function OrderDetailPage() {
         <p style={{ color: 'var(--text-2)', fontWeight: 600 }}>{t('error')}</p>
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'center' }}>
           <Button variant="ghost" onClick={() => navigate('/orders')}>{t('orders')}</Button>
-          <Button onClick={() => { void refetch() }} loading={isFetching}>
+          <Button onClick={() => window.location.reload()}>
             {language === 'uz' ? 'Qayta urinish' : 'Повторить'}
           </Button>
         </div>
@@ -463,7 +452,7 @@ export function OrderDetailPage() {
           <p style={{ fontWeight: 700, fontSize: 16, color: 'var(--primary)', marginBottom: 12 }}>
             {language === 'uz' ? 'Mahsulotlar' : 'Товары'}
           </p>
-          {order.items.map((item, i) => (
+          {order.items.map((item: any, i: number) => (
             <div key={i} style={{
               display: 'flex', justifyContent: 'space-between',
               padding: '10px 0',

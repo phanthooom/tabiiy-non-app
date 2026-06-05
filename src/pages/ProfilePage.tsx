@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  User, MapPin, CreditCard, Bell, Globe, LogOut, ChevronRight,
+  User, MapPin, CreditCard, Bell, Globe, LogOut, ChevronRight, Shield
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore, useLangStore, useDeliveryStore, useCartStore } from '@/store'
@@ -15,6 +15,8 @@ export function ProfilePage() {
   const { clearCart } = useCartStore()
   const { setDeliveryType } = useDeliveryStore()
   const displayUser = BYPASS_MODE ? mockUser : user
+  
+  const isAdmin = window.Telegram?.WebApp?.initDataUnsafe?.user?.id === 638384527 || import.meta.env.VITE_BYPASS_AUTH === 'true'
 
   const [showLangPicker, setShowLangPicker] = useState(false)
 
@@ -30,6 +32,11 @@ export function ProfilePage() {
     { icon: <MapPin size={20} strokeWidth={1.8} />, label: language === 'uz' ? 'Manzillarim' : 'Мои адреса', action: () => {} },
     { icon: <CreditCard size={20} strokeWidth={1.8} />, label: language === 'uz' ? "To'lov usullari" : 'Способы оплаты', action: () => {} },
     { icon: <Bell size={20} strokeWidth={1.8} />, label: language === 'uz' ? 'Xabarnomalar' : 'Уведомления', action: () => {} },
+    ...(isAdmin ? [{ 
+      icon: <Shield size={20} strokeWidth={1.8} />, 
+      label: 'Admin paneli', 
+      action: () => navigate('/admin-orders') 
+    }] : []),
     {
       icon: <Globe size={20} strokeWidth={1.8} />,
       label: language === 'uz' ? 'Til' : 'Язык',
