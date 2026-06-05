@@ -7,7 +7,7 @@ export function TopAppBar() {
         top: 0, left: 0, right: 0,
         height: `calc(var(--top-bar-height) + ${safeTop})`,
         paddingTop: safeTop,
-        background: 'linear-gradient(180deg, #dce8eb 0%, #f1f8f8 100%)',
+        background: 'linear-gradient(180deg, #dce8eb 0%, #eefcfd 100%)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',

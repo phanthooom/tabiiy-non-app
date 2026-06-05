@@ -385,29 +385,30 @@ export function Stepper({ value, onInc, onDec, min = 0, disabled = false }: Step
     <div style={{
       display: 'flex',
       alignItems: 'center',
-      gap: 2,
-      background: 'var(--surface-2)',
-      borderRadius: 'var(--radius-full)',
-      padding: '2px',
+      background: '#eefcfd',
+      borderRadius: 20,
+      padding: '4px 8px',
+      gap: 12,
     }}>
       <motion.button
         whileTap={{ scale: 0.88 }}
         onClick={onDec}
         disabled={disabled || value <= min}
         style={{
-          width: 32, height: 32,
-          borderRadius: '50%',
-          background: !disabled && value > min ? 'var(--surface)' : 'transparent',
-          color: !disabled && value > min ? 'var(--primary)' : 'var(--text-3)',
-          fontSize: 18, fontWeight: 700,
+          width: 24, height: 24,
+          background: 'transparent',
+          color: disabled || value <= min ? '#94a3b8' : '#0f172a',
+          fontSize: 16, fontWeight: 500,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           border: 'none', cursor: !disabled && value > min ? 'pointer' : 'not-allowed',
-          transition: 'all 0.15s',
         }}
       >
         −
       </motion.button>
-      <span style={{ minWidth: 26, textAlign: 'center', fontWeight: 700, fontSize: 14, color: 'var(--primary)' }}>
+      <span style={{ 
+        minWidth: 16, textAlign: 'center', 
+        fontWeight: 600, fontSize: 14, color: '#0f172a' 
+      }}>
         {value}
       </span>
       <motion.button
@@ -415,11 +416,10 @@ export function Stepper({ value, onInc, onDec, min = 0, disabled = false }: Step
         onClick={onInc}
         disabled={disabled}
         style={{
-          width: 32, height: 32,
-          borderRadius: '50%',
-          background: disabled ? 'transparent' : 'var(--accent)',
-          color: disabled ? 'var(--text-3)' : '#fff',
-          fontSize: 18, fontWeight: 700,
+          width: 24, height: 24,
+          background: 'transparent',
+          color: disabled ? '#94a3b8' : '#0f172a',
+          fontSize: 16, fontWeight: 500,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           border: 'none', cursor: disabled ? 'not-allowed' : 'pointer',
         }}

@@ -127,11 +127,7 @@ export function CartPage() {
   const deliveryFee: number = 0
 
   return (
-    <div style={{ padding: '20px 16px 32px' }}>
-      <h2 style={{ fontSize: 24, fontWeight: 800, color: '#0f172a', marginBottom: 20 }}>
-        {t('cart')}
-      </h2>
-
+    <div style={{ padding: '16px 16px 32px' }}>
       {/* Cart items */}
       <AnimatePresence initial={false}>
         {items.map((item) => (
@@ -144,18 +140,18 @@ export function CartPage() {
             style={{
               background: '#ffffff',
               borderRadius: 16,
-              padding: '12px 14px',
+              padding: '12px',
               marginBottom: 12,
               display: 'flex',
               gap: 16,
               alignItems: 'center',
-              border: '1px solid #e2e8f0',
-              boxShadow: '0 4px 20px rgba(0,0,0,0.02)',
+              border: 'none',
+              boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
             }}
           >
             {/* Photo */}
             <div style={{
-              width: 72, height: 72,
+              width: 56, height: 56,
               borderRadius: 12,
               background: '#f8fafc',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -166,17 +162,17 @@ export function CartPage() {
                 ? <img src={item.image_url.startsWith('/static/') ? `${BASE_URL}${item.image_url}` : item.image_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 : item.photo_file_id
                   ? <ProductPhoto fileId={item.photo_file_id} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  : <span style={{ fontSize: 30 }}>🍞</span>
+                  : <span style={{ fontSize: 24 }}>🍞</span>
               }
             </div>
 
             {/* Info */}
             <div style={{ flex: 1, minWidth: 0 }}>
-              <p style={{ fontWeight: 700, fontSize: 16, color: '#0f172a', marginBottom: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              <p style={{ fontWeight: 600, fontSize: 16, color: '#0f172a', marginBottom: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {item.product_name}
               </p>
-              <p style={{ color: '#0f172a', fontSize: 15, fontWeight: 600 }}>
-                {item.subtotal.toLocaleString('ru-RU')} <span style={{ fontSize: 13, color: '#64748b', fontWeight: 500 }}>{t('sum')}</span>
+              <p style={{ color: '#64748b', fontSize: 14 }}>
+                {item.subtotal.toLocaleString('ru-RU')} {t('sum')}
               </p>
             </div>
 
@@ -205,33 +201,32 @@ export function CartPage() {
         transition={{ delay: 0.1 }}
         style={{
           background: '#ffffff',
-          border: '1px solid #e2e8f0',
           borderRadius: 16,
-          padding: '20px 16px',
-          marginTop: 16,
-          boxShadow: '0 4px 20px rgba(0,0,0,0.02)',
+          padding: '20px 24px',
+          marginTop: 24,
+          boxShadow: '0 4px 20px rgba(0,0,0,0.04)',
         }}
       >
-        <p style={{ fontWeight: 800, fontSize: 18, color: '#0f172a', marginBottom: 16 }}>
-          {language === 'uz' ? 'Buyurtma xulosasi' : 'Итого к оплате'}
+        <p style={{ fontWeight: 700, fontSize: 18, color: '#0f172a', marginBottom: 20 }}>
+          {language === 'uz' ? 'Buyurtma xulosasi' : 'Order Summary'}
         </p>
 
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
-          <span style={{ color: '#64748b', fontSize: 15 }}>
-            {language === 'uz' ? 'Jami' : 'Сумма'}
+          <span style={{ color: '#64748b', fontSize: 14 }}>
+            {language === 'uz' ? 'Jami' : 'Subtotal'}
           </span>
-          <span style={{ fontWeight: 600, fontSize: 15, color: '#0f172a' }}>
-            {subtotal.toLocaleString('ru-RU')} <span style={{ fontSize: 13, color: '#64748b', fontWeight: 500 }}>{t('sum')}</span>
+          <span style={{ fontWeight: 600, fontSize: 14, color: '#0f172a' }}>
+            {subtotal.toLocaleString('ru-RU')} {t('sum')}
           </span>
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
-          <span style={{ color: '#64748b', fontSize: 15 }}>
-            {language === 'uz' ? 'Yetkazib berish' : 'Доставка'}
+          <span style={{ color: '#64748b', fontSize: 14 }}>
+            {language === 'uz' ? 'Yetkazib berish' : 'Delivery Fee'}
           </span>
-          <span style={{ fontWeight: 600, fontSize: 15, color: '#0f172a' }}>
+          <span style={{ fontWeight: 600, fontSize: 14, color: '#0f172a' }}>
             {deliveryFee === 0
-              ? (language === 'uz' ? 'Bepul' : 'Бесплатно')
+              ? (language === 'uz' ? 'Bepul' : '$0.00')
               : `${deliveryFee.toLocaleString('ru-RU')} ${t('sum')}`}
           </span>
         </div>
@@ -243,7 +238,7 @@ export function CartPage() {
             {t('total')}
           </span>
           <span style={{ fontWeight: 800, fontSize: 18, color: '#0f172a' }}>
-            {(subtotal + deliveryFee).toLocaleString('ru-RU')} <span style={{ fontSize: 14, color: '#64748b', fontWeight: 600 }}>{t('sum')}</span>
+            {(subtotal + deliveryFee).toLocaleString('ru-RU')} {t('sum')}
           </span>
         </div>
 
@@ -255,16 +250,15 @@ export function CartPage() {
             background: '#e8751a',
             color: '#fff',
             border: 'none',
-            borderRadius: 12,
+            borderRadius: 8,
             padding: '14px',
             fontWeight: 700,
-            fontSize: 16,
+            fontSize: 14,
             fontFamily: 'var(--font-body)',
             cursor: 'pointer',
-            boxShadow: '0 4px 12px rgba(232, 117, 26, 0.2)',
           }}
         >
-          {language === 'uz' ? 'Buyurtma berish' : 'Оформить заказ'}
+          {language === 'uz' ? 'Buyurtma berish' : 'Proceed to Checkout'}
         </motion.button>
       </motion.div>
     </div>
