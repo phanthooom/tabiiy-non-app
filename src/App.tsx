@@ -43,10 +43,15 @@ function AppShell() {
       window.Telegram.WebApp.ready()
       window.Telegram.WebApp.expand()
       
-      // Попытка запустить абсолютный Fullscreen (Telegram v7.7+)
       const webAppAny = window.Telegram.WebApp as any
+      // Попытка запустить абсолютный Fullscreen (Telegram v7.7+)
       if (typeof webAppAny.requestFullscreen === 'function') {
         webAppAny.requestFullscreen()
+      }
+      
+      // Отключаем свайп вниз для закрытия приложения, чтобы не мешал скроллу
+      if (typeof webAppAny.disableVerticalSwipes === 'function') {
+        webAppAny.disableVerticalSwipes()
       }
     }
   }, [])
@@ -70,6 +75,7 @@ function AppShell() {
         margin: '0 auto',
         position: 'relative',
         minHeight: '100dvh',
+        paddingTop: 'var(--tg-safe-area-inset-top, env(safe-area-inset-top, 20px))',
       }}
     >
       {showTopBar && <TopAppBar />}
