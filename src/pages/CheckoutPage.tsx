@@ -5,7 +5,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { MapPin, Store } from 'lucide-react'
 import { ordersApi, apiErrorMessage } from '@/api'
 import { mutationRetryOptions, withRetry } from '@/lib/retry'
-import { Button } from '@/components/ui'
+
 import { queryKeys } from '@/lib/query-keys'
 import { useCartStore, useDeliveryStore, useLangStore } from '@/store'
 import { useT } from '@/utils/i18n'
