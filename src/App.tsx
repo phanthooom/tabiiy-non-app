@@ -68,7 +68,8 @@ function AppShell() {
     return <Navigate to="/welcome" replace />
   }
 
-  const showTopBar = !isAdmin && !isPreAuth
+  const isOrderTracking = pathname.startsWith('/orders/')
+  const showTopBar = !isAdmin && !isPreAuth && !isOrderTracking
 
   return (
     <div
