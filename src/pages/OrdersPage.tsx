@@ -106,11 +106,12 @@ function OrderCard({ order, onClick, language }: { order: Order; onClick: () => 
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       style={{
-        background: 'var(--surface)',
-        border: '1px solid var(--border)',
+        background: '#ffffff',
+        border: '1px solid #e2e8f0',
         borderRadius: 16,
-        marginBottom: 14,
-        overflow: 'hidden',
+        marginBottom: 16,
+        padding: '16px',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.02)',
       }}
     >
       {/* Card header */}
@@ -118,40 +119,41 @@ function OrderCard({ order, onClick, language }: { order: Order; onClick: () => 
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        padding: '14px 16px 0',
+        marginBottom: 8,
       }}>
-        <span style={{ fontWeight: 700, fontSize: 13, color: 'var(--text-3)' }}>
-          #{order.id}
+        <span style={{ fontWeight: 800, fontSize: 13, color: '#0f172a' }}>
+          #TN-{order.id}
         </span>
         {badge && (
           <span style={{
-            fontSize: 11, fontWeight: 700,
+            fontSize: 10, fontWeight: 800,
             color: badge.color,
             background: badge.bg,
-            borderRadius: 20,
-            padding: '3px 10px',
-            display: 'flex', alignItems: 'center', gap: 4,
+            borderRadius: 6,
+            padding: '4px 8px',
+            textTransform: 'uppercase',
+            letterSpacing: '0.05em',
           }}>
-            🍞 {badge.label[language] ?? order.status_label.toUpperCase()}
+            {badge.label[language] ?? order.status_label}
           </span>
         )}
       </div>
 
       {/* Order title */}
-      <div style={{ padding: '6px 16px 0' }}>
-        <p style={{ fontWeight: 700, fontSize: 18, color: 'var(--primary)' }}>
+      <div style={{ marginBottom: 16 }}>
+        <p style={{ fontWeight: 700, fontSize: 20, color: '#0f172a' }}>
           {order.items.length > 0
-            ? order.items.map(i => i.product_name).join(', ')
-            : language === 'uz' ? 'Buyurtma' : 'Заказ'}
+            ? (order.items.length === 1 ? order.items[0].product_name : (language === 'uz' ? 'Tabiiy Non Buyurtmasi' : 'Заказ Tabiiy Non'))
+            : (language === 'uz' ? 'Buyurtma' : 'Заказ')}
         </p>
       </div>
 
       {/* Progress bar (only for active orders) */}
       {isActive && (
-        <div style={{ padding: '12px 16px 4px' }}>
+        <div style={{ marginBottom: 16 }}>
           <div style={{
-            height: 6,
-            background: 'var(--surface-2)',
+            height: 4,
+            background: '#e2e8f0',
             borderRadius: 99,
             overflow: 'hidden',
           }}>
@@ -161,42 +163,46 @@ function OrderCard({ order, onClick, language }: { order: Order; onClick: () => 
               transition={{ duration: 0.8, ease: 'easeOut' }}
               style={{
                 height: '100%',
-                background: 'var(--accent)',
+                background: '#e8751a',
                 borderRadius: 99,
               }}
             />
           </div>
-          <p style={{ fontSize: 12, color: 'var(--text-3)', marginTop: 4, textAlign: 'right' }}>
+          <p style={{ fontSize: 11, color: '#64748b', marginTop: 8, textAlign: 'right', fontWeight: 500 }}>
             {language === 'uz' ? 'Taxminiy vaqt: 45 min' : 'Est. Delivery: 45 mins'}
           </p>
         </div>
       )}
 
       {/* Divider */}
-      <div style={{ height: 1, background: 'var(--border)', margin: '8px 0' }} />
+      <div style={{ height: 1, background: '#f1f5f9', marginBottom: 16 }} />
 
       {/* Items + total */}
       <div style={{
-        padding: '0 16px 14px',
         display: 'flex',
         alignItems: 'center',
         gap: 12,
+        marginBottom: 16,
       }}>
-        {/* Product image placeholder */}
+        {/* Product image */}
         {firstItem && (
           <div style={{
-            width: 52, height: 52, borderRadius: 10,
-            background: 'var(--surface-2)', overflow: 'hidden', flexShrink: 0,
+            width: 56, height: 56, borderRadius: 12,
+            background: '#f8fafc', overflow: 'hidden', flexShrink: 0,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 22,
+            border: '1px solid #f1f5f9',
           }}>
-            🍞
+            <img 
+              src="https://images.unsplash.com/photo-1509440159596-0249088772ff?q=80&w=200&auto=format&fit=crop" 
+              alt="Bread"
+              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            />
           </div>
         )}
 
         {/* Items text */}
         <div style={{ flex: 1, minWidth: 0 }}>
-          <p style={{ fontSize: 13, color: 'var(--text-2)', lineHeight: 1.5 }}>
+          <p style={{ fontSize: 13, color: '#334155', lineHeight: 1.6, fontWeight: 500 }}>
             {order.items.map(i => `${i.product_name} x${i.quantity}`).join('\n').split('\n').map((line, idx) => (
               <span key={idx} style={{ display: 'block' }}>{line}</span>
             ))}
@@ -204,24 +210,24 @@ function OrderCard({ order, onClick, language }: { order: Order; onClick: () => 
         </div>
 
         {/* Total */}
-        <p style={{ fontWeight: 700, fontSize: 15, color: 'var(--primary)', flexShrink: 0 }}>
+        <p style={{ fontWeight: 800, fontSize: 15, color: '#0f172a', flexShrink: 0 }}>
           {order.total_amount.toLocaleString('ru-RU')} {t('sum')}
         </p>
       </div>
 
       {/* Track order button */}
-      <div style={{ padding: '0 16px 14px', display: 'flex', justifyContent: 'flex-end' }}>
+      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
         <button
           onClick={onClick}
           style={{
-            background: 'none',
-            border: '1.5px solid var(--border)',
+            background: '#ffffff',
+            border: '1px solid #cbd5e1',
             borderRadius: 10,
-            padding: '8px 18px',
-            fontSize: 14, fontWeight: 600,
-            color: 'var(--primary)',
+            padding: '8px 16px',
+            fontSize: 13, fontWeight: 700,
+            color: '#0f172a',
             cursor: 'pointer',
-            fontFamily: 'var(--font-body)',
+            transition: 'all 0.2s',
           }}
         >
           {language === 'uz' ? 'Kuzatish' : 'Track Order'}
@@ -283,11 +289,11 @@ export function OrdersPage() {
     flex: 1,
     background: 'none',
     border: 'none',
-    borderBottom: active ? '2px solid var(--primary)' : '2px solid transparent',
+    borderBottom: active ? '2px solid #e8751a' : '2px solid transparent',
     padding: '10px 0',
-    fontSize: 15,
-    fontWeight: active ? 700 : 500,
-    color: active ? 'var(--primary)' : 'var(--text-3)',
+    fontSize: 14,
+    fontWeight: 700,
+    color: active ? '#e8751a' : '#64748b',
     cursor: 'pointer',
     fontFamily: 'var(--font-body)',
     transition: 'all 0.18s',
