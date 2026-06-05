@@ -21,7 +21,7 @@ export function DeliveryLocationPage() {
     navigate('/welcome', { replace: true })
   }
 
-  const handleDragEnd = (event: any, info: any) => {
+  const handleDragEnd = (_event: any, info: any) => {
     if (info.offset.y > 100) {
       handleBack()
     } else {
