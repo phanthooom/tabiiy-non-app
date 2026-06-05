@@ -159,17 +159,17 @@ export function ProductCard({ product, onAdd, cartQty, addLabel, outLabel, sumLa
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         style={{
-          background: 'var(--surface)',
-          borderRadius: 16,
+          background: '#ffffff',
+          borderRadius: 24,
           overflow: 'hidden',
-          border: '1px solid var(--border)',
-          boxShadow: 'var(--shadow-sm)',
+          border: '1px solid rgba(0,0,0,0.03)',
+          boxShadow: '0 8px 30px rgba(0,0,0,0.04)',
         }}
       >
         {/* Photo */}
         <div style={{
-          height: 180,
-          background: 'var(--surface-2)',
+          height: 200,
+          background: '#f8fbfc',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -250,14 +250,14 @@ export function ProductCard({ product, onAdd, cartQty, addLabel, outLabel, sumLa
         </div>
 
         {/* Info */}
-        <div style={{ padding: '14px 16px 16px' }}>
+        <div style={{ padding: '16px 20px 20px' }}>
           <h3 style={{
-            fontSize: 17,
-            fontWeight: 600,
-            marginBottom: 4,
+            fontSize: 19,
+            fontWeight: 700,
+            marginBottom: 6,
             lineHeight: 1.3,
-            color: 'var(--primary)',
-            letterSpacing: '-0.01em',
+            color: '#1a1a1a',
+            letterSpacing: '-0.02em',
           }}>
             {product.name}
           </h3>
@@ -269,10 +269,10 @@ export function ProductCard({ product, onAdd, cartQty, addLabel, outLabel, sumLa
             marginTop: 12,
           }}>
             <span style={{
-              fontSize: 18,
-              fontWeight: 700,
-              color: 'var(--primary)',
-              letterSpacing: '-0.01em',
+              fontSize: 20,
+              fontWeight: 800,
+              color: '#1a1a1a',
+              letterSpacing: '-0.02em',
             }}>
               {price} <span style={{ fontSize: 13, color: 'var(--text-2)', fontWeight: 500 }}>{sumLabel}</span>
             </span>
@@ -282,17 +282,17 @@ export function ProductCard({ product, onAdd, cartQty, addLabel, outLabel, sumLa
               onClick={() => onAdd(product)}
               disabled={!product.is_available || addDisabled}
               style={{
-                background: product.is_available && !addDisabled ? 'var(--accent)' : 'var(--surface-2)',
-                color: product.is_available && !addDisabled ? '#fff' : 'var(--text-3)',
+                background: product.is_available && !addDisabled ? '#f07c34' : '#f1f5f9',
+                color: product.is_available && !addDisabled ? '#fff' : '#94a3b8',
                 border: 'none',
-                borderRadius: 'var(--radius)',
-                padding: '9px 16px',
-                fontWeight: 600,
-                fontSize: 13,
+                borderRadius: 14,
+                padding: '10px 20px',
+                fontWeight: 700,
+                fontSize: 14,
                 fontFamily: 'var(--font-body)',
-                letterSpacing: '0.04em',
+                letterSpacing: '0.02em',
                 cursor: product.is_available && !addDisabled ? 'pointer' : 'not-allowed',
-                boxShadow: product.is_available && !addDisabled ? 'var(--shadow)' : 'none',
+                boxShadow: product.is_available && !addDisabled ? '0 4px 12px rgba(240, 124, 52, 0.3)' : 'none',
               }}
             >
               {product.is_available ? addLabel : outLabel}

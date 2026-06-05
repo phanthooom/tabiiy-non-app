@@ -44,21 +44,6 @@
   --font-body: 'Hanken Grotesk', sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #121e1f;
-    --surface: #1e2c2d;
-    --surface-2: #263334;
-    --surface-3: #2c3a3b;
-    --surface-high: #303f40;
-    --border: #3d4f50;
-    --text: #e6f3f4;
-    --text-2: #9eb4b5;
-    --text-3: #5a7475;
-    --primary: #b7c8de;
-    --accent-light: #301400;
-  }
-}
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 

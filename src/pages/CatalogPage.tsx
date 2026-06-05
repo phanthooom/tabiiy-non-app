@@ -82,13 +82,33 @@ export function CatalogPage() {
   }
 
   return (
-    <div style={{ padding: '20px 16px 100px' }}>
+    <div style={{ padding: '24px 16px 120px', background: '#f1f8f8', minHeight: '100dvh' }}>
+      
+      {/* Premium Header */}
+      <div style={{ marginBottom: 24, padding: '0 4px' }}>
+        <h1 style={{
+          fontSize: 28,
+          fontWeight: 800,
+          color: '#1a1a1a',
+          letterSpacing: '-0.03em',
+          marginBottom: 6,
+        }}>
+          {language === 'uz' ? 'Tabiiy va issiq' : 'Свежий и горячий'}
+        </h1>
+        <p style={{
+          fontSize: 15,
+          color: '#64748b',
+          fontWeight: 500,
+        }}>
+          {language === 'uz' ? 'O\'zingizga yoqqan nonni tanlang' : 'Выберите хлеб по вкусу'}
+        </p>
+      </div>
       {/* Grid */}
       <AnimatePresence>
         <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-          gap: 14,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 16,
         }}>
           {(products ?? []).map((product, i) => (
             <motion.div

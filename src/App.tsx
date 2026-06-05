@@ -8,6 +8,7 @@ import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { BottomNav } from '@/components/layout/BottomNav'
 import { TopAppBar } from '@/components/layout/TopAppBar'
 import { queryClient } from '@/lib/query-client'
+import { isInsideTelegram } from '@/lib/telegram'
 
 import { CatalogPage } from '@/pages/CatalogPage'
 import { CartPage } from '@/pages/CartPage'
@@ -66,7 +67,7 @@ function AppShell() {
     return <Navigate to="/welcome" replace />
   }
 
-  const showTopBar = !isAdmin && !isPreAuth
+  const showTopBar = !isAdmin && !isPreAuth && !isInsideTelegram()
 
   return (
     <div
