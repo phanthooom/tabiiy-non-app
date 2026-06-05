@@ -44,8 +44,9 @@ function AppShell() {
       window.Telegram.WebApp.expand()
       
       // Попытка запустить абсолютный Fullscreen (Telegram v7.7+)
-      if (typeof window.Telegram.WebApp.requestFullscreen === 'function') {
-        window.Telegram.WebApp.requestFullscreen()
+      const webAppAny = window.Telegram.WebApp as any
+      if (typeof webAppAny.requestFullscreen === 'function') {
+        webAppAny.requestFullscreen()
       }
     }
   }, [])
