@@ -159,7 +159,7 @@ export function CheckoutPage() {
         isOpen={isMapOpen}
         onClose={() => setIsMapOpen(false)}
         onConfirm={(addr) => setAddress(addr)}
-        apiKey="YOUR_YANDEX_API_KEY_HERE"
+        apiKey="fcd5b77b-d255-480e-b530-ec10724a2275"
       />
 
       <label style={labelStyle}>{t('comment')}</label>
