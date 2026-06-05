@@ -92,11 +92,33 @@ export function CartPage() {
       <div style={{
         display: 'flex', flexDirection: 'column',
         alignItems: 'center', justifyContent: 'center',
-        padding: '80px 20px', gap: 16,
+        padding: '100px 20px', gap: 16,
+        textAlign: 'center',
       }}>
-        <span style={{ fontSize: 72 }}>🛒</span>
-        <p style={{ fontSize: 18, fontWeight: 600, color: 'var(--text-2)' }}>{t('emptyCart')}</p>
-        <Button onClick={() => navigate('/')}>{t('menu')}</Button>
+        <div style={{
+          width: 96, height: 96, borderRadius: 48,
+          background: '#f8fafc', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.05)',
+          marginBottom: 8,
+        }}>
+          <span style={{ fontSize: 40 }}>🛒</span>
+        </div>
+        <p style={{ fontSize: 20, fontWeight: 800, color: '#0f172a' }}>{t('emptyCart')}</p>
+        <p style={{ fontSize: 15, color: '#64748b', marginBottom: 12 }}>
+          {language === 'uz' ? 'Savatda hozircha hech narsa yo\'q' : 'В корзине пока ничего нет'}
+        </p>
+        <motion.button
+          whileTap={{ scale: 0.96 }}
+          onClick={() => navigate('/')}
+          style={{
+            background: '#e8751a', color: '#fff', border: 'none',
+            borderRadius: 12, padding: '14px 24px', fontWeight: 700, fontSize: 16,
+            fontFamily: 'var(--font-body)', cursor: 'pointer',
+            boxShadow: '0 4px 12px rgba(232, 117, 26, 0.2)',
+          }}
+        >
+          {t('menu')}
+        </motion.button>
       </div>
     )
   }
@@ -106,6 +128,10 @@ export function CartPage() {
 
   return (
     <div style={{ padding: '20px 16px 32px' }}>
+      <h2 style={{ fontSize: 24, fontWeight: 800, color: '#0f172a', marginBottom: 20 }}>
+        {t('cart')}
+      </h2>
+
       {/* Cart items */}
       <AnimatePresence initial={false}>
         {items.map((item) => (
@@ -116,23 +142,25 @@ export function CartPage() {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: 40, height: 0, marginBottom: 0 }}
             style={{
-              background: 'var(--surface)',
+              background: '#ffffff',
               borderRadius: 16,
               padding: '12px 14px',
               marginBottom: 12,
               display: 'flex',
-              gap: 12,
+              gap: 16,
               alignItems: 'center',
-              border: '1px solid var(--border)',
+              border: '1px solid #e2e8f0',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.02)',
             }}
           >
             {/* Photo */}
             <div style={{
-              width: 64, height: 64,
+              width: 72, height: 72,
               borderRadius: 12,
-              background: 'var(--surface-2)',
+              background: '#f8fafc',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               flexShrink: 0, overflow: 'hidden',
+              boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.05)',
             }}>
               {item.image_url
                 ? <img src={item.image_url.startsWith('/static/') ? `${BASE_URL}${item.image_url}` : item.image_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -144,11 +172,11 @@ export function CartPage() {
 
             {/* Info */}
             <div style={{ flex: 1, minWidth: 0 }}>
-              <p style={{ fontWeight: 600, fontSize: 15, color: 'var(--primary)', marginBottom: 3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              <p style={{ fontWeight: 700, fontSize: 16, color: '#0f172a', marginBottom: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {item.product_name}
               </p>
-              <p style={{ color: 'var(--text-2)', fontSize: 14 }}>
-                {item.subtotal.toLocaleString('ru-RU')} {t('sum')}
+              <p style={{ color: '#0f172a', fontSize: 15, fontWeight: 600 }}>
+                {item.subtotal.toLocaleString('ru-RU')} <span style={{ fontSize: 13, color: '#64748b', fontWeight: 500 }}>{t('sum')}</span>
               </p>
             </div>
 
@@ -176,51 +204,68 @@ export function CartPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
         style={{
-          background: 'var(--surface)',
-          border: '1px solid var(--border)',
+          background: '#ffffff',
+          border: '1px solid #e2e8f0',
           borderRadius: 16,
           padding: '20px 16px',
-          marginTop: 8,
+          marginTop: 16,
+          boxShadow: '0 4px 20px rgba(0,0,0,0.02)',
         }}
       >
-        <p style={{ fontWeight: 700, fontSize: 18, color: 'var(--primary)', marginBottom: 16 }}>
-          {language === 'uz' ? 'Buyurtma xulosasi' : 'Order Summary'}
+        <p style={{ fontWeight: 800, fontSize: 18, color: '#0f172a', marginBottom: 16 }}>
+          {language === 'uz' ? 'Buyurtma xulosasi' : 'Итого к оплате'}
         </p>
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
-          <span style={{ color: 'var(--text-2)', fontSize: 15 }}>
-            {language === 'uz' ? 'Jami' : 'Subtotal'}
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
+          <span style={{ color: '#64748b', fontSize: 15 }}>
+            {language === 'uz' ? 'Jami' : 'Сумма'}
           </span>
-          <span style={{ fontWeight: 600, fontSize: 15, color: 'var(--text)' }}>
-            {subtotal.toLocaleString('ru-RU')} {t('sum')}
+          <span style={{ fontWeight: 600, fontSize: 15, color: '#0f172a' }}>
+            {subtotal.toLocaleString('ru-RU')} <span style={{ fontSize: 13, color: '#64748b', fontWeight: 500 }}>{t('sum')}</span>
           </span>
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
-          <span style={{ color: 'var(--text-2)', fontSize: 15 }}>
-            {language === 'uz' ? 'Yetkazib berish' : 'Delivery Fee'}
+          <span style={{ color: '#64748b', fontSize: 15 }}>
+            {language === 'uz' ? 'Yetkazib berish' : 'Доставка'}
           </span>
-          <span style={{ fontWeight: 600, fontSize: 15, color: 'var(--text)' }}>
+          <span style={{ fontWeight: 600, fontSize: 15, color: '#0f172a' }}>
             {deliveryFee === 0
-              ? (language === 'uz' ? 'Bepul' : '$0.00')
+              ? (language === 'uz' ? 'Bepul' : 'Бесплатно')
               : `${deliveryFee.toLocaleString('ru-RU')} ${t('sum')}`}
           </span>
         </div>
 
-        <div style={{ height: 1, background: 'var(--border)', marginBottom: 16 }} />
+        <div style={{ height: 1, background: '#e2e8f0', marginBottom: 16 }} />
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 20 }}>
-          <span style={{ fontWeight: 700, fontSize: 17, color: 'var(--primary)' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 24 }}>
+          <span style={{ fontWeight: 800, fontSize: 18, color: '#0f172a' }}>
             {t('total')}
           </span>
-          <span style={{ fontWeight: 700, fontSize: 17, color: 'var(--primary)' }}>
-            {(subtotal + deliveryFee).toLocaleString('ru-RU')} {t('sum')}
+          <span style={{ fontWeight: 800, fontSize: 18, color: '#0f172a' }}>
+            {(subtotal + deliveryFee).toLocaleString('ru-RU')} <span style={{ fontSize: 14, color: '#64748b', fontWeight: 600 }}>{t('sum')}</span>
           </span>
         </div>
 
-        <Button fullWidth size="lg" onClick={() => navigate('/checkout')}>
-          {language === 'uz' ? 'Buyurtma berish' : 'Proceed to Checkout'}
-        </Button>
+        <motion.button
+          whileTap={{ scale: 0.96 }}
+          onClick={() => navigate('/checkout')}
+          style={{
+            width: '100%',
+            background: '#e8751a',
+            color: '#fff',
+            border: 'none',
+            borderRadius: 12,
+            padding: '14px',
+            fontWeight: 700,
+            fontSize: 16,
+            fontFamily: 'var(--font-body)',
+            cursor: 'pointer',
+            boxShadow: '0 4px 12px rgba(232, 117, 26, 0.2)',
+          }}
+        >
+          {language === 'uz' ? 'Buyurtma berish' : 'Оформить заказ'}
+        </motion.button>
       </motion.div>
     </div>
   )
