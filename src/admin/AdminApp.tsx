@@ -5,12 +5,19 @@ import { OrdersPage } from './pages/OrdersPage'
 import { ProductsPage } from './pages/ProductsPage'
 import { UsersPage } from './pages/UsersPage'
 
+import { useBackButton } from '../hooks/useTelegram'
+import { useNavigate } from 'react-router-dom'
+
 type Tab = 'orders' | 'products' | 'users'
 
 export default function AdminApp() {
   const token = useAuthStore(s => s.token)
   const logout = useAuthStore(s => s.logout)
   const [tab, setTab] = useState<Tab>('orders')
+  const navigate = useNavigate()
+
+  // Показываем нативную кнопку 'Назад' в Telegram Mini App для возврата в каталог
+  useBackButton(() => navigate('/'), true)
 
   if (!token) return <LoginPage />
 
@@ -20,7 +27,7 @@ export default function AdminApp() {
       <div style={{
         background: '#1e293b',
         borderBottom: '1px solid #334155',
-        padding: 'calc(env(safe-area-inset-top, 0px) + 20px) 20px 10px',
+        padding: '50px 20px 10px', // Увеличенный жесткий отступ для iOS
         display: 'flex',
         alignItems: 'center',
         gap: 8,
