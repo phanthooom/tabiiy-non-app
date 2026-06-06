@@ -15,14 +15,30 @@ const STATUSES = [
 export function AdminOrdersPage() {
   const { orders, loading } = useFirebaseOrders(null) // null = all orders
   const [activeTab, setActiveTab] = useState<AdminTab>('all')
+  const [searchQuery, setSearchQuery] = useState('')
 
   const filteredOrders = orders.filter(o => {
-    if (activeTab === 'all') return true
-    if (activeTab === 'processing') return o.status === 'accepted'
-    if (activeTab === 'confirmed') return o.status === 'cooking'
-    if (activeTab === 'delivering') return o.status === 'courier'
-    if (activeTab === 'delivered') return o.status === 'delivered'
-    return true
+    // 1. Filter by Tab
+    let tabMatch = true
+    if (activeTab === 'processing') tabMatch = o.status === 'accepted'
+    if (activeTab === 'confirmed') tabMatch = o.status === 'cooking'
+    if (activeTab === 'delivering') tabMatch = o.status === 'courier'
+    if (activeTab === 'delivered') tabMatch = o.status === 'delivered'
+    
+    // 2. Filter by Search Query
+    let searchMatch = true
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase()
+      const searchString = `
+        ${o.id || ''} 
+        ${o.user_name || ''} 
+        ${o.user_phone || ''} 
+        ${o.address || ''}
+      `.toLowerCase()
+      searchMatch = searchString.includes(q)
+    }
+
+    return tabMatch && searchMatch
   })
 
   const countByStatus = (status: string) => orders.filter(o => o.status === status).length
@@ -34,20 +50,36 @@ export function AdminOrdersPage() {
       minHeight: '100vh' 
     }}>
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <h1 style={{ fontSize: 24, fontWeight: 800, color: '#0f172a', letterSpacing: '-0.02em' }}>Buyurtmalar (Admin)</h1>
-        <div style={{ 
-          background: '#ffffff', 
-          width: 40, 
-          height: 40, 
-          borderRadius: '50%', 
-          display: 'flex', 
-          alignItems: 'center', 
-          justifyContent: 'center',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
+      </div>
+
+      {/* Search Bar */}
+      <div style={{ position: 'relative', marginBottom: 24 }}>
+        <div style={{
+          position: 'absolute', top: 0, left: 14, height: '100%',
+          display: 'flex', alignItems: 'center', pointerEvents: 'none'
         }}>
-          <Search size={20} color="#64748b" />
+          <Search size={18} color="#94a3b8" />
         </div>
+        <input 
+          type="text" 
+          placeholder="ID, ism, raqam yoki manzil bo'yicha qidiruv..." 
+          value={searchQuery}
+          onChange={e => setSearchQuery(e.target.value)}
+          style={{
+            width: '100%',
+            background: '#ffffff',
+            border: '1px solid #e2e8f0',
+            borderRadius: 12,
+            padding: '12px 16px 12px 40px',
+            fontSize: 15,
+            color: '#0f172a',
+            outline: 'none',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.02)',
+            fontFamily: 'inherit'
+          }}
+        />
       </div>
 
       {/* Tabs */}
@@ -85,7 +117,7 @@ export function AdminOrdersPage() {
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           {filteredOrders.map(order => (
-            <AdminOrderCard key={order.id} order={order} />
+            <AdminOrderCard key={order.id} order={order} searchQuery={searchQuery} />
           ))}
           {filteredOrders.length === 0 && (
             <p style={{ textAlign: 'center', color: '#64748b', marginTop: 40 }}>Buyurtmalar topilmadi</p>
@@ -96,7 +128,28 @@ export function AdminOrdersPage() {
   )
 }
 
-function AdminOrderCard({ order }: { order: any }) {
+function Highlight({ text, query }: { text: string | number; query: string }) {
+  if (!query || !text) return <>{text}</>
+  const str = String(text)
+  const regex = new RegExp(`(${query})`, 'gi')
+  const parts = str.split(regex)
+
+  return (
+    <>
+      {parts.map((part, i) =>
+        regex.test(part) ? (
+          <mark key={i} style={{ background: '#fef08a', color: '#854d0e', borderRadius: 3, padding: '0 2px' }}>
+            {part}
+          </mark>
+        ) : (
+          <span key={i}>{part}</span>
+        )
+      )}
+    </>
+  )
+}
+
+function AdminOrderCard({ order, searchQuery }: { order: any; searchQuery: string }) {
   const [expanded, setExpanded] = useState(false)
 
   const handleStatusChange = async (statusId: string, label: string) => {
@@ -124,7 +177,9 @@ function AdminOrderCard({ order }: { order: any }) {
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
         <div>
-          <p style={{ fontWeight: 700, color: '#334155', fontSize: 14 }}>Buyurtma #{order.id}</p>
+          <p style={{ fontWeight: 700, color: '#334155', fontSize: 14 }}>
+            Buyurtma #<Highlight text={order.id} query={searchQuery} />
+          </p>
           <p style={{ color: '#94a3b8', fontSize: 12, marginTop: 4 }}>{formattedDate}</p>
         </div>
         <span style={{
@@ -150,14 +205,18 @@ function AdminOrderCard({ order }: { order: any }) {
         <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
           <User size={18} color="#64748b" style={{ marginTop: 2 }} />
           <div>
-            <p style={{ fontWeight: 600, color: '#334155', fontSize: 14 }}>{order.user_name || 'Foydalanuvchi'}</p>
-            <p style={{ color: '#94a3b8', fontSize: 13 }}>{order.user_phone || '+998 -- --- -- --'}</p>
+            <p style={{ fontWeight: 600, color: '#334155', fontSize: 14 }}>
+              <Highlight text={order.user_name || 'Foydalanuvchi'} query={searchQuery} />
+            </p>
+            <p style={{ color: '#94a3b8', fontSize: 13 }}>
+              <Highlight text={order.user_phone || '+998 -- --- -- --'} query={searchQuery} />
+            </p>
           </div>
         </div>
         <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
           <MapPin size={18} color="#64748b" style={{ marginTop: 2, flexShrink: 0 }} />
           <p style={{ color: '#334155', fontSize: 14, lineHeight: 1.4 }}>
-            {order.address || 'Manzil kiritilmagan'}
+            <Highlight text={order.address || 'Manzil kiritilmagan'} query={searchQuery} />
           </p>
         </div>
       </div>
