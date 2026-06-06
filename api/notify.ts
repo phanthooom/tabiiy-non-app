@@ -14,8 +14,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: 'Method Not Allowed' });
   }
 
-  // 2. Получаем токен из переменных окружения Vercel
-  const BOT_TOKEN = process.env.BOT_TOKEN;
+  // 2. Получаем токен
+  const BOT_TOKEN = '8957857177:AAFNSzeeQR7NTZHoQ7BbKajJhQyfKrizJSU';
   if (!BOT_TOKEN) {
     console.error('BOT_TOKEN is not set in Vercel environment variables');
     // Не возвращаем ошибку клиенту, чтобы не ломать админку, просто логируем

@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-const BOT_TOKEN = process.env.BOT_TOKEN;
+const BOT_TOKEN = '8957857177:AAFNSzeeQR7NTZHoQ7BbKajJhQyfKrizJSU';
 const FIRESTORE_PROJECT_ID = 'tabiiy-non';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
