@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ProductCard, Button, Spinner } from '@/components/ui'
 import { queryKeys, STALE_TIME } from '@/lib/query-keys'
-import { productsApi, cartApi } from '@/api'
+import { productsApi, cartApi, apiErrorMessage } from '@/api'
 import { useCartStore, useLangStore } from '@/store'
 import { useT } from '@/utils/i18n'
 import { useTelegram } from '@/hooks/useTelegram'
@@ -51,6 +51,10 @@ export function CatalogPage() {
       setCart(newCart)
       queryClient.setQueryData(queryKeys.cart(), newCart)
       tg?.HapticFeedback.notificationOccurred('success')
+    },
+    onError: (err: unknown) => {
+      tg?.HapticFeedback.notificationOccurred('error')
+      tg?.showAlert(apiErrorMessage(err, 'Ошибка добавления в корзину'))
     },
   })
 
