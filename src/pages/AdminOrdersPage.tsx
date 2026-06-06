@@ -29,10 +29,11 @@ export function AdminOrdersPage() {
     let searchMatch = true
     if (searchQuery) {
       const q = searchQuery.toLowerCase()
+      const oAny = o as any
       const searchString = `
         ${o.id || ''} 
-        ${o.user_name || ''} 
-        ${o.user_phone || ''} 
+        ${oAny.user_name || ''} 
+        ${oAny.user_phone || ''} 
         ${o.address || ''}
       `.toLowerCase()
       searchMatch = searchString.includes(q)
