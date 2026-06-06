@@ -38,8 +38,8 @@ export function AuthProvider({ children }: Props) {
   useEffect(() => {
     const init = async () => {
       try {
-        // Mode 0: BYPASS AUTH
-        if (import.meta.env.VITE_BYPASS_AUTH === 'true') {
+        // Mode 0: BYPASS AUTH (Only if not opened inside Telegram)
+        if (import.meta.env.VITE_BYPASS_AUTH === 'true' && !hasTelegramInitData()) {
           setCurrentUser(1) // Mock user ID for bypass mode
           setAuth('fake_token', { id: 1, full_name: 'Demo User', username: 'demo', phone: null, language: 'ru' })
           try {
