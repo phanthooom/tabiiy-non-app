@@ -40,6 +40,14 @@ export function AuthProvider({ children }: Props) {
       try {
         // Mode 0: BYPASS AUTH
         if (import.meta.env.VITE_BYPASS_AUTH === 'true') {
+          setCurrentUser(1) // Mock user ID for bypass mode
+          setAuth('fake_token', { id: 1, full_name: 'Demo User', username: 'demo', phone: null, language: 'ru' })
+          try {
+            const cart = await cartApi.get()
+            setCart(cart)
+          } catch {
+            setCart({ items: [], total: 0, items_count: 0 })
+          }
           setStatus('ok')
           return
         }
