@@ -11,7 +11,22 @@ export const authApi = {
   },
 }
 
+import { onSnapshot } from 'firebase/firestore'
+
 export const ordersApi = {
+  subscribe: (
+    onUpdate: (data: PaginatedList<Order>) => void,
+    params?: { status?: string }
+  ) => {
+    const q = query(collection(db, 'orders'), orderBy('created_at', 'desc'), limit(100))
+    return onSnapshot(q, (snap) => {
+      let items = snap.docs.map(d => ({ ...d.data(), id: d.id } as any as Order))
+      if (params?.status) {
+        items = items.filter(o => o.status === params.status)
+      }
+      onUpdate({ items, total: items.length })
+    })
+  },
   list: async (params?: { status?: string; page?: number; size?: number }): Promise<PaginatedList<Order>> => {
     const q = query(collection(db, 'orders'), orderBy('created_at', 'desc'), limit(100))
     const snap = await getDocs(q)
@@ -21,10 +36,27 @@ export const ordersApi = {
     }
     return { items, total: items.length }
   },
-  updateStatus: async (id: number | string, status: string): Promise<Order> => {
-    const ref = doc(db, 'orders', String(id))
+  updateStatus: async (order: Order, status: string): Promise<Order> => {
+    const ref = doc(db, 'orders', String(order.id))
     await updateDoc(ref, { status })
-    return { id, status } as any as Order
+    
+    // Вызываем нашу серверную функцию Vercel для отправки уведомления
+    try {
+      await fetch('/api/notify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderId: order.id,
+          telegramId: (order as any).user_id || order.user?.id, // Берем ID пользователя из заказа
+          status,
+          totalAmount: order.total_amount
+        })
+      })
+    } catch (e) {
+      console.error('Failed to call notify API', e)
+    }
+
+    return { ...order, status } as any as Order
   },
   callDelivery: async (_id: number | string): Promise<CallDeliveryResult> => {
     return { claim_id: 'dummy', price: 0 }

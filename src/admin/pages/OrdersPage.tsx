@@ -27,25 +27,30 @@ export function OrdersPage() {
   const [selected, setSelected] = useState<Order | null>(null)
   const [actionLoading, setActionLoading] = useState(false)
 
-  const load = async () => {
+  useEffect(() => {
     setLoading(true)
-    try {
-      const res = await ordersApi.list({ status: filterStatus || undefined, page, size: 20 })
-      setOrders(res.items)
-      setTotal(res.total)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  useEffect(() => { load() }, [page, filterStatus])
+    const unsubscribe = ordersApi.subscribe(
+      (res) => {
+        setOrders(res.items)
+        setTotal(res.total)
+        setLoading(false)
+        
+        // Обновляем выбранный заказ в модалке, если он изменился
+        setSelected(prev => {
+          if (!prev) return null
+          return res.items.find(o => o.id === prev.id) || prev
+        })
+      },
+      { status: filterStatus || undefined }
+    )
+    return () => unsubscribe()
+  }, [filterStatus])
 
   const changeStatus = async (order: Order, status: OrderStatus) => {
     setActionLoading(true)
     try {
-      await ordersApi.updateStatus(order.id, status)
-      await load()
-      setSelected(null)
+      await ordersApi.updateStatus(order, status)
+      // load() больше не нужен, данные обновятся через onSnapshot
     } finally {
       setActionLoading(false)
     }
@@ -56,7 +61,6 @@ export function OrdersPage() {
     try {
       const res = await ordersApi.callDelivery(order.id)
       alert(`Курьер вызван!\nClaim ID: ${res.claim_id}\nЦена: ${res.price}`)
-      await load()
     } catch (e: any) {
       alert('Ошибка: ' + (e.response?.data?.error?.message || e.message))
     } finally {

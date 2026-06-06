@@ -20,7 +20,7 @@ export default function AdminApp() {
       <div style={{
         background: '#1e293b',
         borderBottom: '1px solid #334155',
-        padding: '0 20px',
+        padding: 'calc(env(safe-area-inset-top, 0px) + 20px) 20px 10px',
         display: 'flex',
         alignItems: 'center',
         gap: 8,

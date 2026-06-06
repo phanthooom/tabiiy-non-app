@@ -1,13 +1,13 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useNavigate, useParams } from 'react-router-dom'
 import { CheckCircle, ArrowLeft, Clock, MapPin, Phone } from 'lucide-react'
 import { YMaps, Map as YandexMap } from '@pbe/react-yandex-maps'
-import { useQuery } from '@tanstack/react-query'
+
 import { Button, Spinner } from '@/components/ui'
 import { BYPASS_MODE, mockOrders } from '@/lib/mock-data'
 import { ordersApi } from '@/api'
-import { queryKeys, STALE_TIME } from '@/lib/query-keys'
+
 import { useLangStore } from '@/store'
 import { useT } from '@/utils/i18n'
 import { useBackButton } from '@/hooks/useTelegram'
@@ -244,20 +244,30 @@ export function OrdersPage() {
   const navigate = useNavigate()
   const [tab, setTab] = useState<'active' | 'history'>('active')
 
-  const {
-    data: ordersData,
-    isLoading,
-    isError,
-    refetch,
-  } = useQuery({
-    queryKey: queryKeys.orders(1),
-    queryFn: () => BYPASS_MODE
-      ? Promise.resolve({ items: mockOrders, meta: { page: 1, size: 20, total_count: mockOrders.length, has_next: false, has_prev: false } })
-      : ordersApi.list(),
-    staleTime: STALE_TIME.orders,
-    refetchInterval: 30_000,
-  })
-  const allOrders: Order[] = ordersData?.items ?? []
+  const [allOrders, setAllOrders] = useState<Order[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [isError, setIsError] = useState(false)
+
+  useEffect(() => {
+    if (BYPASS_MODE) {
+      setAllOrders(mockOrders)
+      setIsLoading(false)
+      return
+    }
+    
+    try {
+      const unsubscribe = ordersApi.subscribe((orders) => {
+        setAllOrders(orders)
+        setIsLoading(false)
+        setIsError(false)
+      })
+      return () => unsubscribe()
+    } catch (e) {
+      console.error(e)
+      setIsError(true)
+      setIsLoading(false)
+    }
+  }, [])
   const activeOrders = allOrders.filter((o: Order) => ACTIVE_STATUSES.has(o.status))
   const historyOrders = allOrders.filter((o: Order) => !ACTIVE_STATUSES.has(o.status))
   const visibleOrders = tab === 'active' ? activeOrders : historyOrders
@@ -269,7 +279,7 @@ export function OrdersPage() {
         alignItems: 'center', padding: '48px 24px 100px', gap: 16, textAlign: 'center',
       }}>
         <p style={{ color: 'var(--text-2)', fontWeight: 600 }}>{t('error')}</p>
-        <Button onClick={() => void refetch()}>
+        <Button onClick={() => window.location.reload()}>
           {language === 'uz' ? 'Qayta urinish' : 'Повторить'}
         </Button>
       </div>
@@ -367,19 +377,31 @@ export function OrderDetailPage() {
   const orderId = id ? (Number.isNaN(Number(id)) ? id : Number(id)) : null
   const idValid = orderId !== null
 
-  const {
-    data: order,
-    isLoading,
-    isError,
-  } = useQuery({
-    queryKey: queryKeys.order(orderId as number | string),
-    queryFn: () => BYPASS_MODE
-      ? Promise.resolve(mockOrders.find(o => o.id === orderId) ?? mockOrders[0])
-      : ordersApi.get(orderId as number | string),
-    enabled: idValid,
-    staleTime: STALE_TIME.orders,
-    refetchInterval: 15_000,
-  })
+  const [order, setOrder] = useState<Order | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [isError, setIsError] = useState(false)
+
+  useEffect(() => {
+    if (!idValid) return
+    if (BYPASS_MODE) {
+      setOrder(mockOrders.find(o => o.id === orderId) ?? mockOrders[0])
+      setIsLoading(false)
+      return
+    }
+
+    try {
+      const unsubscribe = ordersApi.subscribeOne(orderId as number | string, (data) => {
+        setOrder(data)
+        setIsLoading(false)
+        setIsError(false)
+      })
+      return () => unsubscribe()
+    } catch (e) {
+      console.error(e)
+      setIsError(true)
+      setIsLoading(false)
+    }
+  }, [idValid, orderId])
 
   if (!idValid) {
     return (

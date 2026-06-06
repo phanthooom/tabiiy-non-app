@@ -89,6 +89,12 @@ export const ordersApi = {
       if (!o) throw new Error(`Order ${id} not found`)
       return o
     }),
+
+  subscribe: (onUpdate: (orders: Order[]) => void) =>
+    firestoreOrders.subscribe(requireUser(), onUpdate),
+
+  subscribeOne: (id: number | string, onUpdate: (order: Order | null) => void) =>
+    firestoreOrders.subscribeOne(String(id), onUpdate),
 }
 
 // ── Users ─────────────────────────────────────────────────────────────────
