@@ -1,0 +1,40 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Products — читают все, пишет только admin ──────────────────────────
+    match /products/{productId} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.token.admin == true;
+    }
+
+    // ── Users — только свой документ ──────────────────────────────────────
+    match /users/{telegramId} {
+      allow read, write: if request.auth != null
+        && request.auth.token.telegram_id == telegramId;
+    }
+
+    // ── Carts — только свой документ ──────────────────────────────────────
+    match /carts/{telegramId} {
+      allow read, write: if request.auth != null
+        && request.auth.token.telegram_id == telegramId;
+    }
+
+    // ── Orders — создание своих, чтение своих ─────────────────────────────
+    match /orders/{orderId} {
+      // Создать заказ может любой авторизованный пользователь (свой user_id)
+      allow create: if request.auth != null
+        && request.resource.data.user_id == request.auth.token.telegram_id;
+
+      // Читать свой заказ
+      allow read: if request.auth != null
+        && resource.data.user_id == request.auth.token.telegram_id;
+
+      // Обновлять статус — только admin (например, бот/сервер)
+      allow update: if request.auth != null && request.auth.token.admin == true;
+
+      allow delete: if false;
+    }
+  }
+}

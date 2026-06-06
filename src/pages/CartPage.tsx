@@ -1,13 +1,14 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
-import { cartApi, BASE_URL } from '@/api'
+import { BASE_URL, cartApi } from '@/api'
 import { Button, ProductPhoto, Spinner, Stepper } from '@/components/ui'
 import { queryKeys, STALE_TIME } from '@/lib/query-keys'
 import { useCartStore, useLangStore } from '@/store'
 import { useT } from '@/utils/i18n'
 import { useTelegram } from '@/hooks/useTelegram'
 import { BYPASS_MODE } from '@/lib/mock-data'
+import type { Cart } from '@/types'
 
 export function CartPage() {
   const { cart, setCart } = useCartStore()
@@ -19,15 +20,15 @@ export function CartPage() {
 
   const { isLoading, isError, isFetching, refetch } = useQuery({
     queryKey: queryKeys.cart(),
-    queryFn: ({ signal }) =>
-      BYPASS_MODE
-        ? Promise.resolve(cart ?? { items: [], total: 0, items_count: 0 })
-        : cartApi.get({ signal }).then(c => { setCart(c); return c }),
+    queryFn: () => {
+      if (BYPASS_MODE) return Promise.resolve(cart ?? { items: [], total: 0, items_count: 0 })
+      return cartApi.get().then(c => { setCart(c); return c })
+    },
     staleTime: STALE_TIME.cart,
     retry: false,
   })
 
-  const syncCartCache = (newCart: Awaited<ReturnType<typeof cartApi.get>>) => {
+  const syncCartCache = (newCart: Cart) => {
     setCart(newCart)
     queryClient.setQueryData(queryKeys.cart(), newCart)
   }
@@ -41,8 +42,10 @@ export function CartPage() {
   }
 
   const updateMutation = useMutation({
-    mutationFn: ({ pid, qty }: { pid: number; qty: number }) =>
-      BYPASS_MODE ? Promise.resolve(buildUpdatedCart(pid, qty)) : cartApi.updateItem(pid, qty),
+    mutationFn: ({ pid, qty }: { pid: number; qty: number }) => {
+      if (BYPASS_MODE) return Promise.resolve(buildUpdatedCart(pid, qty))
+      return cartApi.updateItem(pid, qty)
+    },
     onSuccess: syncCartCache,
   })
 
@@ -246,6 +249,7 @@ export function CartPage() {
           whileTap={{ scale: 0.96 }}
           onClick={() => navigate('/checkout')}
           style={{
+   
             width: '100%',
             background: '#e8751a',
             color: '#fff',

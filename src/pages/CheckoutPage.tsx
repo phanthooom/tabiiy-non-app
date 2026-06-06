@@ -3,11 +3,9 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { MapPin, Store } from 'lucide-react'
-import { apiErrorMessage } from '@/api'
+import { apiErrorMessage, ordersApi } from '@/api'
 import { mutationRetryOptions, withRetry } from '@/lib/retry'
-import { createFirebaseOrder } from '@/hooks/useFirebaseOrders'
-import { useAuthStore } from '@/store'
-import { BYPASS_MODE, mockUser } from '@/lib/mock-data'
+import { BYPASS_MODE } from '@/lib/mock-data'
 
 import { queryKeys } from '@/lib/query-keys'
 import { useCartStore, useDeliveryStore, useLangStore } from '@/store'
@@ -25,10 +23,6 @@ export function CheckoutPage() {
   const t = useT(language)
   const { tg } = useTelegram()
   const queryClient = useQueryClient()
-  const { user } = useAuthStore()
-  const displayUser = BYPASS_MODE ? mockUser : user
-  const telegramUser = window.Telegram?.WebApp?.initDataUnsafe?.user
-
   const [deliveryType, setDeliveryType] = useState<DeliveryType>(savedDeliveryType ?? 'delivery')
   const [address, setAddress] = useState('')
   const [comment, setComment] = useState('')
@@ -38,20 +32,21 @@ export function CheckoutPage() {
   useBackButton(() => navigate('/cart'))
 
   const orderMutation = useMutation({
-    mutationFn: () =>
-      withRetry(
-        () =>
-          createFirebaseOrder({
-            delivery_type: deliveryType,
-            address: deliveryType === 'delivery' ? address : null,
-            total_amount: cart?.total || 0,
-            items: cart?.items.map(i => ({ ...i, unit_price: i.price })) || [],
-            telegram_id: telegramUser?.id || displayUser?.id,
-            user_name: telegramUser?.first_name || displayUser?.full_name,
-            user_phone: displayUser?.phone || '+998 90 000 00 00'
-          }),
+    mutationFn: () => {
+      if (BYPASS_MODE) {
+        return new Promise<{ id: number }>((resolve) =>
+          setTimeout(() => resolve({ id: Math.floor(Math.random() * 10000) }), 800)
+        )
+      }
+      return withRetry(
+        () => ordersApi.create({
+          delivery_type: deliveryType,
+          address: deliveryType === 'delivery' ? address : undefined,
+          address_comment: comment.trim() || undefined,
+        }),
         mutationRetryOptions(idempotencyKey.current),
-      ),
+      )
+    },
     onSuccess: (order) => {
       clearCart()
       queryClient.removeQueries({ queryKey: queryKeys.cart() })

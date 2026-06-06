@@ -1,8 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { motion, AnimatePresence } from 'framer-motion'
-import { productsApi, cartApi } from '@/api'
 import { ProductCard, Button, Spinner } from '@/components/ui'
 import { queryKeys, STALE_TIME } from '@/lib/query-keys'
+import { productsApi, cartApi } from '@/api'
 import { useCartStore, useLangStore } from '@/store'
 import { useT } from '@/utils/i18n'
 import { useTelegram } from '@/hooks/useTelegram'
@@ -24,23 +24,28 @@ export function CatalogPage() {
     refetch,
   } = useQuery({
     queryKey: queryKeys.products(),
-    queryFn: ({ signal }) => BYPASS_MODE ? Promise.resolve(mockProducts) : productsApi.list({ signal }),
+    queryFn: () => BYPASS_MODE ? Promise.resolve(mockProducts) : productsApi.list(),
     staleTime: STALE_TIME.products,
     retry: false,
   })
 
   const addMutation = useMutation({
-    mutationFn: (product_id: number) => {
+    mutationFn: (product: Product) => {
       if (BYPASS_MODE) {
-        const product = mockProducts.find(p => p.id === product_id)!
-        const existingItem = cart?.items.find(i => i.product_id === product_id)
+        const existingItem = cart?.items.find(i => i.product_id === product.id)
         const newItems = existingItem
-          ? cart!.items.map(i => i.product_id === product_id ? { ...i, quantity: i.quantity + 1, subtotal: i.price * (i.quantity + 1) } : i)
-          : [...(cart?.items ?? []), { product_id, product_name: product.name, price: product.price, quantity: 1, subtotal: product.price, photo_file_id: null, image_url: null }]
+          ? cart!.items.map(i => i.product_id === product.id
+              ? { ...i, quantity: i.quantity + 1, subtotal: i.price * (i.quantity + 1) }
+              : i)
+          : [...(cart?.items ?? []), {
+              product_id: product.id, product_name: product.name,
+              price: product.price, quantity: 1, subtotal: product.price,
+              photo_file_id: null, image_url: null,
+            }]
         const total = newItems.reduce((s, i) => s + i.subtotal, 0)
         return Promise.resolve({ items: newItems, total, items_count: newItems.length })
       }
-      return cartApi.addItem(product_id, 1)
+      return cartApi.addItem(product.id, 1)
     },
     onSuccess: (newCart) => {
       setCart(newCart)
@@ -56,7 +61,7 @@ export function CatalogPage() {
       tg?.showAlert(language === 'uz' ? 'Boshqa yo\'q!' : 'Больше нет на складе!')
       return
     }
-    addMutation.mutate(product.id)
+    addMutation.mutate(product)
   }
 
   if (isError) {
