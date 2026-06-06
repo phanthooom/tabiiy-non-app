@@ -1,4 +1,4 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
+import axios from 'axios';
 
 const STATUS_LABELS: Record<string, string> = {
   accepted: '✅ Принят',
@@ -8,7 +8,7 @@ const STATUS_LABELS: Record<string, string> = {
   cancelled: '❌ Отменён',
 };
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export default async function handler(req, res) {
   // 1. Проверяем метод
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });
@@ -17,8 +17,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   // 2. Получаем токен
   const BOT_TOKEN = '8957857177:AAFNSzeeQR7NTZHoQ7BbKajJhQyfKrizJSU';
   if (!BOT_TOKEN) {
-    console.error('BOT_TOKEN is not set in Vercel environment variables');
-    // Не возвращаем ошибку клиенту, чтобы не ломать админку, просто логируем
+    console.error('BOT_TOKEN is not set');
     return res.status(200).json({ success: false, reason: 'No bot token' });
   }
 
@@ -33,28 +32,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const message = `📦 *Обновление заказа #${orderId}*\n\nСтатус вашего заказа изменён на: *${statusText}*\nСумма: ${totalAmount} сум\n\nСпасибо, что выбираете Tabiiy Non! 🍞`;
 
     // 3. Отправляем запрос к Telegram API
-    const response = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        chat_id: telegramId,
-        text: message,
-        parse_mode: 'Markdown',
-      }),
+    await axios.post(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+      chat_id: telegramId,
+      text: message,
+      parse_mode: 'Markdown',
     });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      console.error('Telegram API error:', data);
-      return res.status(500).json({ error: 'Failed to send telegram message', details: data });
-    }
 
     return res.status(200).json({ success: true, message: 'Notification sent' });
   } catch (error: any) {
-    console.error('Error sending notification:', error);
-    return res.status(500).json({ error: 'Internal server error', details: error.message });
+    console.error('Error sending notification:', error?.response?.data || error.message);
+    return res.status(500).json({ error: 'Internal server error' });
   }
 }
