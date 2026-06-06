@@ -248,8 +248,12 @@ export const firestoreOrders = {
       subtotal:     i.subtotal,
     }))
 
+    const userProfile = await firestoreUsers.get(telegramId)
+
     const orderData = {
       user_id:         String(telegramId),
+      user_name:       userProfile?.full_name || 'Foydalanuvchi',
+      user_phone:      userProfile?.phone || null,
       status:          'accepted',
       status_label:    'Принят',
       delivery_type:   params.delivery_type,

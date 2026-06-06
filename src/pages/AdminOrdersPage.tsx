@@ -46,7 +46,7 @@ export function AdminOrdersPage() {
 
   return (
     <div style={{ 
-      padding: 'calc(var(--tg-safe-area-inset-top, 20px) + 32px) 16px 100px', 
+      padding: 'calc(var(--tg-safe-area-inset-top, 20px) + 12px) 16px 100px', 
       background: '#f8fafc', 
       minHeight: '100vh' 
     }}>
@@ -216,9 +216,24 @@ function AdminOrderCard({ order, searchQuery }: { order: any; searchQuery: strin
         </div>
         <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
           <MapPin size={18} color="#64748b" style={{ marginTop: 2, flexShrink: 0 }} />
-          <p style={{ color: '#334155', fontSize: 14, lineHeight: 1.4 }}>
-            <Highlight text={order.address || 'Manzil kiritilmagan'} query={searchQuery} />
-          </p>
+          <div style={{ color: '#334155', fontSize: 14, lineHeight: 1.4 }}>
+            {order.address ? (
+              <a 
+                href={
+                  /^\d+\.\d+,\s*\d+\.\d+$/.test(order.address)
+                  ? `https://yandex.ru/maps/?pt=${order.address.split(',')[1].trim()},${order.address.split(',')[0].trim()}&z=18&l=map`
+                  : `https://yandex.ru/maps/?text=${encodeURIComponent(order.address)}`
+                }
+                target="_blank" 
+                rel="noopener noreferrer"
+                style={{ color: '#0ea5e9', textDecoration: 'none', borderBottom: '1px dashed #0ea5e9' }}
+              >
+                {/^\d+\.\d+,\s*\d+\.\d+$/.test(order.address) ? '📍 Xaritadan belgilangan manzil' : <Highlight text={order.address} query={searchQuery} />}
+              </a>
+            ) : (
+              'Manzil kiritilmagan'
+            )}
+          </div>
         </div>
       </div>
 
