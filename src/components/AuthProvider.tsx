@@ -99,7 +99,7 @@ export function AuthProvider({ children }: Props) {
           const userProfile = {
             id: userId,
             full_name: firestoreUser?.full_name || [user.first_name, user.last_name].filter(Boolean).join(' ') || 'User',
-            username: firestoreUser?.username || user.username ?? null,
+            username: firestoreUser?.username || (user.username ?? null),
             phone: firestoreUser?.phone || null,
             language: firestoreUser?.language || (user.language_code === 'uz' ? 'uz' : 'ru') as 'uz' | 'ru',
           }
