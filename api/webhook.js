@@ -1,4 +1,4 @@
-const axios = require('axios');
+
 
 const BOT_TOKEN = '8957857177:AAFNSzeeQR7NTZHoQ7BbKajJhQyfKrizJSU';
 const FIRESTORE_PROJECT_ID = 'tabiiy-non';
@@ -17,16 +17,20 @@ module.exports = async function handler(req, res) {
 
       if (text === '/start') {
         // Отправляем приветствие и просим номер телефона
-        await axios.post(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-          chat_id: chatId,
-          text: 'Добро пожаловать в Tabiiy Non! 🍞\n\nДля того чтобы делать заказы, нам нужен ваш номер телефона. Пожалуйста, нажмите кнопку ниже 👇',
-          reply_markup: {
-            keyboard: [
-              [{ text: '📱 Отправить номер', request_contact: true }]
-            ],
-            resize_keyboard: true,
-            one_time_keyboard: true
-          }
+        await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id: chatId,
+            text: 'Добро пожаловать в Tabiiy Non! 🍞\n\nДля того чтобы делать заказы, нам нужен ваш номер телефона. Пожалуйста, нажмите кнопку ниже 👇',
+            reply_markup: {
+              keyboard: [
+                [{ text: '📱 Отправить номер', request_contact: true }]
+              ],
+              resize_keyboard: true,
+              one_time_keyboard: true
+            }
+          })
         });
       } else if (contact) {
         // Сохраняем телефон в Firestore
@@ -42,23 +46,31 @@ module.exports = async function handler(req, res) {
         // Используем Firebase REST API для upsert'а профиля
         const firestoreUrl = `https://firestore.googleapis.com/v1/projects/${FIRESTORE_PROJECT_ID}/databases/(default)/documents/users/${telegramId}?updateMask.fieldPaths=phone&updateMask.fieldPaths=full_name&updateMask.fieldPaths=username`;
         
-        await axios.patch(firestoreUrl, {
-          fields: {
-            phone: { stringValue: phone },
-            full_name: { stringValue: fullName },
-            username: { stringValue: username }
-          }
+        await fetch(firestoreUrl, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            fields: {
+              phone: { stringValue: phone },
+              full_name: { stringValue: fullName },
+              username: { stringValue: username }
+            }
+          })
         });
 
         // Отправляем подтверждение и кнопку магазина
-        await axios.post(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-          chat_id: chatId,
-          text: 'Спасибо! Ваш номер сохранен. ✅\n\nТеперь вы можете открыть магазин и сделать заказ.',
-          reply_markup: {
-            inline_keyboard: [
-              [{ text: '🛒 Открыть магазин', web_app: { url: 'https://tabiiy-non-app.vercel.app/' } }]
-            ]
-          }
+        await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id: chatId,
+            text: 'Спасибо! Ваш номер сохранен. ✅\n\nТеперь вы можете открыть магазин и сделать заказ.',
+            reply_markup: {
+              inline_keyboard: [
+                [{ text: '🛒 Открыть магазин', web_app: { url: 'https://tabiiy-non-app.vercel.app/' } }]
+              ]
+            }
+          })
         });
       }
     }
