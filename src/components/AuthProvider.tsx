@@ -93,17 +93,20 @@ export function AuthProvider({ children }: Props) {
           const fakeToken = `tg_${userId}`
           localStorage.setItem('access_token', fakeToken)
 
+          // Загружаем данные из Firestore (там может быть сохраненный телефон)
+          const firestoreUser = await firestoreUsers.get(userId)
+
           const userProfile = {
             id: userId,
-            full_name: [user.first_name, user.last_name].filter(Boolean).join(' ') || 'User',
-            username: user.username ?? null,
-            phone: null,
-            language: (user.language_code === 'uz' ? 'uz' : 'ru') as 'uz' | 'ru',
+            full_name: firestoreUser?.full_name || [user.first_name, user.last_name].filter(Boolean).join(' ') || 'User',
+            username: firestoreUser?.username || user.username ?? null,
+            phone: firestoreUser?.phone || null,
+            language: firestoreUser?.language || (user.language_code === 'uz' ? 'uz' : 'ru') as 'uz' | 'ru',
           }
           setAuth(fakeToken, userProfile as any)
           setLanguage(userProfile.language)
 
-          // Сохраняем пользователя в Firestore
+          // Сохраняем пользователя в Firestore (обновляем имя/ник)
           firestoreUsers.upsert(userId, {
             full_name: userProfile.full_name,
             username: userProfile.username,
