@@ -16,7 +16,7 @@ const STATUSES = [
 
 export function AdminOrdersPage() {
   const navigate = useNavigate()
-  useBackButton(() => navigate('/admin'))
+  useBackButton(() => navigate('/'))
 
   const { orders, loading } = useFirebaseOrders(null) // null = all orders
   const [activeTab, setActiveTab] = useState<AdminTab>('all')
