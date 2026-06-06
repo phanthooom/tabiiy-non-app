@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
+import { useNavigate } from 'react-router-dom'
 import { Search, User, MapPin, ChevronDown } from 'lucide-react'
 import { useFirebaseOrders, updateFirebaseOrderStatus } from '@/hooks/useFirebaseOrders'
+import { useBackButton } from '@/hooks/useTelegram'
 
 type AdminTab = 'all' | 'processing' | 'confirmed' | 'delivering' | 'delivered'
 
@@ -13,6 +15,9 @@ const STATUSES = [
 ]
 
 export function AdminOrdersPage() {
+  const navigate = useNavigate()
+  useBackButton(() => navigate('/admin'))
+
   const { orders, loading } = useFirebaseOrders(null) // null = all orders
   const [activeTab, setActiveTab] = useState<AdminTab>('all')
   const [searchQuery, setSearchQuery] = useState('')
