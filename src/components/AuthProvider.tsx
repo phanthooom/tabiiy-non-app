@@ -23,6 +23,7 @@ type ErrorContext = 'telegram' | 'dev-browser' | null
 export function AuthProvider({ children }: Props) {
   const [status, setStatus] = useState<Status>('loading')
   const [errorContext, setErrorContext] = useState<ErrorContext>(null)
+  const [errorMsg, setErrorMsg] = useState<string>('')
   const { setAuth } = useAuthStore()
   const { setCart } = useCartStore()
   const { setLanguage } = useLangStore()
@@ -134,8 +135,9 @@ export function AuthProvider({ children }: Props) {
 
         setErrorContext('telegram')
         setStatus('error')
-      } catch (e) {
+      } catch (e: any) {
         console.error('Auth failed:', e)
+        setErrorMsg(e?.message || String(e))
         setErrorContext(isDevJwtAuthMode() ? 'dev-browser' : 'telegram')
         const stored = localStorage.getItem('access_token')
         if (stored && stored.startsWith('tg_')) {
@@ -202,6 +204,11 @@ export function AuthProvider({ children }: Props) {
             <p style={{ color: 'var(--text-2)', fontSize: 14 }}>
               Это приложение работает только внутри Telegram Mini App
             </p>
+            {errorMsg && (
+              <p style={{ color: 'red', fontSize: 12, marginTop: 16, maxWidth: 300, wordBreak: 'break-all' }}>
+                Error: {errorMsg}
+              </p>
+            )}
           </>
         )}
       </div>
