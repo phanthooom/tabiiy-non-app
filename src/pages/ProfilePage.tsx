@@ -72,15 +72,22 @@ export function ProfilePage() {
           border: '1px solid var(--border)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontSize: 30, flexShrink: 0,
+          overflow: 'hidden',
         }}>
-          🧑
+          {window.Telegram?.WebApp?.initDataUnsafe?.user?.photo_url ? (
+            <img 
+              src={window.Telegram.WebApp.initDataUnsafe.user.photo_url} 
+              alt="Profile" 
+              style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+            />
+          ) : '🧑'}
         </div>
         <div>
           <p style={{ fontWeight: 700, fontSize: 18, color: 'var(--primary)', lineHeight: 1.25 }}>
             {displayUser?.full_name ?? '—'}
           </p>
           <p style={{ color: 'var(--text-3)', fontSize: 14, marginTop: 2 }}>
-            {displayUser?.phone ?? (language === 'uz' ? '+998 90 123 45 67' : '+998 90 123 45 67')}
+            {displayUser?.phone || (language === 'uz' ? 'Raqam kiritilmagan' : 'Номер не указан')}
           </p>
         </div>
       </motion.div>
