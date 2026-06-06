@@ -111,7 +111,7 @@ export function AddressMapModal({ isOpen, onClose, onConfirm, apiKey }: AddressM
             {/* @ts-expect-error Yandex Maps supports uz_UZ but react-yandex-maps types do not */}
             <YMaps query={{ apikey: apiKey, lang: language === 'uz' ? 'uz_UZ' : 'ru_RU', load: 'package.full' }}>
               <YandexMap
-                defaultState={{ center: TASHKENT_CENTER, zoom: 16 }}
+                defaultState={{ center: TASHKENT_CENTER, zoom: 16, controls: [] }}
                 width="100%"
                 height="100%"
                 onLoad={handleLoad}
@@ -121,7 +121,6 @@ export function AddressMapModal({ isOpen, onClose, onConfirm, apiKey }: AddressM
                 options={{
                   suppressMapOpenBlock: true,
                   yandexMapDisablePoiInteractivity: true,
-                  controls: [], // Отключаем все стандартные элементы управления Яндекса
                 }}
               />
             </YMaps>
