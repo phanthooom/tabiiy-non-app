@@ -6,8 +6,6 @@ import { MapPin, Store } from 'lucide-react'
 import { apiErrorMessage, ordersApi } from '@/api'
 import { mutationRetryOptions, withRetry } from '@/lib/retry'
 import { BYPASS_MODE } from '@/lib/mock-data'
-import { createFirebaseOrder } from '@/hooks/useFirebaseOrders'
-import { useAuthStore } from '@/store'
 
 import { queryKeys } from '@/lib/query-keys'
 import { useCartStore, useDeliveryStore, useLangStore } from '@/store'
@@ -25,9 +23,6 @@ export function CheckoutPage() {
   const t = useT(language)
   const { tg } = useTelegram()
   const queryClient = useQueryClient()
-  const { user } = useAuthStore()
-  const telegramUser = window.Telegram?.WebApp?.initDataUnsafe?.user
-
   const [deliveryType, setDeliveryType] = useState<DeliveryType>(savedDeliveryType ?? 'delivery')
   const [address, setAddress] = useState('')
   const [comment, setComment] = useState('')
@@ -51,13 +46,6 @@ export function CheckoutPage() {
             address: deliveryType === 'delivery' ? address : undefined,
             address_comment: comment.trim() || undefined,
           })
-          // 2. Mirror to Firestore so OrdersPage (Firebase) can display it
-          createFirebaseOrder({
-            ...order,
-            telegram_id: telegramUser?.id ?? user?.id,
-            user_name: telegramUser?.first_name ?? user?.full_name,
-            user_phone: user?.phone ?? undefined,
-          }).catch(console.warn)
           return order
         },
         mutationRetryOptions(idempotencyKey.current),
@@ -66,7 +54,7 @@ export function CheckoutPage() {
     onSuccess: (order) => {
       clearCart()
       queryClient.removeQueries({ queryKey: queryKeys.cart() })
-      queryClient.invalidateQueries({ queryKey: ['orders'] })
+      queryClient.invalidateQueries({ queryKey: queryKeys.orders(1) })
       tg?.HapticFeedback.notificationOccurred('success')
       navigate(`/order-success/${order.id}`)
     },

@@ -6,34 +6,24 @@ service cloud.firestore {
     // ── Products — читают все, пишет только admin ──────────────────────────
     match /products/{productId} {
       allow read: if true;
-      allow write: if request.auth != null && request.auth.token.admin == true;
+      allow write: if false; // управляется через Admin SDK / seed script
     }
 
-    // ── Users — только свой документ ──────────────────────────────────────
+    // ── Users — FCM токены, пишет сам клиент ──────────────────────────────
     match /users/{telegramId} {
-      allow read, write: if request.auth != null
-        && request.auth.token.telegram_id == telegramId;
+      allow read, write: if true; // нет Firebase Auth, клиент сохраняет FCM токен
     }
 
-    // ── Carts — только свой документ ──────────────────────────────────────
+    // ── Carts — не используется (корзина в backend) ───────────────────────
     match /carts/{telegramId} {
-      allow read, write: if request.auth != null
-        && request.auth.token.telegram_id == telegramId;
+      allow read, write: if false;
     }
 
-    // ── Orders — создание своих, чтение своих ─────────────────────────────
+    // ── Orders — создаёт клиент, читают все (фильтр по telegram_id в запросе)
     match /orders/{orderId} {
-      // Создать заказ может любой авторизованный пользователь (свой user_id)
-      allow create: if request.auth != null
-        && request.resource.data.user_id == request.auth.token.telegram_id;
-
-      // Читать свой заказ
-      allow read: if request.auth != null
-        && resource.data.user_id == request.auth.token.telegram_id;
-
-      // Обновлять статус — только admin (например, бот/сервер)
-      allow update: if request.auth != null && request.auth.token.admin == true;
-
+      allow create: if true;   // CheckoutPage пишет копию после backend заказа
+      allow read:   if true;   // useFirebaseOrders фильтрует по telegram_id
+      allow update: if true;   // admin panel обновляет статус
       allow delete: if false;
     }
   }

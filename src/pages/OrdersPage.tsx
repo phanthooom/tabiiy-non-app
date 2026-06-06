@@ -3,10 +3,12 @@ import { motion } from 'framer-motion'
 import { useNavigate, useParams } from 'react-router-dom'
 import { CheckCircle, ArrowLeft, Clock, MapPin, Phone } from 'lucide-react'
 import { YMaps, Map as YandexMap } from '@pbe/react-yandex-maps'
+import { useQuery } from '@tanstack/react-query'
 import { Button, Spinner } from '@/components/ui'
-import { BYPASS_MODE, mockUser } from '@/lib/mock-data'
-import { useFirebaseOrders } from '@/hooks/useFirebaseOrders'
-import { useLangStore, useAuthStore } from '@/store'
+import { BYPASS_MODE, mockOrders } from '@/lib/mock-data'
+import { ordersApi } from '@/api'
+import { queryKeys, STALE_TIME } from '@/lib/query-keys'
+import { useLangStore } from '@/store'
 import { useT } from '@/utils/i18n'
 import { useBackButton } from '@/hooks/useTelegram'
 import type { Order } from '@/types'
@@ -242,13 +244,20 @@ export function OrdersPage() {
   const navigate = useNavigate()
   const [tab, setTab] = useState<'active' | 'history'>('active')
 
-  const telegramUser = window.Telegram?.WebApp?.initDataUnsafe?.user
-  const { user } = useAuthStore()
-  const displayUser = BYPASS_MODE ? mockUser : user
-  const telegramId = telegramUser?.id ?? displayUser?.id
-
-  const { orders: allOrders, loading: isLoading } = useFirebaseOrders(telegramId)
-  const isError = false
+  const {
+    data: ordersData,
+    isLoading,
+    isError,
+    refetch,
+  } = useQuery({
+    queryKey: queryKeys.orders(1),
+    queryFn: () => BYPASS_MODE
+      ? Promise.resolve({ items: mockOrders, meta: { page: 1, size: 20, total_count: mockOrders.length, has_next: false, has_prev: false } })
+      : ordersApi.list(),
+    staleTime: STALE_TIME.orders,
+    refetchInterval: 30_000,
+  })
+  const allOrders: Order[] = ordersData?.items ?? []
   const activeOrders = allOrders.filter((o: Order) => ACTIVE_STATUSES.has(o.status))
   const historyOrders = allOrders.filter((o: Order) => !ACTIVE_STATUSES.has(o.status))
   const visibleOrders = tab === 'active' ? activeOrders : historyOrders
@@ -260,7 +269,7 @@ export function OrdersPage() {
         alignItems: 'center', padding: '48px 24px 100px', gap: 16, textAlign: 'center',
       }}>
         <p style={{ color: 'var(--text-2)', fontWeight: 600 }}>{t('error')}</p>
-        <Button onClick={() => window.location.reload()}>
+        <Button onClick={() => void refetch()}>
           {language === 'uz' ? 'Qayta urinish' : 'Повторить'}
         </Button>
       </div>
@@ -358,14 +367,19 @@ export function OrderDetailPage() {
   const orderId = id ? Number(id) : NaN
   const idValid = Number.isFinite(orderId) && orderId > 0
 
-  const telegramUser = window.Telegram?.WebApp?.initDataUnsafe?.user
-  const { user } = useAuthStore()
-  const displayUser = BYPASS_MODE ? mockUser : user
-  const telegramId = telegramUser?.id ?? displayUser?.id
-
-  const { orders, loading: isLoading } = useFirebaseOrders(telegramId)
-  const order = orders.find((o: Order) => o.id === orderId)
-  const isError = false
+  const {
+    data: order,
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: queryKeys.order(orderId),
+    queryFn: () => BYPASS_MODE
+      ? Promise.resolve(mockOrders.find(o => o.id === orderId) ?? mockOrders[0])
+      : ordersApi.get(orderId),
+    enabled: idValid,
+    staleTime: STALE_TIME.orders,
+    refetchInterval: 15_000,
+  })
 
   if (!idValid) {
     return (
@@ -393,7 +407,7 @@ export function OrderDetailPage() {
     )
   }
 
-  if (isLoading || !order || order.id !== orderId) {
+  if (isLoading || !order) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 80 }}>
         <Spinner size={40} />
