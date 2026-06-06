@@ -1,6 +1,6 @@
-import axios from 'axios';
+const axios = require('axios');
 
-const STATUS_LABELS: Record<string, string> = {
+const STATUS_LABELS = {
   accepted: '✅ Принят',
   packing: '📦 Упаковывается',
   courier_assigned: '🚗 Курьер в пути',
@@ -8,7 +8,7 @@ const STATUS_LABELS: Record<string, string> = {
   cancelled: '❌ Отменён',
 };
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   // 1. Проверяем метод
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method Not Allowed' });

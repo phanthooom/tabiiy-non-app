@@ -1,9 +1,9 @@
-import axios from 'axios';
+const axios = require('axios');
 
 const BOT_TOKEN = '8957857177:AAFNSzeeQR7NTZHoQ7BbKajJhQyfKrizJSU';
 const FIRESTORE_PROJECT_ID = 'tabiiy-non';
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');
   if (!BOT_TOKEN) return res.status(200).send('OK');
 
