@@ -6,6 +6,8 @@ import { MapPin, Store } from 'lucide-react'
 import { apiErrorMessage, ordersApi } from '@/api'
 import { mutationRetryOptions, withRetry } from '@/lib/retry'
 import { BYPASS_MODE } from '@/lib/mock-data'
+import { createFirebaseOrder } from '@/hooks/useFirebaseOrders'
+import { useAuthStore } from '@/store'
 
 import { queryKeys } from '@/lib/query-keys'
 import { useCartStore, useDeliveryStore, useLangStore } from '@/store'
@@ -23,6 +25,9 @@ export function CheckoutPage() {
   const t = useT(language)
   const { tg } = useTelegram()
   const queryClient = useQueryClient()
+  const { user } = useAuthStore()
+  const telegramUser = window.Telegram?.WebApp?.initDataUnsafe?.user
+
   const [deliveryType, setDeliveryType] = useState<DeliveryType>(savedDeliveryType ?? 'delivery')
   const [address, setAddress] = useState('')
   const [comment, setComment] = useState('')
@@ -39,11 +44,22 @@ export function CheckoutPage() {
         )
       }
       return withRetry(
-        () => ordersApi.create({
-          delivery_type: deliveryType,
-          address: deliveryType === 'delivery' ? address : undefined,
-          address_comment: comment.trim() || undefined,
-        }),
+        async () => {
+          // 1. Create order in backend (Telegram bot notification + Yandex delivery)
+          const order = await ordersApi.create({
+            delivery_type: deliveryType,
+            address: deliveryType === 'delivery' ? address : undefined,
+            address_comment: comment.trim() || undefined,
+          })
+          // 2. Mirror to Firestore so OrdersPage (Firebase) can display it
+          createFirebaseOrder({
+            ...order,
+            telegram_id: telegramUser?.id ?? user?.id,
+            user_name: telegramUser?.first_name ?? user?.full_name,
+            user_phone: user?.phone ?? undefined,
+          }).catch(console.warn)
+          return order
+        },
         mutationRetryOptions(idempotencyKey.current),
       )
     },
@@ -223,7 +239,7 @@ export function CheckoutPage() {
           disabled={!canSubmit || orderMutation.isPending}
           onClick={() => orderMutation.mutate()}
           style={{
-            width: '100%',
+              width: '100%',
             background: canSubmit ? '#e8751a' : '#cbd5e1',
             color: '#fff',
             border: 'none',

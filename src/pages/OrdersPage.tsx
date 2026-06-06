@@ -1,13 +1,12 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { useNavigate, useParams } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
 import { CheckCircle, ArrowLeft, Clock, MapPin, Phone } from 'lucide-react'
 import { YMaps, Map as YandexMap } from '@pbe/react-yandex-maps'
 import { Button, Spinner } from '@/components/ui'
-import { BYPASS_MODE, mockOrders } from '@/lib/mock-data'
-import { ordersApi } from '@/api'
-import { useLangStore } from '@/store'
+import { BYPASS_MODE, mockUser } from '@/lib/mock-data'
+import { useFirebaseOrders } from '@/hooks/useFirebaseOrders'
+import { useLangStore, useAuthStore } from '@/store'
 import { useT } from '@/utils/i18n'
 import { useBackButton } from '@/hooks/useTelegram'
 import type { Order } from '@/types'
@@ -243,14 +242,13 @@ export function OrdersPage() {
   const navigate = useNavigate()
   const [tab, setTab] = useState<'active' | 'history'>('active')
 
-  const { data: allOrders = [], isLoading, isError } = useQuery({
-    queryKey: ['orders'],
-    queryFn: () => BYPASS_MODE
-      ? Promise.resolve(mockOrders)
-      : ordersApi.list().then(r => r.items),
-    refetchInterval: 15000,
-    retry: false,
-  })
+  const telegramUser = window.Telegram?.WebApp?.initDataUnsafe?.user
+  const { user } = useAuthStore()
+  const displayUser = BYPASS_MODE ? mockUser : user
+  const telegramId = telegramUser?.id ?? displayUser?.id
+
+  const { orders: allOrders, loading: isLoading } = useFirebaseOrders(telegramId)
+  const isError = false
   const activeOrders = allOrders.filter((o: Order) => ACTIVE_STATUSES.has(o.status))
   const historyOrders = allOrders.filter((o: Order) => !ACTIVE_STATUSES.has(o.status))
   const visibleOrders = tab === 'active' ? activeOrders : historyOrders
@@ -360,15 +358,14 @@ export function OrderDetailPage() {
   const orderId = id ? Number(id) : NaN
   const idValid = Number.isFinite(orderId) && orderId > 0
 
-  const { data: order, isLoading, isError } = useQuery({
-    queryKey: ['orders', orderId],
-    queryFn: () => BYPASS_MODE
-      ? Promise.resolve(mockOrders.find((o: Order) => o.id === orderId) ?? null)
-      : ordersApi.get(orderId),
-    refetchInterval: 10000,
-    enabled: idValid,
-    retry: false,
-  })
+  const telegramUser = window.Telegram?.WebApp?.initDataUnsafe?.user
+  const { user } = useAuthStore()
+  const displayUser = BYPASS_MODE ? mockUser : user
+  const telegramId = telegramUser?.id ?? displayUser?.id
+
+  const { orders, loading: isLoading } = useFirebaseOrders(telegramId)
+  const order = orders.find((o: Order) => o.id === orderId)
+  const isError = false
 
   if (!idValid) {
     return (
