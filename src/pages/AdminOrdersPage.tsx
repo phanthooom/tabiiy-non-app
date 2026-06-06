@@ -28,11 +28,26 @@ export function AdminOrdersPage() {
   const countByStatus = (status: string) => orders.filter(o => o.status === status).length
 
   return (
-    <div style={{ padding: '20px 16px 100px', background: '#f8fafc', minHeight: '100vh' }}>
+    <div style={{ 
+      padding: 'calc(var(--tg-safe-area-inset-top, 20px) + 32px) 16px 100px', 
+      background: '#f8fafc', 
+      minHeight: '100vh' 
+    }}>
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-        <h1 style={{ fontSize: 20, fontWeight: 700, color: '#0f172a' }}>Buyurtmalar (Admin)</h1>
-        <Search size={24} color="#64748b" />
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+        <h1 style={{ fontSize: 24, fontWeight: 800, color: '#0f172a', letterSpacing: '-0.02em' }}>Buyurtmalar (Admin)</h1>
+        <div style={{ 
+          background: '#ffffff', 
+          width: 40, 
+          height: 40, 
+          borderRadius: '50%', 
+          display: 'flex', 
+          alignItems: 'center', 
+          justifyContent: 'center',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
+        }}>
+          <Search size={20} color="#64748b" />
+        </div>
       </div>
 
       {/* Tabs */}
