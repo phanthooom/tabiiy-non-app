@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { YMaps, Map as YandexMap } from '@pbe/react-yandex-maps'
-import { MapPin, ArrowLeft, LocateFixed, Loader2 } from 'lucide-react'
+import { MapPin, ArrowLeft, LocateFixed, Loader2, Plus, Minus } from 'lucide-react'
 import { useLangStore } from '@/store'
 
 interface AddressMapModalProps {
@@ -84,6 +84,13 @@ export function AddressMapModal({ isOpen, onClose, onConfirm, apiKey }: AddressM
     )
   }
 
+  const handleZoom = (delta: number) => {
+    if (mapRef.current) {
+      const newZoom = mapRef.current.getZoom() + delta
+      mapRef.current.setZoom(newZoom, { duration: 200 })
+    }
+  }
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -114,6 +121,7 @@ export function AddressMapModal({ isOpen, onClose, onConfirm, apiKey }: AddressM
                 options={{
                   suppressMapOpenBlock: true,
                   yandexMapDisablePoiInteractivity: true,
+                  controls: [], // Отключаем все стандартные элементы управления Яндекса
                 }}
               />
             </YMaps>
@@ -140,6 +148,7 @@ export function AddressMapModal({ isOpen, onClose, onConfirm, apiKey }: AddressM
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 boxShadow: '0 2px 12px rgba(0,0,0,0.15)',
                 cursor: 'pointer',
+                flexShrink: 0,
               }}
             >
               <ArrowLeft size={22} color="#0f172a" />
@@ -163,26 +172,67 @@ export function AddressMapModal({ isOpen, onClose, onConfirm, apiKey }: AddressM
             </div>
           </div>
 
-          {/* GPS Location Button */}
-          <button
-            onClick={detectLocation}
-            disabled={locating}
-            style={{
-              position: 'absolute',
-              top: 'calc(env(safe-area-inset-top, 0px) + 120px)', // Pushed down to clear the address bubble
-              right: 16,
-              width: 44, height: 44,
-              borderRadius: '50%',
+          {/* Map Controls */}
+          <div style={{
+            position: 'absolute',
+            top: 'calc(env(safe-area-inset-top, 0px) + 130px)',
+            right: 16,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 12,
+            zIndex: 10,
+          }}>
+            <button
+              onClick={detectLocation}
+              disabled={locating}
+              style={{
+                width: 44, height: 44,
+                borderRadius: '50%',
+                background: '#ffffff',
+                border: 'none',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                boxShadow: '0 2px 12px rgba(0,0,0,0.15)',
+                cursor: locating ? 'wait' : 'pointer',
+              }}
+            >
+              {locating ? <Loader2 size={22} color="#e8751a" className="spinner" /> : <LocateFixed size={22} color="#e8751a" />}
+            </button>
+
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
               background: '#ffffff',
-              border: 'none',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              borderRadius: 22,
               boxShadow: '0 2px 12px rgba(0,0,0,0.15)',
-              cursor: locating ? 'wait' : 'pointer',
-              zIndex: 10,
-            }}
-          >
-            {locating ? <Loader2 size={22} color="#e8751a" className="spinner" /> : <LocateFixed size={22} color="#e8751a" />}
-          </button>
+              overflow: 'hidden',
+            }}>
+              <button
+                onClick={() => handleZoom(1)}
+                style={{
+                  width: 44, height: 44,
+                  background: 'transparent',
+                  border: 'none',
+                  borderBottom: '1px solid #f1f5f9',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  cursor: 'pointer',
+                }}
+              >
+                <Plus size={22} color="#0f172a" />
+              </button>
+              <button
+                onClick={() => handleZoom(-1)}
+                style={{
+                  width: 44, height: 44,
+                  background: 'transparent',
+                  border: 'none',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  cursor: 'pointer',
+                }}
+              >
+                <Minus size={22} color="#0f172a" />
+              </button>
+            </div>
+          </div>
 
           {/* Central Pin */}
           <div style={{
