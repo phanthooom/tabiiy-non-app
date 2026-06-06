@@ -364,18 +364,18 @@ export function OrderDetailPage() {
 
   useBackButton(() => navigate('/orders'))
 
-  const orderId = id ? Number(id) : NaN
-  const idValid = Number.isFinite(orderId) && orderId > 0
+  const orderId = id ? (Number.isNaN(Number(id)) ? id : Number(id)) : null
+  const idValid = orderId !== null
 
   const {
     data: order,
     isLoading,
     isError,
   } = useQuery({
-    queryKey: queryKeys.order(orderId),
+    queryKey: queryKeys.order(orderId as number | string),
     queryFn: () => BYPASS_MODE
       ? Promise.resolve(mockOrders.find(o => o.id === orderId) ?? mockOrders[0])
-      : ordersApi.get(orderId),
+      : ordersApi.get(orderId as number | string),
     enabled: idValid,
     staleTime: STALE_TIME.orders,
     refetchInterval: 15_000,

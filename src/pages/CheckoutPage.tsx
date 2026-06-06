@@ -12,7 +12,7 @@ import { useCartStore, useDeliveryStore, useLangStore } from '@/store'
 import { useT } from '@/utils/i18n'
 import { useBackButton } from '@/hooks/useTelegram'
 import { useTelegram } from '@/hooks/useTelegram'
-import type { DeliveryType } from '@/types'
+import type { DeliveryType, Order } from '@/types'
 import { AddressMapModal } from '@/components/ui/AddressMapModal'
 
 export function CheckoutPage() {
@@ -34,8 +34,8 @@ export function CheckoutPage() {
   const orderMutation = useMutation({
     mutationFn: () => {
       if (BYPASS_MODE) {
-        return new Promise<{ id: number }>((resolve) =>
-          setTimeout(() => resolve({ id: Math.floor(Math.random() * 10000) }), 800)
+        return new Promise<Order>((resolve) =>
+          setTimeout(() => resolve({ id: Math.floor(Math.random() * 10000), status: 'accepted', status_label: 'Принят', delivery_type: 'pickup', address: null, total_amount: 0, created_at: new Date().toISOString(), items: [], yandex_claim_id: null }), 800)
         )
       }
       return withRetry(

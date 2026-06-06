@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
-import { BASE_URL, cartApi } from '@/api'
+import { cartApi } from '@/api'
 import { Button, ProductPhoto, Spinner, Stepper } from '@/components/ui'
 import { queryKeys, STALE_TIME } from '@/lib/query-keys'
 import { useCartStore, useLangStore } from '@/store'
@@ -33,7 +33,7 @@ export function CartPage() {
     queryClient.setQueryData(queryKeys.cart(), newCart)
   }
 
-  const buildUpdatedCart = (pid: number, qty: number) => {
+  const buildUpdatedCart = (pid: number | string, qty: number) => {
     const items = (cart?.items ?? [])
       .map(i => i.product_id === pid ? { ...i, quantity: qty, subtotal: i.price * qty } : i)
       .filter(i => i.quantity > 0)
@@ -42,7 +42,7 @@ export function CartPage() {
   }
 
   const updateMutation = useMutation({
-    mutationFn: ({ pid, qty }: { pid: number; qty: number }) => {
+    mutationFn: ({ pid, qty }: { pid: number | string; qty: number }) => {
       if (BYPASS_MODE) return Promise.resolve(buildUpdatedCart(pid, qty))
       return cartApi.updateItem(pid, qty)
     },
@@ -50,9 +50,9 @@ export function CartPage() {
   })
 
   const removeMutation = useMutation({
-    mutationFn: (pid: number) => {
+    mutationFn: (pid: number | string) => {
       if (BYPASS_MODE) {
-        const items = (cart?.items ?? []).filter(i => i.product_id !== pid)
+        const items = (cart?.items ?? []).filter(i => String(i.product_id) !== String(pid))
         const total = items.reduce((s, i) => s + i.subtotal, 0)
         return Promise.resolve({ items, total, items_count: items.length })
       }
@@ -162,7 +162,7 @@ export function CartPage() {
               boxShadow: 'inset 0 0 0 1px rgba(0,0,0,0.05)',
             }}>
               {item.image_url
-                ? <img src={item.image_url.startsWith('/static/') ? `${BASE_URL}${item.image_url}` : item.image_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ? <img src={item.image_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 : item.photo_file_id
                   ? <ProductPhoto fileId={item.photo_file_id} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                   : <span style={{ fontSize: 24 }}>🍞</span>

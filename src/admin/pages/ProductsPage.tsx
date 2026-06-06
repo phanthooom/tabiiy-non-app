@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import { productsApi } from '../api/index'
-import { BASE_URL } from '@/api'
 import type { Product } from '../types/index'
 
 const BREAD_PRESETS = [
@@ -166,13 +165,13 @@ export function ProductsPage() {
                       })
                       setDescriptionRu(preset.description_ru)
                       setDescriptionUz(preset.description_uz)
-                      setPreviewImage(`${BASE_URL}${preset.image_url}`)
+                      setPreviewImage(preset.image_url)
                       setShowPresetSuggestions(false)
                     }}
                     style={{ display: 'flex', gap: 12, padding: 10, cursor: 'pointer', alignItems: 'center', color: '#fff' }}
                     onMouseDown={e => e.preventDefault()}
                   >
-                    <img src={`${BASE_URL}${preset.image_url}`} alt={preset.name_ru} style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 6 }} />
+                    <img src={preset.image_url} alt={preset.name_ru} style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 6 }} />
                     <span>{preset.name_ru} / {preset.name_uz}</span>
                   </div>
                 ))}

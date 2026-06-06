@@ -26,7 +26,7 @@ export const productsApi = {
   list: (): Promise<Product[]> =>
     firestoreProducts.list(),
 
-  get: (id: number): Promise<Product> =>
+  get: (id: number | string): Promise<Product> =>
     firestoreProducts.get(id).then(p => {
       if (!p) throw new Error(`Product ${id} not found`)
       return p
@@ -39,17 +39,17 @@ export const cartApi = {
   get: (): Promise<Cart> =>
     firestoreCart.get(requireUser()),
 
-  addItem: async (product_id: number, quantity = 1): Promise<Cart> => {
+  addItem: async (product_id: number | string, quantity = 1): Promise<Cart> => {
     const uid = requireUser()
     const product = await firestoreProducts.get(product_id)
     if (!product) throw new Error(`Product ${product_id} not found`)
     return firestoreCart.addItem(uid, product, quantity)
   },
 
-  updateItem: (product_id: number, quantity: number): Promise<Cart> =>
+  updateItem: (product_id: number | string, quantity: number): Promise<Cart> =>
     firestoreCart.updateItem(requireUser(), product_id, quantity),
 
-  removeItem: (product_id: number): Promise<Cart> =>
+  removeItem: (product_id: number | string): Promise<Cart> =>
     firestoreCart.removeItem(requireUser(), product_id),
 
   clear: (): Promise<void> =>
@@ -84,7 +84,7 @@ export const ordersApi = {
     }
   },
 
-  get: (id: number): Promise<Order> =>
+  get: (id: number | string): Promise<Order> =>
     firestoreOrders.get(String(id)).then(o => {
       if (!o) throw new Error(`Order ${id} not found`)
       return o

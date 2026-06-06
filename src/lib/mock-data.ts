@@ -1,6 +1,6 @@
 import type { Cart, Order, Product, UserProfile } from '@/types'
 
-export const BYPASS_MODE = import.meta.env.VITE_BYPASS_AUTH === 'true'
+export const BYPASS_MODE = false
 
 export const mockProducts: Product[] = [
   {

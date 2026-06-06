@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
-import { authApi, cartApi } from '@/api'
+import { cartApi } from '@/api'
+import { setCurrentUser } from '@/api/firestore-api'
 import { firestoreUsers } from '@/lib/firestore-service'
 import { registerAuthInvalidationListener } from '@/lib/auth-invalidation'
 import { isDevJwtAuthMode } from '@/lib/auth-mode'
@@ -73,30 +74,34 @@ export function AuthProvider({ children }: Props) {
 
         if (hasInitData) {
           const tg = getTelegramWebApp()!
-          const initData = tg.initData
-          if (!initData.trim()) throw new Error('No initData')
+          const user = tg.initDataUnsafe.user
+          if (!user?.id) throw new Error('No user data from Telegram')
 
-          const auth = await authApi.telegram(initData)
-          localStorage.setItem('access_token', auth.access_token)
+          const userId = user.id
+          setCurrentUser(userId)
+          
+          // Fallback token for auth store compatibility, we don't really use it
+          const fakeToken = `tg_${userId}`
+          localStorage.setItem('access_token', fakeToken)
 
           const userProfile = {
-            id: auth.user_id,
-            full_name: auth.full_name,
-            username: tg.initDataUnsafe.user?.username ?? null,
+            id: userId,
+            full_name: [user.first_name, user.last_name].filter(Boolean).join(' ') || 'User',
+            username: user.username ?? null,
             phone: null,
-            language: auth.language,
+            language: (user.language_code === 'uz' ? 'uz' : 'ru') as 'uz' | 'ru',
           }
-          setAuth(auth.access_token, userProfile)
-          setLanguage(auth.language)
+          setAuth(fakeToken, userProfile as any)
+          setLanguage(userProfile.language)
 
-          // Сохраняем пользователя в Firestore (для FCM токенов)
-          firestoreUsers.upsert(auth.user_id, {
-            full_name: auth.full_name,
-            username: tg.initDataUnsafe.user?.username ?? null,
-            language: auth.language,
+          // Сохраняем пользователя в Firestore
+          firestoreUsers.upsert(userId, {
+            full_name: userProfile.full_name,
+            username: userProfile.username,
+            language: userProfile.language,
           }).catch(console.warn)
 
-          // Загружаем корзину с backend
+          // Загружаем корзину
           const cart = await cartApi.get()
           setCart(cart)
 
@@ -104,10 +109,12 @@ export function AuthProvider({ children }: Props) {
           return
         }
 
-        // Fallback: saved token
+        // Fallback: in Dev or Web without initData but with stored ID
         const stored = localStorage.getItem('access_token')
-        if (stored) {
+        if (stored && stored.startsWith('tg_')) {
           try {
+            const userId = parseInt(stored.replace('tg_', ''), 10)
+            setCurrentUser(userId)
             const cart = await cartApi.get()
             setCart(cart)
             setStatus('ok')
@@ -122,9 +129,11 @@ export function AuthProvider({ children }: Props) {
       } catch (e) {
         console.error('Auth failed:', e)
         setErrorContext(isDevJwtAuthMode() ? 'dev-browser' : 'telegram')
-        const token = localStorage.getItem('access_token')
-        if (token) {
+        const stored = localStorage.getItem('access_token')
+        if (stored && stored.startsWith('tg_')) {
           try {
+            const userId = parseInt(stored.replace('tg_', ''), 10)
+            setCurrentUser(userId)
             const cart = await cartApi.get()
             setCart(cart)
             setStatus('ok')

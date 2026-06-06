@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ShoppingCart } from 'lucide-react'
 import type { HTMLMotionProps } from 'framer-motion'
-import { BASE_URL, photoUrl } from '@/api'
+import { photoUrl } from '@/api'
 import type { Product } from '@/types'
 
 // ── Button ────────────────────────────────────────────────────────────────
@@ -150,9 +150,7 @@ interface ProductCardProps {
 export function ProductCard({ product, onAdd, cartQty, addLabel, outLabel, sumLabel, addDisabled }: ProductCardProps) {
   const price = product.price.toLocaleString('ru-RU')
   const [showInfo, setShowInfo] = useState(false)
-  const imageUrl = product.image_url?.startsWith('/static/')
-    ? `${BASE_URL}${product.image_url}`
-    : product.image_url
+  const imageUrl = product.image_url
 
   return (
     <>

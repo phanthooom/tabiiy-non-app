@@ -19,8 +19,6 @@ import {
   addDoc,
   query,
   where,
-  orderBy,
-  limit,
   onSnapshot,
   serverTimestamp,
   type Unsubscribe,
@@ -40,8 +38,9 @@ const col = {
 }
 
 function toProduct(id: string, data: DocumentData): Product {
+  const numId = Number(id)
   return {
-    id: Number(id),
+    id:              Number.isNaN(numId) ? id : numId,
     name:            data.name_ru ?? data.name ?? '',
     name_ru:         data.name_ru ?? '',
     name_uz:         data.name_uz ?? '',
@@ -67,10 +66,11 @@ function toUserProfile(telegramId: string, data: DocumentData): UserProfile {
 }
 
 function toOrder(id: string, data: DocumentData): Order {
+  const numId = Number(id)
   return {
-    id:              Number(id),
+    id:              Number.isNaN(numId) ? id : numId,
     status:          data.status ?? 'accepted',
-    status_label:    data.status_label ?? '',
+    status_label:    data.status_label ?? 'Принят',
     delivery_type:   data.delivery_type ?? 'pickup',
     address:         data.address ?? null,
     total_amount:    data.total_amount ?? 0,
@@ -91,9 +91,9 @@ export const firestoreProducts = {
     return snap.docs.map(d => toProduct(d.id, d.data()))
   },
 
-  /** Получить один продукт по id */
-  get: async (id: number): Promise<Product | null> => {
-    const snap = await getDoc(doc(db, 'products', String(id)))
+  /** Получить один продукт по ID */
+  get: async (id: number | string): Promise<Product | null> => {
+    const snap = await getDoc(doc(col.products(), String(id)))
     if (!snap.exists()) return null
     return toProduct(snap.id, snap.data())
   },
@@ -170,7 +170,7 @@ export const firestoreCart = {
     const snap = await getDoc(ref)
     let items: CartItem[] = snap.exists() ? (snap.data().items ?? []) : []
 
-    const existing = items.find(i => i.product_id === product.id)
+    const existing = items.find(i => String(i.product_id) === String(product.id))
     if (existing) {
       existing.quantity += quantity
       existing.subtotal = existing.price * existing.quantity
@@ -190,16 +190,16 @@ export const firestoreCart = {
     return calcCart(items)
   },
 
-  /** Обновить количество товара */
-  updateItem: async (telegramId: number, productId: number, quantity: number): Promise<Cart> => {
-    const ref = doc(db, 'carts', String(telegramId))
+  /** Изменить количество товара в корзине */
+  updateItem: async (telegramId: number, product_id: number | string, quantity: number): Promise<Cart> => {
+    const ref = doc(col.carts(), String(telegramId))
     const snap = await getDoc(ref)
     let items: CartItem[] = snap.exists() ? (snap.data().items ?? []) : []
 
     if (quantity <= 0) {
-      items = items.filter(i => i.product_id !== productId)
+      items = items.filter(i => String(i.product_id) !== String(product_id))
     } else {
-      const item = items.find(i => i.product_id === productId)
+      const item = items.find(i => String(i.product_id) === String(product_id))
       if (item) {
         item.quantity = quantity
         item.subtotal = item.price * quantity
@@ -211,7 +211,7 @@ export const firestoreCart = {
   },
 
   /** Удалить товар из корзины */
-  removeItem: async (telegramId: number, productId: number): Promise<Cart> => {
+  removeItem: async (telegramId: number, productId: number | string): Promise<Cart> => {
     return firestoreCart.updateItem(telegramId, productId, 0)
   },
 
@@ -268,7 +268,7 @@ export const firestoreOrders = {
 
     return {
       ...orderData,
-      id:         parseInt(ref.id.slice(-8), 16), // короткий числовой id для UI
+      id:         ref.id, // Использовать оригинальный ID Firestore
       created_at: new Date().toISOString(),
     }
   },
@@ -280,16 +280,17 @@ export const firestoreOrders = {
   ): Promise<Order[]> => {
     const constraints: QueryConstraint[] = [
       where('user_id', '==', String(telegramId)),
-      orderBy('created_at', 'desc'),
-      limit(opts.size ?? 20),
     ]
     const snap = await getDocs(query(col.orders(), ...constraints))
-    return snap.docs.map(d => toOrder(d.id, d.data()))
+    const orders = snap.docs.map(d => toOrder(d.id, d.data()))
+    // Sort in memory by created_at desc to avoid requiring a composite index in Firestore
+    orders.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    return orders.slice(0, opts.size ?? 20)
   },
 
   /** Получить один заказ */
-  get: async (orderId: string): Promise<Order | null> => {
-    const snap = await getDoc(doc(db, 'orders', orderId))
+  get: async (id: number | string): Promise<Order | null> => {
+    const snap = await getDoc(doc(col.orders(), String(id)))
     if (!snap.exists()) return null
     return toOrder(snap.id, snap.data())
   },
@@ -298,12 +299,12 @@ export const firestoreOrders = {
   subscribe: (telegramId: number, onUpdate: (orders: Order[]) => void): Unsubscribe => {
     const q = query(
       col.orders(),
-      where('user_id', '==', String(telegramId)),
-      orderBy('created_at', 'desc'),
-      limit(20)
+      where('user_id', '==', String(telegramId))
     )
     return onSnapshot(q, snap => {
-      onUpdate(snap.docs.map(d => toOrder(d.id, d.data())))
+      const orders = snap.docs.map(d => toOrder(d.id, d.data()))
+      orders.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+      onUpdate(orders.slice(0, 20))
     })
   },
 

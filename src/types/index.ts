@@ -80,7 +80,7 @@ export interface AuthResponse {
 }
 
 export interface Product {
-  id: number
+  id: number | string
   name: string
   name_uz: string
   name_ru: string
@@ -95,7 +95,7 @@ export interface Product {
 }
 
 export interface CartItem {
-  product_id: number
+  product_id: number | string
   product_name: string
   price: number
   quantity: number
@@ -118,7 +118,7 @@ export interface OrderItem {
 }
 
 export interface Order {
-  id: number
+  id: number | string
   status: string
   status_label: string
   delivery_type: 'delivery' | 'pickup'
@@ -130,7 +130,7 @@ export interface Order {
 }
 
 export interface UserProfile {
-  id: number
+  id: number | string
   full_name: string
   username: string | null
   phone: string | null

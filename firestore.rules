@@ -14,9 +14,9 @@ service cloud.firestore {
       allow read, write: if true; // нет Firebase Auth, клиент сохраняет FCM токен
     }
 
-    // ── Carts — не используется (корзина в backend) ───────────────────────
+    // ── Carts ─────────────────────────────────────────────────────────────
     match /carts/{telegramId} {
-      allow read, write: if false;
+      allow read, write: if true;
     }
 
     // ── Orders — создаёт клиент, читают все (фильтр по telegram_id в запросе)
