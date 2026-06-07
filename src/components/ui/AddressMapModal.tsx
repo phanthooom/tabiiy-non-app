@@ -39,13 +39,8 @@ export function AddressMapModal({ isOpen, onClose, onConfirm, apiKey }: AddressM
         )
         if (resp.ok) {
           const data = await resp.json()
-          const a = data?.address
-          if (a) {
-            const road = a.road || a.pedestrian || a.neighbourhood || a.suburb || ''
-            const house = a.house_number ? ` ${a.house_number}` : ''
-            const city = a.city || a.town || a.village || ''
-            const text = road ? `${road}${house}${city ? ', ' + city : ''}` : (data.display_name || '')
-            if (text) return text
+          if (data && data.display_name) {
+            return data.display_name
           }
         }
       } catch {}
@@ -58,7 +53,7 @@ export function AddressMapModal({ isOpen, onClose, onConfirm, apiKey }: AddressM
           const item = data?.response?.GeoObjectCollection?.featureMember?.[0]?.GeoObject
           const text = item?.metaDataProperty?.GeocoderMetaData?.text || item?.name
           if (text) {
-            return text.replace('Узбекистан, Ташкент, ', '').replace('Oʻzbekiston, Toshkent, ', '')
+            return text
           }
         }
       } catch {}
@@ -68,7 +63,7 @@ export function AddressMapModal({ isOpen, onClose, onConfirm, apiKey }: AddressM
         const res = await ymapsRef.current.geocode(coords, { results: 1 })
         const obj = res.geoObjects.get(0)
         const name = obj?.getAddressLine?.() || obj?.properties?.get('text')
-        if (name) return name.replace('Узбекистан, Ташкент, ', '').replace('Oʻzbekiston, Toshkent, ', '')
+        if (name) return name
       } catch {}
 
       return `${lat.toFixed(5)}, ${lon.toFixed(5)}`
@@ -82,13 +77,12 @@ export function AddressMapModal({ isOpen, onClose, onConfirm, apiKey }: AddressM
   const handleBoundsChange = (e: any) => {
     const newCenter = e.get('newCenter')
     centerRef.current = newCenter
-    if (timerRef.current) clearTimeout(timerRef.current)
     setAddress(detectingLabel)
-  }
-
-  const handleDragEnd = () => {
+    
     if (timerRef.current) clearTimeout(timerRef.current)
-    timerRef.current = setTimeout(() => fetchAddress(centerRef.current), 350)
+    timerRef.current = setTimeout(() => {
+      fetchAddress(newCenter)
+    }, 600)
   }
 
   const handleLoad = (ymaps: any) => {
@@ -149,7 +143,6 @@ export function AddressMapModal({ isOpen, onClose, onConfirm, apiKey }: AddressM
                 onLoad={handleLoad}
                 instanceRef={mapRef}
                 onBoundsChange={handleBoundsChange}
-                onActionEnd={handleDragEnd}
                 options={{
                   suppressMapOpenBlock: true,
                   yandexMapDisablePoiInteractivity: true,

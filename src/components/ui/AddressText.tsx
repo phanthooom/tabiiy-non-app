@@ -20,13 +20,8 @@ export function AddressText({ address, language, clickable = true }: { address: 
           )
           if (resp.ok) {
             const data = await resp.json()
-            const a = data?.address
-            if (a) {
-              const road = a.road || a.pedestrian || a.neighbourhood || a.suburb || ''
-              const house = a.house_number ? ` ${a.house_number}` : ''
-              const city = a.city || a.town || a.village || ''
-              const text = road ? `${road}${house}${city ? ', ' + city : ''}` : (data.display_name || '')
-              if (text) return text
+            if (data && data.display_name) {
+              return data.display_name
             }
           }
         } catch {}
@@ -41,7 +36,7 @@ export function AddressText({ address, language, clickable = true }: { address: 
               let name = featureMember[0].GeoObject.name
               let desc = featureMember[0].GeoObject.description
               let full = desc ? `${name}, ${desc}` : name
-              return full.replace('Узбекистан, Ташкент, ', '').replace('Узбекистан, ', '').replace('Oʻzbekiston, Toshkent, ', '')
+              return full
             }
           }
         } catch {}
