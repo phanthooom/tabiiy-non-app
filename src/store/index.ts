@@ -47,12 +47,16 @@ export const useCartStore = create<CartState>()((set) => ({
 
 interface DeliveryState {
   deliveryType: DeliveryType | null
+  address: string
   setDeliveryType: (type: DeliveryType | null) => void
+  setAddress: (address: string) => void
 }
 
 export const useDeliveryStore = create<DeliveryState>()((set) => ({
   deliveryType: null,
+  address: '',
   setDeliveryType: (deliveryType) => set({ deliveryType }),
+  setAddress: (address) => set({ address }),
 }))
 
 // ── Language store ────────────────────────────────────────────────────────
