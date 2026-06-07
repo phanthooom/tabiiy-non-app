@@ -14,6 +14,7 @@ import { useBackButton } from '@/hooks/useTelegram'
 import { useTelegram } from '@/hooks/useTelegram'
 import type { DeliveryType, Order } from '@/types'
 import { AddressMapModal } from '@/components/ui/AddressMapModal'
+import { AddressText } from '@/components/ui/AddressText'
 
 export function CheckoutPage() {
   const navigate = useNavigate()
@@ -141,12 +142,13 @@ export function CheckoutPage() {
               style={{ position: 'relative', cursor: 'pointer' }}
               onClick={() => setIsMapOpen(true)}
             >
-              <input
-                style={{ ...inputStyle, paddingRight: 40, pointerEvents: 'none' }}
-                placeholder={t('addressPlaceholder')}
-                value={/^\d+\.\d+,\s*\d+\.\d+$/.test(address) ? (language === 'uz' ? '📍 Xaritadan belgilangan manzil' : '📍 Выбрано на карте') : address}
-                readOnly
-              />
+              <div style={{ ...inputStyle, paddingRight: 40, minHeight: 46, display: 'flex', alignItems: 'center' }}>
+                {address ? (
+                  <AddressText address={address} language={language} clickable={false} />
+                ) : (
+                  <span style={{ color: '#94a3b8' }}>{t('addressPlaceholder')}</span>
+                )}
+              </div>
               <MapPin
                 size={18}
                 color="#e8751a"

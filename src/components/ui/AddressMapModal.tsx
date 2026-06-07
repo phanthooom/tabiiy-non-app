@@ -28,24 +28,44 @@ export function AddressMapModal({ isOpen, onClose, onConfirm, apiKey }: AddressM
   const fetchAddress = useCallback(async (coords: number[]) => {
     if (!ymapsRef.current) return
     setIsFetching(true)
+
+    const fallbackFetch = async () => {
+      try {
+        const res = await fetch(`https://geocode-maps.yandex.ru/1.x/?apikey=fcd5b77b-d255-480e-b530-ec10724a2275&geocode=${coords[1]},${coords[0]}&format=json&lang=${language === 'uz' ? 'uz_UZ' : 'ru_RU'}`)
+        const data = await res.json()
+        const featureMember = data?.response?.GeoObjectCollection?.featureMember
+        if (featureMember && featureMember.length > 0) {
+          let name = featureMember[0].GeoObject.name
+          let desc = featureMember[0].GeoObject.description
+          let full = desc ? `${name}, ${desc}` : name
+          setAddress(full.replace('Узбекистан, Ташкент, ', '').replace('Узбекистан, ', '').replace('Oʻzbekiston, Toshkent, ', ''))
+        } else {
+          setAddress(`${coords[0].toFixed(5)}, ${coords[1].toFixed(5)}`)
+        }
+      } catch {
+        setAddress(`${coords[0].toFixed(5)}, ${coords[1].toFixed(5)}`)
+      } finally {
+        setIsFetching(false)
+      }
+    }
+
     try {
       // Allow any kind of result (house, street, district) so it doesn't fail
       const res = await ymapsRef.current.geocode(coords, { results: 1 })
       const firstGeoObject = res.geoObjects.get(0)
       if (firstGeoObject) {
         let addr = firstGeoObject.getAddressLine()
-        // Optional: Remove "Узбекистан, Ташкент, " prefix to make it shorter and cleaner
-        addr = addr.replace('Узбекистан, Ташкент, ', '').replace('Oʻzbekiston, Toshkent, ', '')
+        // Optional: Remove prefix to make it shorter and cleaner
+        addr = addr.replace('Узбекистан, Ташкент, ', '').replace('Узбекистан, ', '').replace('Oʻzbekiston, Toshkent, ', '')
         setAddress(addr)
+        setIsFetching(false)
       } else {
-        setAddress(`${coords[0].toFixed(5)}, ${coords[1].toFixed(5)}`)
+        await fallbackFetch()
       }
     } catch (err) {
-      setAddress(`${coords[0].toFixed(5)}, ${coords[1].toFixed(5)}`)
-    } finally {
-      setIsFetching(false)
+      await fallbackFetch()
     }
-  }, [])
+  }, [language])
 
   const handleBoundsChange = (e: any) => {
     const newCenter = e.get('newCenter')
