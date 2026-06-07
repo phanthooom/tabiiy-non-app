@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { Search, User, MapPin, ChevronDown } from 'lucide-react'
 import { useFirebaseOrders, updateFirebaseOrderStatus } from '@/hooks/useFirebaseOrders'
 import { useBackButton } from '@/hooks/useTelegram'
+import { AddressText } from '@/components/ui/AddressText'
 
 type AdminTab = 'all' | 'processing' | 'confirmed' | 'delivering' | 'delivered'
 
@@ -223,18 +224,7 @@ function AdminOrderCard({ order, searchQuery }: { order: any; searchQuery: strin
           <MapPin size={18} color="#64748b" style={{ marginTop: 2, flexShrink: 0 }} />
           <div style={{ color: '#334155', fontSize: 14, lineHeight: 1.4 }}>
             {order.address ? (
-              <a 
-                href={
-                  /^\d+\.\d+,\s*\d+\.\d+$/.test(order.address)
-                  ? `https://yandex.ru/maps/?pt=${order.address.split(',')[1].trim()},${order.address.split(',')[0].trim()}&z=18&l=map`
-                  : `https://yandex.ru/maps/?text=${encodeURIComponent(order.address)}`
-                }
-                target="_blank" 
-                rel="noopener noreferrer"
-                style={{ color: '#0ea5e9', textDecoration: 'none', borderBottom: '1px dashed #0ea5e9' }}
-              >
-                {/^\d+\.\d+,\s*\d+\.\d+$/.test(order.address) ? '📍 Xaritadan belgilangan manzil' : <Highlight text={order.address} query={searchQuery} />}
-              </a>
+              <AddressText address={order.address} language="uz" clickable={true} />
             ) : (
               'Manzil kiritilmagan'
             )}

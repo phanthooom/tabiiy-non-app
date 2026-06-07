@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { ordersApi } from '../api/index'
 import type { Order, OrderStatus } from '../types/index'
+import { AddressText } from '@/components/ui/AddressText'
 
 const STATUS_LABELS: Record<OrderStatus, string> = {
   accepted: '✅ Принят',
@@ -111,8 +112,8 @@ export function OrdersPage() {
                   {STATUS_LABELS[o.status]}
                 </span>
               </div>
-              <div style={{ color: '#888', fontSize: 13, marginTop: 6 }}>
-                📍 {o.address ? (/^\d+\.\d+,\s*\d+\.\d+$/.test(o.address) ? 'Xaritadan belgilangan manzil' : o.address) : 'Самовывоз'} · {o.items.length} поз. · {o.total_amount.toLocaleString()} сум
+              <div style={{ color: '#888', fontSize: 13, marginTop: 6, display: 'flex', alignItems: 'center', gap: 4 }}>
+                📍 {o.address ? <AddressText address={o.address} language="ru" clickable={true} /> : 'Самовывоз'} · {o.items.length} поз. · {o.total_amount.toLocaleString()} сум
               </div>
             </div>
           ))}
@@ -133,7 +134,7 @@ export function OrdersPage() {
             <h2 style={{ color: '#c8a96e', marginBottom: 16 }}>Заказ #{selected.id}</h2>
             <p style={{ color: '#aaa', fontSize: 14 }}>👤 {selected.user.full_name} (@{selected.user.username})</p>
             <p style={{ color: '#aaa', fontSize: 14 }}>📞 {selected.customer_phone}</p>
-            <p style={{ color: '#aaa', fontSize: 14 }}>📍 {selected.address ? (/^\d+\.\d+,\s*\d+\.\d+$/.test(selected.address) ? 'Xaritadan belgilangan manzil' : selected.address) : 'Самовывоз'}</p>
+            <div style={{ color: '#aaa', fontSize: 14, display: 'flex', gap: 4 }}>📍 {selected.address ? <AddressText address={selected.address} language="ru" clickable={true} /> : 'Самовывоз'}</div>
             <div style={{ margin: '14px 0', borderTop: '1px solid #2a2a2a', paddingTop: 14 }}>
               {selected.items.map((item, i) => (
                 <div key={i} style={{ display: 'flex', justifyContent: 'space-between', color: '#ccc', fontSize: 14, marginBottom: 6 }}>

@@ -5,6 +5,7 @@ import { CheckCircle, Clock, MapPin, Phone } from 'lucide-react'
 import { YMaps, Map as YandexMap } from '@pbe/react-yandex-maps'
 
 import { Button, Spinner } from '@/components/ui'
+import { AddressText } from '@/components/ui/AddressText'
 import { BYPASS_MODE, mockOrders } from '@/lib/mock-data'
 import { ordersApi } from '@/api'
 
@@ -527,9 +528,7 @@ export function OrderDetailPage() {
             <p style={{ fontSize: 11, color: '#64748b', fontWeight: 600, marginBottom: 2 }}>{language === 'uz' ? 'Yetkazib berish manzili' : 'Адрес доставки'}</p>
             <p style={{ fontSize: 13, color: '#0f172a', fontWeight: 500, lineHeight: 1.4 }}>
               {order.address ? (
-                /^\d+\.\d+,\s*\d+\.\d+$/.test(order.address)
-                  ? (language === 'uz' ? '📍 Xaritadan belgilangan manzil' : '📍 Выбрано на карте')
-                  : order.address
+                <AddressText address={order.address} language={language} clickable={true} />
               ) : (language === 'uz' ? 'Manzil kiritilmagan' : 'Адрес не указан')}
             </p>
           </div>
