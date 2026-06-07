@@ -61,14 +61,14 @@ function AppShell() {
   const isAdmin = pathname.startsWith('/admin')
   const isWelcome = pathname === '/welcome'
   const isDeliveryLocation = pathname === '/delivery-location'
+  const isOrderTracking = pathname.startsWith('/orders/') && pathname !== '/orders'
   const isPreAuth = isWelcome || isDeliveryLocation
-  const showNav = !isAdmin && !isPreAuth
+  const showNav = !isAdmin && !isPreAuth && !isOrderTracking
 
   if (!isAdmin && deliveryType === null && !isPreAuth) {
     return <Navigate to="/welcome" replace />
   }
 
-  const isOrderTracking = pathname.startsWith('/orders/')
   const showTopBar = !isAdmin && !isPreAuth && !isOrderTracking
 
   return (

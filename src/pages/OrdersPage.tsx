@@ -443,7 +443,7 @@ export function OrderDetailPage() {
         {/* @ts-expect-error Yandex Maps supports uz_UZ but react-yandex-maps types do not */}
         <YMaps query={{ apikey: 'fcd5b77b-d255-480e-b530-ec10724a2275', lang: language === 'uz' ? 'uz_UZ' : 'ru_RU' }}>
           <YandexMap
-            defaultState={{ center: [41.3111, 69.2401], zoom: 12 }}
+            defaultState={{ center: [41.3111, 69.2401], zoom: 12, controls: [] }}
             width="100%"
             height="100%"
             options={{ suppressMapOpenBlock: true, yandexMapDisablePoiInteractivity: true }}
@@ -451,25 +451,14 @@ export function OrderDetailPage() {
         </YMaps>
       </div>
 
-      {/* Header */}
-      <div style={{ 
-        position: 'absolute', top: 0, left: 0, right: 0, zIndex: 10, 
-        padding: 'calc(env(safe-area-inset-top, 20px) + 16px) 16px 24px', 
-        background: 'linear-gradient(to bottom, rgba(255,255,255,0.9), rgba(255,255,255,0))', 
-        display: 'flex', alignItems: 'center', gap: 16 
-      }}>
-        <button onClick={() => navigate('/orders')} style={{ background: 'none', border: 'none', padding: 8, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <ArrowLeft size={24} color="#0f172a" />
-        </button>
-        <h1 style={{ flex: 1, textAlign: 'center', margin: 0, fontSize: 18, fontWeight: 700, color: '#0f172a', paddingRight: 40 }}>
-          {language === 'uz' ? 'Buyurtmani kuzatish' : 'Отслеживание заказа'}
-        </h1>
-      </div>
-
       {/* Bottom Card */}
-      <div style={{ 
+      <motion.div 
+        initial={{ y: '100%' }}
+        animate={{ y: 0 }}
+        transition={{ type: 'spring', damping: 25, stiffness: 200, delay: 0.1 }}
+        style={{ 
         position: 'absolute', 
-        bottom: 'calc(env(safe-area-inset-bottom, 0px) + var(--nav-height) + 16px)', 
+        bottom: 'env(safe-area-inset-bottom, 16px)', 
         left: 16, right: 16, zIndex: 10, 
         background: '#ffffff', borderRadius: 20, padding: 20, 
         boxShadow: '0 8px 32px rgba(0,0,0,0.1)' 
@@ -526,9 +515,9 @@ export function OrderDetailPage() {
               <span>(120+)</span>
             </div>
           </div>
-          <button style={{ width: 40, height: 40, borderRadius: '50%', border: '1px solid #e2e8f0', background: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+          <a href="tel:+998901234567" style={{ width: 40, height: 40, borderRadius: '50%', border: '1px solid #e2e8f0', background: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', textDecoration: 'none' }}>
             <Phone size={18} color="#0f172a" />
-          </button>
+          </a>
         </div>
 
         {/* Address Info */}
@@ -541,7 +530,7 @@ export function OrderDetailPage() {
             </p>
           </div>
         </div>
-      </div>
+      </motion.div>
     </div>
   )
 }
