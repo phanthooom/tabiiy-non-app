@@ -526,7 +526,11 @@ export function OrderDetailPage() {
           <div>
             <p style={{ fontSize: 11, color: '#64748b', fontWeight: 600, marginBottom: 2 }}>{language === 'uz' ? 'Yetkazib berish manzili' : 'Адрес доставки'}</p>
             <p style={{ fontSize: 13, color: '#0f172a', fontWeight: 500, lineHeight: 1.4 }}>
-              {order.address || (language === 'uz' ? 'Manzil kiritilmagan' : 'Адрес не указан')}
+              {order.address ? (
+                /^\d+\.\d+,\s*\d+\.\d+$/.test(order.address)
+                  ? (language === 'uz' ? '📍 Xaritadan belgilangan manzil' : '📍 Выбрано на карте')
+                  : order.address
+              ) : (language === 'uz' ? 'Manzil kiritilmagan' : 'Адрес не указан')}
             </p>
           </div>
         </div>

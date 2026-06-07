@@ -112,7 +112,7 @@ export function OrdersPage() {
                 </span>
               </div>
               <div style={{ color: '#888', fontSize: 13, marginTop: 6 }}>
-                📍 {o.address || 'Самовывоз'} · {o.items.length} поз. · {o.total_amount.toLocaleString()} сум
+                📍 {o.address ? (/^\d+\.\d+,\s*\d+\.\d+$/.test(o.address) ? 'Xaritadan belgilangan manzil' : o.address) : 'Самовывоз'} · {o.items.length} поз. · {o.total_amount.toLocaleString()} сум
               </div>
             </div>
           ))}
@@ -133,7 +133,7 @@ export function OrdersPage() {
             <h2 style={{ color: '#c8a96e', marginBottom: 16 }}>Заказ #{selected.id}</h2>
             <p style={{ color: '#aaa', fontSize: 14 }}>👤 {selected.user.full_name} (@{selected.user.username})</p>
             <p style={{ color: '#aaa', fontSize: 14 }}>📞 {selected.customer_phone}</p>
-            <p style={{ color: '#aaa', fontSize: 14 }}>📍 {selected.address || 'Самовывоз'}</p>
+            <p style={{ color: '#aaa', fontSize: 14 }}>📍 {selected.address ? (/^\d+\.\d+,\s*\d+\.\d+$/.test(selected.address) ? 'Xaritadan belgilangan manzil' : selected.address) : 'Самовывоз'}</p>
             <div style={{ margin: '14px 0', borderTop: '1px solid #2a2a2a', paddingTop: 14 }}>
               {selected.items.map((item, i) => (
                 <div key={i} style={{ display: 'flex', justifyContent: 'space-between', color: '#ccc', fontSize: 14, marginBottom: 6 }}>

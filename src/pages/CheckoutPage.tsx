@@ -144,7 +144,7 @@ export function CheckoutPage() {
               <input
                 style={{ ...inputStyle, paddingRight: 40, pointerEvents: 'none' }}
                 placeholder={t('addressPlaceholder')}
-                value={address}
+                value={/^\d+\.\d+,\s*\d+\.\d+$/.test(address) ? (language === 'uz' ? '📍 Xaritadan belgilangan manzil' : '📍 Выбрано на карте') : address}
                 readOnly
               />
               <MapPin
