@@ -28,44 +28,56 @@ export function AddressMapModal({ isOpen, onClose, onConfirm, apiKey }: AddressM
   const fetchAddress = useCallback(async (coords: number[]) => {
     if (!ymapsRef.current) return
     setIsFetching(true)
+    const [lat, lon] = coords
 
-    const fallbackFetch = async () => {
+    const resolveAddress = async () => {
+      // Primary: Nominatim (OpenStreetMap)
       try {
-        const res = await fetch(`https://geocode-maps.yandex.ru/1.x/?apikey=fcd5b77b-d255-480e-b530-ec10724a2275&geocode=${coords[1]},${coords[0]}&format=json&lang=${language === 'uz' ? 'uz_UZ' : 'ru_RU'}`)
-        const data = await res.json()
-        const featureMember = data?.response?.GeoObjectCollection?.featureMember
-        if (featureMember && featureMember.length > 0) {
-          let name = featureMember[0].GeoObject.name
-          let desc = featureMember[0].GeoObject.description
-          let full = desc ? `${name}, ${desc}` : name
-          setAddress(full.replace('Узбекистан, Ташкент, ', '').replace('Узбекистан, ', '').replace('Oʻzbekiston, Toshkent, ', ''))
-        } else {
-          setAddress(`${coords[0].toFixed(5)}, ${coords[1].toFixed(5)}`)
+        const resp = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1`,
+          { headers: { 'Accept-Language': language === 'uz' ? 'uz' : 'ru' } }
+        )
+        if (resp.ok) {
+          const data = await resp.json()
+          const a = data?.address
+          if (a) {
+            const road = a.road || a.pedestrian || a.neighbourhood || a.suburb || ''
+            const house = a.house_number ? ` ${a.house_number}` : ''
+            const city = a.city || a.town || a.village || ''
+            const text = road ? `${road}${house}${city ? ', ' + city : ''}` : (data.display_name || '')
+            if (text) return text
+          }
         }
-      } catch {
-        setAddress(`${coords[0].toFixed(5)}, ${coords[1].toFixed(5)}`)
-      } finally {
-        setIsFetching(false)
-      }
+      } catch {}
+
+      // Fallback: Yandex REST
+      try {
+        const res = await fetch(`https://geocode-maps.yandex.ru/1.x/?apikey=${apiKey}&geocode=${lon},${lat}&format=json&lang=${language === 'uz' ? 'uz_UZ' : 'ru_RU'}`)
+        if (res.ok) {
+          const data = await res.json()
+          const item = data?.response?.GeoObjectCollection?.featureMember?.[0]?.GeoObject
+          const text = item?.metaDataProperty?.GeocoderMetaData?.text || item?.name
+          if (text) {
+            return text.replace('Узбекистан, Ташкент, ', '').replace('Oʻzbekiston, Toshkent, ', '')
+          }
+        }
+      } catch {}
+
+      // Final fallback: Ymaps geocode
+      try {
+        const res = await ymapsRef.current.geocode(coords, { results: 1 })
+        const obj = res.geoObjects.get(0)
+        const name = obj?.getAddressLine?.() || obj?.properties?.get('text')
+        if (name) return name.replace('Узбекистан, Ташкент, ', '').replace('Oʻzbekiston, Toshkent, ', '')
+      } catch {}
+
+      return `${lat.toFixed(5)}, ${lon.toFixed(5)}`
     }
 
-    try {
-      // Allow any kind of result (house, street, district) so it doesn't fail
-      const res = await ymapsRef.current.geocode(coords, { results: 1 })
-      const firstGeoObject = res.geoObjects.get(0)
-      if (firstGeoObject) {
-        let addr = firstGeoObject.getAddressLine()
-        // Optional: Remove prefix to make it shorter and cleaner
-        addr = addr.replace('Узбекистан, Ташкент, ', '').replace('Узбекистан, ', '').replace('Oʻzbekiston, Toshkent, ', '')
-        setAddress(addr)
-        setIsFetching(false)
-      } else {
-        await fallbackFetch()
-      }
-    } catch (err) {
-      await fallbackFetch()
-    }
-  }, [language])
+    const text = await resolveAddress()
+    setAddress(text)
+    setIsFetching(false)
+  }, [language, apiKey])
 
   const handleBoundsChange = (e: any) => {
     const newCenter = e.get('newCenter')
