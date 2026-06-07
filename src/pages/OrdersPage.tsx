@@ -438,7 +438,7 @@ export function OrderDetailPage() {
   }
 
   return (
-    <div style={{ position: 'relative', height: '100dvh', width: '100%', overflow: 'hidden', background: '#f8fafc' }}>
+    <div style={{ position: 'fixed', inset: 0, zIndex: 50, overflow: 'hidden', background: '#f8fafc' }}>
       <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
         {/* @ts-expect-error Yandex Maps supports uz_UZ but react-yandex-maps types do not */}
         <YMaps query={{ apikey: 'fcd5b77b-d255-480e-b530-ec10724a2275', lang: language === 'uz' ? 'uz_UZ' : 'ru_RU' }}>
@@ -458,7 +458,7 @@ export function OrderDetailPage() {
         transition={{ type: 'spring', damping: 25, stiffness: 200, delay: 0.1 }}
         style={{ 
         position: 'absolute', 
-        bottom: 'env(safe-area-inset-bottom, 16px)', 
+        bottom: 'calc(env(safe-area-inset-bottom, 0px) + 32px)', 
         left: 16, right: 16, zIndex: 10, 
         background: '#ffffff', borderRadius: 20, padding: 20, 
         boxShadow: '0 8px 32px rgba(0,0,0,0.1)' 
