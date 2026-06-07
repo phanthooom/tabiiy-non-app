@@ -50,15 +50,10 @@ interface DeliveryState {
   setDeliveryType: (type: DeliveryType | null) => void
 }
 
-export const useDeliveryStore = create<DeliveryState>()(
-  persist(
-    (set) => ({
-      deliveryType: null,
-      setDeliveryType: (deliveryType) => set({ deliveryType }),
-    }),
-    { name: 'delivery' }
-  )
-)
+export const useDeliveryStore = create<DeliveryState>()((set) => ({
+  deliveryType: null,
+  setDeliveryType: (deliveryType) => set({ deliveryType }),
+}))
 
 // ── Language store ────────────────────────────────────────────────────────
 

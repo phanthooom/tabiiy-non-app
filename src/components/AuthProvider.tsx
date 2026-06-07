@@ -12,6 +12,7 @@ import {
 } from '@/lib/telegram'
 import { useAuthStore, useCartStore, useLangStore } from '@/store'
 import { Spinner } from '@/components/ui'
+import { Croissant } from 'lucide-react'
 
 interface Props {
   children: React.ReactNode
@@ -170,7 +171,7 @@ export function AuthProvider({ children }: Props) {
         minHeight: '100dvh', gap: 20,
         background: 'var(--bg)',
       }}>
-        <span style={{ fontSize: 56 }}>{'🍞'}</span>
+        <Croissant size={48} color="#0f172a" strokeWidth={1.5} />
         <Spinner size={36} />
       </div>
     )

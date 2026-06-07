@@ -2,7 +2,7 @@ import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { useDeliveryStore } from '@/store'
 import type { DeliveryType } from '@/types'
-import { Bike, Store, Utensils } from 'lucide-react'
+import { Bike, Store, Croissant } from 'lucide-react'
 
 export function WelcomePage() {
   const navigate = useNavigate()
@@ -98,7 +98,7 @@ export function WelcomePage() {
               marginBottom: 24,
               color: '#0f172a'
             }}>
-            <Utensils size={28} strokeWidth={1.5} />
+            <Croissant size={28} strokeWidth={1.5} />
           </motion.div>
 
           {/* Title */}
