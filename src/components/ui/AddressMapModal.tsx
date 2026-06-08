@@ -187,10 +187,6 @@ export function AddressMapModal({ isOpen, onClose, onConfirm, apiKey }: AddressM
               fontWeight: 600,
               color: address === detectingLabel ? '#64748b' : '#0f172a',
               lineHeight: 1.4,
-              display: '-webkit-box',
-              WebkitLineClamp: 2,
-              WebkitBoxOrient: 'vertical',
-              overflow: 'hidden',
             }}>
               {address}
             </div>
