@@ -192,45 +192,6 @@ export function ProductCard({ product, onAdd, cartQty, addLabel, outLabel, sumLa
             <span style={{ fontSize: 64 }}>🍞</span>
           )}
 
-          {product.description != null && product.description !== '' && (
-            <button
-              onClick={(e) => { e.stopPropagation(); setShowInfo(true) }}
-              style={{
-                position: 'absolute', top: 10, left: 10,
-                background: 'rgba(4,22,39,0.6)',
-                backdropFilter: 'blur(10px)',
-                color: '#fff',
-                borderRadius: '50%',
-                width: 28, height: 28,
-                border: '1px solid rgba(255,255,255,0.25)',
-                cursor: 'pointer',
-                fontSize: 13,
-                fontWeight: 700,
-                fontStyle: 'italic',
-                fontFamily: 'Georgia, serif',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                zIndex: 10,
-              }}
-            >i</button>
-          )}
-
-          {/* Availability / Best Seller badge */}
-          <div style={{
-            position: 'absolute', top: 12, left: 12,
-            background: 'rgba(255, 255, 255, 0.9)',
-            backdropFilter: 'blur(4px)',
-            color: '#1e293b',
-            borderRadius: 4,
-            padding: '4px 8px',
-            fontSize: 10,
-            fontWeight: 800,
-            letterSpacing: '0.05em',
-            textTransform: 'uppercase',
-          }}>
-            {product.is_available ? (cartQty > 0 ? 'IN CART' : 'BEST SELLER') : outLabel}
-          </div>
 
           {cartQty > 0 && (
             <div style={{
