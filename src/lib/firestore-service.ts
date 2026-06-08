@@ -44,6 +44,7 @@ function toProduct(id: string, data: DocumentData): Product {
   const loc = HARDCODED_DESCRIPTIONS[String(id)]
   const descRu = loc ? loc.ru : (data.description_ru ?? null)
   const descUz = loc ? loc.uz : (data.description_uz ?? null)
+  const imageUrl = loc ? loc.image_url : (data.image_url ?? null)
   return {
     id:              finalId,
     name:            data.name_ru ?? data.name ?? '',
@@ -52,7 +53,7 @@ function toProduct(id: string, data: DocumentData): Product {
     price:           data.price ?? 0,
     quantity:        data.quantity ?? 0,
     photo_file_id:   data.photo_file_id ?? null,
-    image_url:       data.image_url ?? null,
+    image_url:       imageUrl,
     is_available:    data.is_available ?? true,
     description:     descRu,
     description_ru:  descRu,
