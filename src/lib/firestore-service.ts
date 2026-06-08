@@ -27,6 +27,7 @@ import {
 } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import type { Cart, CartItem, DeliveryType, Language, Order, OrderItem, Product, UserProfile } from '@/types'
+import { HARDCODED_DESCRIPTIONS } from './product-descriptions'
 
 // ── Helpers ───────────────────────────────────────────────────────────────
 
@@ -39,8 +40,12 @@ const col = {
 
 function toProduct(id: string, data: DocumentData): Product {
   const numId = Number(id)
+  const finalId = Number.isNaN(numId) ? id : numId
+  const loc = HARDCODED_DESCRIPTIONS[String(id)]
+  const descRu = loc ? loc.ru : (data.description_ru ?? null)
+  const descUz = loc ? loc.uz : (data.description_uz ?? null)
   return {
-    id:              Number.isNaN(numId) ? id : numId,
+    id:              finalId,
     name:            data.name_ru ?? data.name ?? '',
     name_ru:         data.name_ru ?? '',
     name_uz:         data.name_uz ?? '',
@@ -49,9 +54,9 @@ function toProduct(id: string, data: DocumentData): Product {
     photo_file_id:   data.photo_file_id ?? null,
     image_url:       data.image_url ?? null,
     is_available:    data.is_available ?? true,
-    description:     data.description_ru ?? null,
-    description_ru:  data.description_ru ?? null,
-    description_uz:  data.description_uz ?? null,
+    description:     descRu,
+    description_ru:  descRu,
+    description_uz:  descUz,
   }
 }
 
