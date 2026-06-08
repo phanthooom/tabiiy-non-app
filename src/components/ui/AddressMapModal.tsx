@@ -151,106 +151,114 @@ export function AddressMapModal({ isOpen, onClose, onConfirm, apiKey }: AddressM
             </YMaps>
           </div>
 
-          {/* Top Bar Floating */}
+          {/* Floating UI Overlay */}
           <div style={{
             position: 'absolute',
-            top: 'calc(env(safe-area-inset-top, 0px) + 60px)', // Pushed down further
+            top: 'calc(env(safe-area-inset-top, 0px) + 60px)',
             left: 16,
             right: 16,
             display: 'flex',
-            alignItems: 'flex-start', // Align to top in case text wraps
-            gap: 12,
-            zIndex: 10,
-          }}>
-            <button
-              onClick={onClose}
-              style={{
-                width: 44, height: 44,
-                borderRadius: '50%',
-                background: '#ffffff',
-                border: 'none',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                boxShadow: '0 2px 12px rgba(0,0,0,0.15)',
-                cursor: 'pointer',
-                flexShrink: 0,
-              }}
-            >
-              <ArrowLeft size={22} color="#0f172a" />
-            </button>
-            <div style={{
-              flex: 1,
-              background: '#ffffff',
-              borderRadius: 20,
-              padding: '12px 16px',
-              boxShadow: '0 2px 12px rgba(0,0,0,0.15)',
-              fontSize: 14,
-              fontWeight: 600,
-              color: address === detectingLabel ? '#64748b' : '#0f172a',
-              lineHeight: 1.4,
-            }}>
-              {address}
-            </div>
-          </div>
-
-          {/* Map Controls */}
-          <div style={{
-            position: 'absolute',
-            top: 'calc(env(safe-area-inset-top, 0px) + 130px)',
-            right: 16,
-            display: 'flex',
             flexDirection: 'column',
+            alignItems: 'flex-end',
             gap: 12,
             zIndex: 10,
+            pointerEvents: 'none',
           }}>
-            <button
-              onClick={detectLocation}
-              disabled={locating}
-              style={{
-                width: 44, height: 44,
-                borderRadius: '50%',
+            {/* Top Bar Floating */}
+            <div style={{
+              width: '100%',
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: 12,
+              pointerEvents: 'auto',
+            }}>
+              <button
+                onClick={onClose}
+                style={{
+                  width: 44, height: 44,
+                  borderRadius: '50%',
+                  background: '#ffffff',
+                  border: 'none',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  boxShadow: '0 2px 12px rgba(0,0,0,0.15)',
+                  cursor: 'pointer',
+                  flexShrink: 0,
+                }}
+              >
+                <ArrowLeft size={22} color="#0f172a" />
+              </button>
+              <div style={{
+                flex: 1,
                 background: '#ffffff',
-                border: 'none',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                borderRadius: 20,
+                padding: '12px 16px',
                 boxShadow: '0 2px 12px rgba(0,0,0,0.15)',
-                cursor: locating ? 'wait' : 'pointer',
-              }}
-            >
-              {locating ? <Loader2 size={22} color="#e8751a" className="spinner" /> : <LocateFixed size={22} color="#e8751a" />}
-            </button>
+                fontSize: 14,
+                fontWeight: 600,
+                color: address === detectingLabel ? '#64748b' : '#0f172a',
+                lineHeight: 1.4,
+              }}>
+                {address}
+              </div>
+            </div>
 
+            {/* Map Controls */}
             <div style={{
               display: 'flex',
               flexDirection: 'column',
-              background: '#ffffff',
-              borderRadius: 22,
-              boxShadow: '0 2px 12px rgba(0,0,0,0.15)',
-              overflow: 'hidden',
+              gap: 12,
+              pointerEvents: 'auto',
             }}>
               <button
-                onClick={() => handleZoom(1)}
+                onClick={detectLocation}
+                disabled={locating}
                 style={{
                   width: 44, height: 44,
-                  background: 'transparent',
-                  border: 'none',
-                  borderBottom: '1px solid #f1f5f9',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  cursor: 'pointer',
-                }}
-              >
-                <Plus size={22} color="#0f172a" />
-              </button>
-              <button
-                onClick={() => handleZoom(-1)}
-                style={{
-                  width: 44, height: 44,
-                  background: 'transparent',
+                  borderRadius: '50%',
+                  background: '#ffffff',
                   border: 'none',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  cursor: 'pointer',
+                  boxShadow: '0 2px 12px rgba(0,0,0,0.15)',
+                  cursor: locating ? 'wait' : 'pointer',
                 }}
               >
-                <Minus size={22} color="#0f172a" />
+                {locating ? <Loader2 size={22} color="#e8751a" className="spinner" /> : <LocateFixed size={22} color="#e8751a" />}
               </button>
+
+              <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                background: '#ffffff',
+                borderRadius: 22,
+                boxShadow: '0 2px 12px rgba(0,0,0,0.15)',
+                overflow: 'hidden',
+              }}>
+                <button
+                  onClick={() => handleZoom(1)}
+                  style={{
+                    width: 44, height: 44,
+                    background: 'transparent',
+                    border: 'none',
+                    borderBottom: '1px solid #f1f5f9',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <Plus size={22} color="#0f172a" />
+                </button>
+                <button
+                  onClick={() => handleZoom(-1)}
+                  style={{
+                    width: 44, height: 44,
+                    background: 'transparent',
+                    border: 'none',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <Minus size={22} color="#0f172a" />
+                </button>
+              </div>
             </div>
           </div>
 
