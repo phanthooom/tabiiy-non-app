@@ -157,12 +157,14 @@ export function ProductCard({ product, onAdd, cartQty, addLabel, outLabel, sumLa
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
+        onClick={() => setShowInfo(true)}
         style={{
           background: '#ffffff',
           borderRadius: 16,
           overflow: 'hidden',
           border: '1px solid #e2e8f0',
           boxShadow: '0 4px 20px rgba(0,0,0,0.03)',
+          cursor: 'pointer',
         }}
       >
         {/* Photo */}
@@ -213,24 +215,11 @@ export function ProductCard({ product, onAdd, cartQty, addLabel, outLabel, sumLa
           <h3 style={{
             fontSize: 18,
             fontWeight: 700,
-            marginBottom: 6,
+            marginBottom: 12,
             color: '#0f172a',
           }}>
             {product.name}
           </h3>
-
-          <p style={{
-            fontSize: 13,
-            color: '#64748b',
-            lineHeight: 1.4,
-            marginBottom: 16,
-            display: '-webkit-box',
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: 'vertical',
-            overflow: 'hidden',
-          }}>
-            {product.description || 'Svejiy, issiq va mazali tandoor noni...'}
-          </p>
 
           <div style={{
             fontSize: 18,
@@ -243,7 +232,7 @@ export function ProductCard({ product, onAdd, cartQty, addLabel, outLabel, sumLa
 
           <motion.button
             whileTap={{ scale: 0.96 }}
-            onClick={() => onAdd(product)}
+            onClick={(e) => { e.stopPropagation(); onAdd(product); }}
             disabled={!product.is_available || addDisabled}
             style={{
               width: '100%',
@@ -269,7 +258,7 @@ export function ProductCard({ product, onAdd, cartQty, addLabel, outLabel, sumLa
         </div>
       </motion.div>
 
-      {/* Info Modal */}
+      {/* Info Bottom Sheet */}
       <AnimatePresence>
         {showInfo && (
           <motion.div
@@ -281,38 +270,45 @@ export function ProductCard({ product, onAdd, cartQty, addLabel, outLabel, sumLa
             style={{
               position: 'fixed', inset: 0, zIndex: 1000,
               background: 'rgba(4,22,39,0.5)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              padding: 24,
+              display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
             }}
           >
             <motion.div
-              key="card"
-              initial={{ opacity: 0, scale: 0.93 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.93 }}
+              key="sheet"
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
               onClick={(e) => e.stopPropagation()}
               style={{
                 background: 'var(--surface)',
-                borderRadius: 16,
-                padding: 24,
-                maxWidth: 360,
+                borderTopLeftRadius: 24,
+                borderTopRightRadius: 24,
+                padding: '32px 24px 24px',
                 width: '100%',
                 position: 'relative',
-                maxHeight: '80vh',
+                maxHeight: '85vh',
                 overflowY: 'auto',
-                border: '1px solid var(--border)',
+                boxShadow: '0 -4px 24px rgba(0,0,0,0.1)',
               }}
             >
+              {/* Drag Handle Indicator */}
+              <div style={{
+                 position: 'absolute', top: 12, left: '50%', transform: 'translateX(-50%)',
+                 width: 40, height: 4, borderRadius: 2, background: '#cbd5e1'
+              }} />
               <button
                 onClick={() => setShowInfo(false)}
                 style={{
-                  position: 'absolute', top: 14, right: 14,
-                  background: 'none', border: 'none',
-                  fontSize: 18, cursor: 'pointer',
-                  color: 'var(--text-3)',
+                  position: 'absolute', top: 16, right: 16,
+                  background: '#f1f5f9', border: 'none',
+                  borderRadius: '50%', width: 32, height: 32,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 16, cursor: 'pointer',
+                  color: '#475569',
                 }}
               >✕</button>
-              <h3 style={{ fontWeight: 700, fontSize: 17, marginBottom: 12, color: 'var(--primary)' }}>
+              <h3 style={{ fontWeight: 800, fontSize: 20, marginBottom: 16, color: 'var(--primary)' }}>
                 {product.name}
               </h3>
               <p style={{
