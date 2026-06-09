@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { YMaps, Map as YandexMap } from '@pbe/react-yandex-maps'
 import { MapPin, ArrowLeft, LocateFixed, Loader2, Plus, Minus } from 'lucide-react'
@@ -12,118 +12,137 @@ interface AddressMapModalProps {
 }
 
 const TASHKENT_CENTER = [41.2995, 69.2401]
-
-const fetchWithTimeout = (url: string, opts: RequestInit = {}, ms = 5000) => {
-  const ctrl = new AbortController()
-  const id = setTimeout(() => ctrl.abort(), ms)
-  return fetch(url, { ...opts, signal: ctrl.signal }).finally(() => clearTimeout(id))
-}
+const MOVE_THRESHOLD = 0.00008 // ~8 metres — ignore micro-jitter from Telegram WebApp
 
 export function AddressMapModal({ isOpen, onClose, onConfirm, apiKey }: AddressMapModalProps) {
   const { language } = useLangStore()
   const [address, setAddress] = useState('')
   const [isFetching, setIsFetching] = useState(false)
   const [locating, setLocating] = useState(false)
-  const mapRef = useRef<any>(null)
-  const ymapsRef = useRef<any>(null)
-  const timerRef = useRef<any>(null)
-  const reqIdRef = useRef(0)
-  const centerRef = useRef(TASHKENT_CENTER)
 
-  const detectingLabel = language === 'uz' ? 'Manzil aniqlanmoqda...' : 'Определение адреса...'
-  const fallbackLabel  = language === 'uz' ? 'Tanlangan manzil' : 'Выбранная локация'
+  const mapRef       = useRef<any>(null)
+  const timerRef     = useRef<any>(null)
+  const reqIdRef     = useRef(0)
+  const centerRef    = useRef(TASHKENT_CENTER)
+  const resolvedPosRef = useRef<number[] | null>(null) // last successfully resolved position
 
+  const lang = language === 'uz'
+  const detectingLabel = lang ? 'Manzil aniqlanmoqda...' : 'Определение адреса...'
+  const fallbackLabel  = lang ? 'Tanlangan manzil'       : 'Выбранная локация'
+
+  // ── Watchdog: if isFetching stuck > 12s, force-release ──────────────────
+  useEffect(() => {
+    if (!isFetching) return
+    const id = setTimeout(() => {
+      setAddress(prev => (prev === detectingLabel || !prev) ? fallbackLabel : prev)
+      setIsFetching(false)
+    }, 12000)
+    return () => clearTimeout(id)
+  }, [isFetching, detectingLabel, fallbackLabel])
+
+  // ── Core geocoding: all three methods run in PARALLEL ───────────────────
   const fetchAddress = useCallback(async (coords: number[]) => {
     const reqId = ++reqIdRef.current
     setIsFetching(true)
     const [lat, lon] = coords
 
-    const resolveAddress = async (): Promise<string> => {
-      // ── 1. Yandex ymaps SDK geocode ──
-      // Most reliable: SDK already loaded, no CORS, same API key as map
-      if (ymapsRef.current) {
-        try {
-          const res = await Promise.race<any>([
-            ymapsRef.current.geocode([lat, lon], { results: 1 }),
-            new Promise<never>((_, rej) => setTimeout(() => rej(new Error('t')), 5000)),
-          ])
+    // 1. Yandex Maps SDK  (window.ymaps — always available once SDK loads, no ref timing)
+    const ymapsGeocodeP = (): Promise<string> => new Promise((resolve, reject) => {
+      const ymaps = (window as any).ymaps
+      if (!ymaps?.geocode) { reject(new Error('no ymaps')); return }
+      const timer = setTimeout(() => reject(new Error('timeout')), 8000)
+      ymaps.geocode([lat, lon], { results: 1 })
+        .then((res: any) => {
+          clearTimeout(timer)
           const obj = res?.geoObjects?.get(0)
-          if (obj) {
-            const name = obj.properties.get('name') || ''
-            const desc = obj.properties.get('description') || ''
-            const full = [name, desc].filter(Boolean).join(', ')
-            if (full) return full
-          }
-        } catch { /* skip */ }
-      }
+          const name = (obj?.properties?.get('name') || '') as string
+          const desc = (obj?.properties?.get('description') || '') as string
+          const full = [name, desc].filter(Boolean).join(', ')
+          full ? resolve(full) : reject(new Error('empty'))
+        })
+        .catch(() => { clearTimeout(timer); reject(new Error('ymaps failed')) })
+    })
 
-      // ── 2. Nominatim — build clean address from components ──
-      try {
-        const resp = await fetchWithTimeout(
-          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1`,
-          { headers: { 'Accept-Language': language === 'uz' ? 'uz' : 'ru' } },
-          5000,
-        )
-        if (resp.ok) {
-          const data = await resp.json()
-          if (data?.address) {
-            const a = data.address
+    // 2. Nominatim — build clean address from address components
+    const nominatimP = (): Promise<string> => new Promise((resolve, reject) => {
+      const ctrl = new AbortController()
+      const timer = setTimeout(() => { ctrl.abort(); reject(new Error('timeout')) }, 5000)
+      fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1`,
+        { headers: { 'Accept-Language': lang ? 'uz' : 'ru' }, signal: ctrl.signal },
+      )
+        .then(r => r.ok ? r.json() : Promise.reject())
+        .then(d => {
+          clearTimeout(timer)
+          const a = d?.address
+          if (a) {
             const parts = [
               a.road || a.pedestrian || a.footway || a.street,
               a.house_number,
               a.suburb || a.neighbourhood || a.quarter,
               a.city || a.town || a.village || a.municipality,
-            ].filter(Boolean)
-            if (parts.length >= 2) return parts.join(', ')
+            ].filter(Boolean) as string[]
+            if (parts.length >= 2) { resolve(parts.join(', ')); return }
           }
-          if (data?.display_name) return data.display_name
-        }
-      } catch { /* skip */ }
+          d?.display_name ? resolve(d.display_name) : reject(new Error('empty'))
+        })
+        .catch(() => { clearTimeout(timer); reject(new Error('nominatim failed')) })
+    })
 
-      // ── 3. Yandex REST geocode ──
-      try {
-        const res = await fetchWithTimeout(
-          `https://geocode-maps.yandex.ru/1.x/?apikey=${apiKey}&geocode=${lon},${lat}&format=json&lang=${language === 'uz' ? 'uz_UZ' : 'ru_RU'}`,
-          {},
-          5000,
-        )
-        if (res.ok) {
-          const data = await res.json()
-          const item = data?.response?.GeoObjectCollection?.featureMember?.[0]?.GeoObject
+    // 3. Yandex REST geocode
+    const yandexRestP = (): Promise<string> => new Promise((resolve, reject) => {
+      const ctrl = new AbortController()
+      const timer = setTimeout(() => { ctrl.abort(); reject(new Error('timeout')) }, 5000)
+      fetch(
+        `https://geocode-maps.yandex.ru/1.x/?apikey=${apiKey}&geocode=${lon},${lat}&format=json&lang=${lang ? 'uz_UZ' : 'ru_RU'}`,
+        { signal: ctrl.signal },
+      )
+        .then(r => r.ok ? r.json() : Promise.reject())
+        .then(d => {
+          clearTimeout(timer)
+          const item = d?.response?.GeoObjectCollection?.featureMember?.[0]?.GeoObject
           const text = item?.metaDataProperty?.GeocoderMetaData?.text || item?.name
-          if (text) return text
-        }
-      } catch { /* skip */ }
+          text ? resolve(text) : reject(new Error('empty'))
+        })
+        .catch(() => { clearTimeout(timer); reject(new Error('yandex rest failed')) })
+    })
 
-      return fallbackLabel
-    }
-
-    // Race all methods against 12s hard timeout
-    const text = await Promise.race([
-      resolveAddress(),
-      new Promise<string>(resolve => setTimeout(() => resolve(fallbackLabel), 12000)),
+    // Race: all three in parallel → first success wins. If all fail → fallback
+    const winner = await Promise.race([
+      // Promise.any: first resolved wins; polyfill-safe via race+catch
+      (Promise as any).any
+        ? (Promise as any).any([ymapsGeocodeP(), nominatimP(), yandexRestP()]).catch(() => fallbackLabel)
+        : Promise.race([ymapsGeocodeP(), nominatimP(), yandexRestP()]).catch(() => fallbackLabel),
+      // Hard outer timeout (watchdog useEffect is the real backstop)
+      new Promise<string>(res => setTimeout(() => res(fallbackLabel), 10000)),
     ])
 
-    // Discard stale result if user already moved the map
-    if (reqId !== reqIdRef.current) return
+    if (reqId !== reqIdRef.current) return  // stale: user already moved map
 
-    setAddress(text)
+    resolvedPosRef.current = [lat, lon]
+    setAddress(winner as string)
     setIsFetching(false)
-  }, [language, apiKey, fallbackLabel])
+  }, [language, apiKey, fallbackLabel, lang])
 
+  // ── Map event handlers ───────────────────────────────────────────────────
   const handleBoundsChange = (e: any) => {
-    const newCenter = e.get('newCenter')
+    const newCenter = e.get('newCenter') as number[]
     centerRef.current = newCenter
-    setAddress(detectingLabel)
+
+    // Only reset address label if map actually moved a meaningful distance
+    const prev = resolvedPosRef.current
+    const moved = !prev
+      || Math.abs(newCenter[0] - prev[0]) > MOVE_THRESHOLD
+      || Math.abs(newCenter[1] - prev[1]) > MOVE_THRESHOLD
+
+    if (moved) setAddress(detectingLabel)
 
     if (timerRef.current) clearTimeout(timerRef.current)
-    timerRef.current = setTimeout(() => {
-      fetchAddress(newCenter)
-    }, 600)
+    timerRef.current = setTimeout(() => fetchAddress(newCenter), 600)
   }
 
-  const handleLoad = (ymaps: any) => {
-    ymapsRef.current = ymaps
+  const handleLoad = () => {
+    // SDK loaded — kick off initial geocode (window.ymaps now available)
     fetchAddress(centerRef.current)
   }
 
@@ -131,24 +150,19 @@ export function AddressMapModal({ isOpen, onClose, onConfirm, apiKey }: AddressM
     if (!navigator.geolocation) return
     setLocating(true)
     navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const { latitude: lat, longitude: lon } = pos.coords
+      ({ coords: { latitude: lat, longitude: lon } }) => {
         centerRef.current = [lat, lon]
-        if (mapRef.current) {
-          mapRef.current.setCenter([lat, lon], 16, { duration: 400 })
-        }
+        if (mapRef.current) mapRef.current.setCenter([lat, lon], 16, { duration: 400 })
         fetchAddress([lat, lon])
         setLocating(false)
       },
-      () => { setLocating(false) },
+      () => setLocating(false),
       { timeout: 10000, enableHighAccuracy: true },
     )
   }
 
   const handleZoom = (delta: number) => {
-    if (mapRef.current) {
-      mapRef.current.setZoom(mapRef.current.getZoom() + delta, { duration: 200 })
-    }
+    if (mapRef.current) mapRef.current.setZoom(mapRef.current.getZoom() + delta, { duration: 200 })
   }
 
   const canConfirm = !isFetching && !!address && address !== detectingLabel
@@ -165,12 +179,11 @@ export function AddressMapModal({ isOpen, onClose, onConfirm, apiKey }: AddressM
         >
           {/* Map */}
           <div style={{ position: 'absolute', inset: 0 }}>
-            {/* @ts-expect-error Yandex Maps supports uz_UZ but react-yandex-maps types do not */}
-            <YMaps query={{ apikey: apiKey, lang: language === 'uz' ? 'uz_UZ' : 'ru_RU', load: 'package.full' }}>
+            {/* @ts-expect-error uz_UZ supported at runtime */}
+            <YMaps query={{ apikey: apiKey, lang: lang ? 'uz_UZ' : 'ru_RU', load: 'package.full' }}>
               <YandexMap
                 defaultState={{ center: TASHKENT_CENTER, zoom: 16, controls: [] }}
-                width="100%"
-                height="100%"
+                width="100%" height="100%"
                 onLoad={handleLoad}
                 instanceRef={mapRef}
                 onBoundsChange={handleBoundsChange}
@@ -204,7 +217,7 @@ export function AddressMapModal({ isOpen, onClose, onConfirm, apiKey }: AddressM
                 flex: 1, background: '#ffffff', borderRadius: 20, padding: '12px 16px',
                 boxShadow: '0 2px 12px rgba(0,0,0,0.15)',
                 fontSize: 14, fontWeight: 600, lineHeight: 1.4,
-                color: (!address || address === detectingLabel) ? '#64748b' : '#0f172a',
+                color: (isFetching || !address || address === detectingLabel) ? '#64748b' : '#0f172a',
                 minHeight: 48, display: 'flex', alignItems: 'center',
               }}>
                 {isFetching ? (
@@ -218,7 +231,7 @@ export function AddressMapModal({ isOpen, onClose, onConfirm, apiKey }: AddressM
               </div>
             </div>
 
-            {/* Map controls */}
+            {/* Controls */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, pointerEvents: 'auto' }}>
               <button
                 onClick={detectLocation}
@@ -234,24 +247,22 @@ export function AddressMapModal({ isOpen, onClose, onConfirm, apiKey }: AddressM
                   : <LocateFixed size={22} color="#e8751a" />}
               </button>
 
-              <div style={{ display: 'flex', flexDirection: 'column', background: '#ffffff', borderRadius: 22, boxShadow: '0 2px 12px rgba(0,0,0,0.15)', overflow: 'hidden' }}>
-                <button
-                  onClick={() => handleZoom(1)}
-                  style={{ width: 44, height: 44, background: 'transparent', border: 'none', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
-                >
+              <div style={{
+                display: 'flex', flexDirection: 'column',
+                background: '#ffffff', borderRadius: 22,
+                boxShadow: '0 2px 12px rgba(0,0,0,0.15)', overflow: 'hidden',
+              }}>
+                <button onClick={() => handleZoom(1)} style={{ width: 44, height: 44, background: 'transparent', border: 'none', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
                   <Plus size={22} color="#0f172a" />
                 </button>
-                <button
-                  onClick={() => handleZoom(-1)}
-                  style={{ width: 44, height: 44, background: 'transparent', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
-                >
+                <button onClick={() => handleZoom(-1)} style={{ width: 44, height: 44, background: 'transparent', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
                   <Minus size={22} color="#0f172a" />
                 </button>
               </div>
             </div>
           </div>
 
-          {/* Central Pin */}
+          {/* Central pin */}
           <div style={{
             position: 'absolute', top: '50%', left: '50%',
             transform: 'translate(-50%, -100%)',
@@ -270,15 +281,11 @@ export function AddressMapModal({ isOpen, onClose, onConfirm, apiKey }: AddressM
             <motion.button
               whileTap={{ scale: 0.97 }}
               disabled={!canConfirm}
-              onClick={() => {
-                onConfirm(address)
-                onClose()
-              }}
+              onClick={() => { onConfirm(address); onClose() }}
               style={{
                 width: '100%',
                 background: canConfirm ? '#e8751a' : '#cbd5e1',
-                color: '#fff',
-                border: 'none', borderRadius: 16, padding: '16px',
+                color: '#fff', border: 'none', borderRadius: 16, padding: '16px',
                 fontWeight: 700, fontSize: 16,
                 fontFamily: 'var(--font-body)',
                 cursor: canConfirm ? 'pointer' : 'not-allowed',
@@ -286,7 +293,7 @@ export function AddressMapModal({ isOpen, onClose, onConfirm, apiKey }: AddressM
                 transition: 'background 0.2s',
               }}
             >
-              {language === 'uz' ? 'Tasdiqlash' : 'Подтвердить'}
+              {lang ? 'Tasdiqlash' : 'Подтвердить'}
             </motion.button>
           </div>
         </motion.div>
