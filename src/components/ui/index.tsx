@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ShoppingCart, X } from 'lucide-react'
 import type { HTMLMotionProps } from 'framer-motion'
@@ -91,12 +91,13 @@ export function ProductPhoto({ fileId, alt = '', style, fallback = <span style={
   return <img src={photoUrl(fileId)} alt={alt} style={style} onError={() => setFailed(true)} />
 }
 
-// ── Product Card (full-width, single column) ──────────────────────────────
+// ── Product Card ──────────────────────────────────────────────────────────
 
 interface ProductCardProps {
   product: Product
   onAdd: (product: Product) => void
   onRemove: (product: Product) => void
+  onSetQty: (product: Product, qty: number) => void
   cartQty: number
   addLabel: string
   outLabel: string
@@ -105,11 +106,57 @@ interface ProductCardProps {
   language?: string
 }
 
-export function ProductCard({ product, onAdd, onRemove, cartQty, addLabel, outLabel, sumLabel, addDisabled, language = 'ru' }: ProductCardProps) {
+export function ProductCard({ product, onAdd, onRemove, onSetQty, cartQty, addLabel, outLabel, sumLabel, addDisabled, language = 'ru' }: ProductCardProps) {
   const [showSheet, setShowSheet] = useState(false)
+  // Local qty for immediate UI feedback; synced to API via debounce
+  const [localQty, setLocalQty] = useState(cartQty)
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
   const price = product.price.toLocaleString('ru-RU')
   const lang = language === 'uz'
   const available = product.is_available && !addDisabled
+
+  // Keep local in sync when external cart changes (e.g. sheet closed, then opened again)
+  useEffect(() => { setLocalQty(cartQty) }, [cartQty])
+
+  // Lock body scroll when sheet open (prevent background scroll on iOS)
+  useEffect(() => {
+    if (!showSheet) return
+    const saved = window.scrollY
+    document.body.style.overflow = 'hidden'
+    document.body.style.position = 'fixed'
+    document.body.style.top = `-${saved}px`
+    document.body.style.width = '100%'
+    return () => {
+      document.body.style.overflow = ''
+      document.body.style.position = ''
+      document.body.style.top = ''
+      document.body.style.width = ''
+      window.scrollTo(0, saved)
+    }
+  }, [showSheet])
+
+  const sheetInc = () => {
+    if (localQty >= product.quantity) return
+    const next = localQty + 1
+    setLocalQty(next)
+    scheduleSync(next)
+  }
+
+  const sheetDec = () => {
+    if (localQty <= 0) return
+    const next = localQty - 1
+    setLocalQty(next)
+    scheduleSync(next)
+  }
+
+  // Debounce: fire API 420ms after last tap
+  const scheduleSync = (qty: number) => {
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => {
+      onSetQty(product, qty)
+    }, 420)
+  }
 
   const imgNode = product.image_url ? (
     <img src={product.image_url} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -121,12 +168,12 @@ export function ProductCard({ product, onAdd, onRemove, cartQty, addLabel, outLa
 
   return (
     <>
-      {/* ── Full-width card ── */}
+      {/* ── Card ── */}
       <div style={{
         background: '#fff', borderRadius: 16, overflow: 'hidden',
         border: '1px solid #e8edf2', boxShadow: '0 2px 12px rgba(0,0,0,0.05)',
       }}>
-        {/* Image clickable */}
+        {/* Image */}
         <div
           onClick={() => setShowSheet(true)}
           style={{
@@ -148,11 +195,11 @@ export function ProductCard({ product, onAdd, onRemove, cartQty, addLabel, outLa
           )}
         </div>
 
-        {/* Info row: name+price left, action right */}
+        {/* Name + price + action */}
         <div style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
           <div style={{ flex: 1, minWidth: 0 }}>
             <p style={{
-              fontSize: 15, fontWeight: 700, color: '#0f172a', marginBottom: 4, lineHeight: 1.3,
+              fontSize: 15, fontWeight: 700, color: '#0f172a', marginBottom: 4,
               overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
             }}>
               {product.name}
@@ -162,50 +209,50 @@ export function ProductCard({ product, onAdd, onRemove, cartQty, addLabel, outLa
             </p>
           </div>
 
-          {/* Button or stepper */}
           {cartQty === 0 ? (
             <motion.button
-              whileTap={{ scale: 0.94 }}
+              whileTap={{ scale: 0.93 }}
               onClick={(e) => { e.stopPropagation(); if (available) onAdd(product) }}
               disabled={!available}
               style={{
-                flexShrink: 0, border: 'none', borderRadius: 12, padding: '10px 16px',
+                flexShrink: 0, border: 'none', borderRadius: 12, padding: '10px 14px',
                 background: available ? '#e8751a' : '#cbd5e1',
-                color: '#fff', fontSize: 14, fontWeight: 700,
+                color: '#fff', fontSize: 13, fontWeight: 700,
                 fontFamily: 'var(--font-body)', cursor: available ? 'pointer' : 'not-allowed',
-                display: 'flex', alignItems: 'center', gap: 6,
-                boxShadow: available ? '0 3px 12px rgba(232,117,26,0.25)' : 'none',
+                display: 'flex', alignItems: 'center', gap: 5,
+                boxShadow: available ? '0 3px 10px rgba(232,117,26,0.3)' : 'none',
               }}
             >
-              <ShoppingCart size={16} strokeWidth={2.5} />
+              <ShoppingCart size={15} strokeWidth={2.5} />
               {product.is_available ? addLabel : outLabel}
             </motion.button>
           ) : (
             <div style={{
               flexShrink: 0, display: 'flex', alignItems: 'center',
-              background: '#fff6ef', border: '1.5px solid #e8751a',
-              borderRadius: 12, overflow: 'hidden',
+              background: '#fff6ef', border: '1.5px solid #e8751a', borderRadius: 12,
             }}>
               <motion.button
-                whileTap={{ scale: 0.85 }}
+                whileTap={{ scale: 0.82 }}
                 onClick={(e) => { e.stopPropagation(); onRemove(product) }}
                 style={{
                   width: 36, height: 38, background: 'transparent', border: 'none',
-                  fontSize: 20, color: '#e8751a', cursor: 'pointer',
+                  fontSize: 22, color: '#e8751a', cursor: 'pointer',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  lineHeight: 1,
                 }}
               >−</motion.button>
-              <span style={{ fontSize: 15, fontWeight: 700, color: '#e8751a', minWidth: 22, textAlign: 'center' }}>
+              <span style={{ fontSize: 15, fontWeight: 700, color: '#e8751a', minWidth: 20, textAlign: 'center' }}>
                 {cartQty}
               </span>
               <motion.button
-                whileTap={{ scale: 0.85 }}
+                whileTap={{ scale: 0.82 }}
                 onClick={(e) => { e.stopPropagation(); onAdd(product) }}
                 disabled={addDisabled}
                 style={{
                   width: 36, height: 38, background: 'transparent', border: 'none',
-                  fontSize: 20, color: '#e8751a', cursor: 'pointer',
+                  fontSize: 22, color: '#e8751a', cursor: 'pointer',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  lineHeight: 1,
                 }}
               >+</motion.button>
             </div>
@@ -217,86 +264,79 @@ export function ProductCard({ product, onAdd, onRemove, cartQty, addLabel, outLa
       <AnimatePresence>
         {showSheet && (
           <>
-            {/* Overlay */}
             <motion.div
               key="overlay"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.25 }}
+              transition={{ duration: 0.22 }}
               onClick={() => setShowSheet(false)}
-              style={{
-                position: 'fixed', inset: 0, zIndex: 2000,
-                background: 'rgba(0,0,0,0.4)',
-              }}
+              style={{ position: 'fixed', inset: 0, zIndex: 2000, background: 'rgba(0,0,0,0.42)' }}
             />
 
-            {/* Sheet — draggable */}
             <motion.div
               key="sheet"
               initial={{ y: '100%' }}
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
-              transition={{ type: 'spring', damping: 32, stiffness: 320, mass: 0.85 }}
+              transition={{ type: 'spring', damping: 34, stiffness: 340, mass: 0.8 }}
               drag="y"
               dragConstraints={{ top: 0, bottom: 0 }}
-              dragElastic={{ top: 0, bottom: 0.35 }}
+              dragElastic={{ top: 0, bottom: 0.3 }}
               onDragEnd={(_, info) => {
-                if (info.offset.y > 90 || info.velocity.y > 450) setShowSheet(false)
+                if (info.offset.y > 80 || info.velocity.y > 400) setShowSheet(false)
               }}
               style={{
-                position: 'fixed', bottom: 0, left: 0, right: 0,
-                zIndex: 2001,
+                position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 2001,
                 background: '#fff',
                 borderTopLeftRadius: 24, borderTopRightRadius: 24,
-                maxHeight: '78vh',
+                maxHeight: '80vh',
                 display: 'flex', flexDirection: 'column',
-                boxShadow: '0 -4px 40px rgba(0,0,0,0.15)',
+                boxShadow: '0 -6px 40px rgba(0,0,0,0.14)',
                 touchAction: 'none',
               }}
             >
-              {/* Drag area + handle */}
+              {/* Handle row */}
               <div style={{
-                flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                paddingTop: 12, paddingBottom: 8, position: 'relative',
-                cursor: 'grab',
+                flexShrink: 0, padding: '12px 16px 8px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                position: 'relative', cursor: 'grab',
               }}>
-                <div style={{ width: 44, height: 4, borderRadius: 2, background: '#d1d9e0' }} />
-
-                {/* X button inside sheet, top-right */}
+                <div style={{ width: 40, height: 4, borderRadius: 2, background: '#dde3ec' }} />
                 <button
                   onClick={() => setShowSheet(false)}
                   style={{
-                    position: 'absolute', right: 16, top: 8,
-                    width: 34, height: 34, borderRadius: '50%',
-                    background: '#f1f5f9', border: 'none', cursor: 'pointer',
+                    position: 'absolute', right: 16, top: '50%', transform: 'translateY(-50%)',
+                    width: 28, height: 28, borderRadius: '50%',
+                    background: '#eef2f7', border: 'none', cursor: 'pointer',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}
                 >
-                  <X size={17} color="#64748b" />
+                  <X size={14} color="#64748b" strokeWidth={2.5} />
                 </button>
               </div>
 
-              {/* Scrollable content */}
+              {/* Scrollable body */}
               <div style={{ flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch' }}>
-                {/* Product image */}
-                <div style={{
-                  height: 200, background: '#f8fafb',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  overflow: 'hidden',
-                }}>
-                  {imgNode}
+                {/* Image: padded, rounded */}
+                <div style={{ padding: '0 20px 16px' }}>
+                  <div style={{
+                    borderRadius: 16, overflow: 'hidden',
+                    height: 190, background: '#f8fafb',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    {imgNode}
+                  </div>
                 </div>
 
-                <div style={{ padding: '18px 20px 4px' }}>
+                <div style={{ padding: '0 20px 8px' }}>
                   <h2 style={{ fontSize: 19, fontWeight: 800, color: '#0f172a', marginBottom: 6, lineHeight: 1.3 }}>
                     {product.name}
                   </h2>
-                  <p style={{ fontSize: 21, fontWeight: 800, color: '#e8751a', marginBottom: 12 }}>
+                  <p style={{ fontSize: 21, fontWeight: 800, color: '#e8751a', marginBottom: 10 }}>
                     {price} <span style={{ fontSize: 13, fontWeight: 500, color: '#94a3b8' }}>{sumLabel}</span>
                   </p>
 
-                  {/* Stock badge */}
                   {product.quantity > 0 && (
                     <div style={{
                       display: 'inline-flex', alignItems: 'center', gap: 6,
@@ -310,13 +350,12 @@ export function ProductCard({ product, onAdd, onRemove, cartQty, addLabel, outLa
                     </div>
                   )}
 
-                  {/* Description */}
                   {product.description && (
                     <>
-                      <p style={{ fontSize: 13, fontWeight: 700, color: '#0f172a', marginBottom: 5, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      <p style={{ fontSize: 12, fontWeight: 700, color: '#94a3b8', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                         {lang ? 'Tavsif' : 'Описание'}
                       </p>
-                      <p style={{ fontSize: 14, color: '#475569', lineHeight: 1.65, marginBottom: 16 }}>
+                      <p style={{ fontSize: 14, color: '#475569', lineHeight: 1.65, marginBottom: 12 }}>
                         {product.description}
                       </p>
                     </>
@@ -324,15 +363,15 @@ export function ProductCard({ product, onAdd, onRemove, cartQty, addLabel, outLa
                 </div>
               </div>
 
-              {/* Bottom action bar */}
+              {/* Bottom action — optimistic stepper */}
               <div style={{
                 padding: '12px 20px calc(12px + env(safe-area-inset-bottom, 0px))',
                 borderTop: '1px solid #f1f5f9', flexShrink: 0,
               }}>
-                {cartQty === 0 ? (
+                {localQty === 0 ? (
                   <motion.button
                     whileTap={{ scale: 0.97 }}
-                    onClick={() => { onAdd(product); setShowSheet(false) }}
+                    onClick={() => { setLocalQty(1); scheduleSync(1) }}
                     disabled={!available}
                     style={{
                       width: '100%', border: 'none', borderRadius: 14, padding: '15px',
@@ -340,7 +379,7 @@ export function ProductCard({ product, onAdd, onRemove, cartQty, addLabel, outLa
                       color: '#fff', fontSize: 16, fontWeight: 700,
                       fontFamily: 'var(--font-body)', cursor: available ? 'pointer' : 'not-allowed',
                       display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                      boxShadow: available ? '0 4px 20px rgba(232,117,26,0.28)' : 'none',
+                      boxShadow: available ? '0 4px 18px rgba(232,117,26,0.28)' : 'none',
                     }}
                   >
                     <ShoppingCart size={19} strokeWidth={2.5} />
@@ -348,40 +387,47 @@ export function ProductCard({ product, onAdd, onRemove, cartQty, addLabel, outLa
                   </motion.button>
                 ) : (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    {/* Big stepper */}
                     <div style={{
                       flex: 1, display: 'flex', alignItems: 'center',
-                      background: '#fff6ef', border: '1.5px solid #e8751a',
-                      borderRadius: 14, overflow: 'hidden',
+                      background: '#fff6ef', border: '2px solid #e8751a', borderRadius: 14,
+                      overflow: 'hidden',
                     }}>
                       <motion.button
-                        whileTap={{ scale: 0.88 }}
-                        onClick={() => onRemove(product)}
+                        whileTap={{ scale: 0.85, background: '#ffe8d4' }}
+                        onClick={sheetDec}
                         style={{
-                          flex: 1, height: 50, background: 'transparent', border: 'none',
-                          fontSize: 26, color: '#e8751a', cursor: 'pointer',
+                          flex: 1, height: 52, background: 'transparent', border: 'none',
+                          fontSize: 28, fontWeight: 300, color: '#e8751a', cursor: 'pointer',
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          userSelect: 'none',
                         }}
                       >−</motion.button>
-                      <span style={{ fontSize: 18, fontWeight: 700, color: '#e8751a', minWidth: 32, textAlign: 'center' }}>
-                        {cartQty}
+                      <span style={{
+                        fontSize: 20, fontWeight: 800, color: '#e8751a',
+                        minWidth: 36, textAlign: 'center',
+                      }}>
+                        {localQty}
                       </span>
                       <motion.button
-                        whileTap={{ scale: 0.88 }}
-                        onClick={() => onAdd(product)}
-                        disabled={addDisabled}
+                        whileTap={{ scale: 0.85, background: '#ffe8d4' }}
+                        onClick={sheetInc}
                         style={{
-                          flex: 1, height: 50, background: 'transparent', border: 'none',
-                          fontSize: 26, color: '#e8751a', cursor: 'pointer',
+                          flex: 1, height: 52, background: 'transparent', border: 'none',
+                          fontSize: 28, fontWeight: 300, color: '#e8751a', cursor: 'pointer',
                           display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          userSelect: 'none',
                         }}
                       >+</motion.button>
                     </div>
+
+                    {/* Done button */}
                     <motion.button
                       whileTap={{ scale: 0.97 }}
                       onClick={() => setShowSheet(false)}
                       style={{
-                        height: 50, paddingInline: 18, border: 'none', borderRadius: 14,
-                        background: '#f1f5f9', color: '#475569', fontSize: 14, fontWeight: 600,
+                        height: 52, paddingInline: 18, border: 'none', borderRadius: 14,
+                        background: '#e8751a', color: '#fff', fontSize: 14, fontWeight: 700,
                         cursor: 'pointer', fontFamily: 'var(--font-body)', whiteSpace: 'nowrap',
                       }}
                     >

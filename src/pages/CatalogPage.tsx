@@ -81,6 +81,40 @@ export function CatalogPage() {
     },
   })
 
+  // Optimistic set-qty: immediately update store, then sync to API
+  const setQtyMutation = useMutation({
+    mutationFn: ({ product, qty }: { product: Product; qty: number }) => {
+      if (BYPASS_MODE) {
+        if (qty === 0) {
+          const newItems = (cart?.items ?? []).filter(i => i.product_id !== product.id)
+          const total = newItems.reduce((s, i) => s + i.subtotal, 0)
+          return Promise.resolve({ items: newItems, total, items_count: newItems.length })
+        }
+        const existingItem = cart?.items.find(i => i.product_id === product.id)
+        const newItems = existingItem
+          ? cart!.items.map(i => i.product_id === product.id
+              ? { ...i, quantity: qty, subtotal: i.price * qty }
+              : i)
+          : [...(cart?.items ?? []), {
+              product_id: product.id, product_name: product.name,
+              price: product.price, quantity: qty, subtotal: product.price * qty,
+              photo_file_id: null, image_url: null,
+            }]
+        const total = newItems.reduce((s, i) => s + i.subtotal, 0)
+        return Promise.resolve({ items: newItems, total, items_count: newItems.length })
+      }
+      if (qty === 0) return cartApi.removeItem(product.id)
+      return cartApi.updateItem(product.id, qty)
+    },
+    onSuccess: (newCart) => {
+      setCart(newCart)
+      queryClient.setQueryData(queryKeys.cart(), newCart)
+    },
+    onError: (err: unknown) => {
+      tg?.showAlert(apiErrorMessage(err, 'Ошибка'))
+    },
+  })
+
   const handleAdd = (product: Product) => {
     const cartItem = cart?.items.find(i => i.product_id === product.id)
     if (cartItem && cartItem.quantity >= product.quantity) {
@@ -95,6 +129,10 @@ export function CatalogPage() {
     const cartItem = cart?.items.find(i => i.product_id === product.id)
     if (!cartItem) return
     removeMutation.mutate({ product, qty: cartItem.quantity })
+  }
+
+  const handleSetQty = (product: Product, qty: number) => {
+    setQtyMutation.mutate({ product, qty })
   }
 
   if (isError) {
@@ -129,7 +167,7 @@ export function CatalogPage() {
         </p>
       </div>
 
-      {/* 2-column grid */}
+      {/* Single column list */}
       <AnimatePresence>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {(products ?? []).map((product, i) => (
@@ -143,6 +181,7 @@ export function CatalogPage() {
                 product={product}
                 onAdd={handleAdd}
                 onRemove={handleRemove}
+                onSetQty={handleSetQty}
                 cartQty={cart?.items.find(x => x.product_id === product.id)?.quantity ?? 0}
                 addLabel={t('addToCart')}
                 outLabel={t('outOfStock')}
