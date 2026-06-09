@@ -6,14 +6,24 @@ import { useFirebaseOrders, updateFirebaseOrderStatus } from '@/hooks/useFirebas
 import { useBackButton } from '@/hooks/useTelegram'
 import { AddressText } from '@/components/ui/AddressText'
 
-type AdminTab = 'all' | 'processing' | 'confirmed' | 'delivering' | 'delivered'
+type AdminTab = 'all' | 'processing' | 'confirmed' | 'delivering' | 'delivered' | 'cancelled'
 
 const STATUSES = [
-  { id: 'accepted', label: 'Jarayonda' },
-  { id: 'packing', label: 'Tasdiqlandi' }, // We map cooking to Tasdiqlandi for UX
-  { id: 'courier_assigned', label: "Yo'lda" },
-  { id: 'delivered', label: 'Yetkazildi' }
+  { id: 'accepted', label: 'Jarayonda', cancel: false },
+  { id: 'packing', label: 'Tasdiqlandi', cancel: false },
+  { id: 'courier_assigned', label: "Yo'lda", cancel: false },
+  { id: 'delivered', label: 'Yetkazildi', cancel: false },
+  { id: 'cancelled', label: '✕ Bekor qilindi', cancel: true },
 ]
+
+const STATUS_BADGE_COLORS: Record<string, { bg: string; color: string }> = {
+  accepted:         { bg: '#e0f2fe', color: '#0369a1' },
+  packing:          { bg: '#fff7ed', color: '#c2410c' },
+  courier_assigned: { bg: '#f0fdf4', color: '#166534' },
+  ready:            { bg: '#f0fdf4', color: '#166534' },
+  delivered:        { bg: '#dcfce7', color: '#166534' },
+  cancelled:        { bg: '#fef2f2', color: '#dc2626' },
+}
 
 export function AdminOrdersPage() {
   const navigate = useNavigate()
@@ -30,6 +40,7 @@ export function AdminOrdersPage() {
     if (activeTab === 'confirmed') tabMatch = o.status === 'packing'
     if (activeTab === 'delivering') tabMatch = o.status === 'courier_assigned'
     if (activeTab === 'delivered') tabMatch = o.status === 'delivered'
+    if (activeTab === 'cancelled') tabMatch = o.status === 'cancelled'
     
     // 2. Filter by Search Query
     let searchMatch = true
@@ -95,29 +106,33 @@ export function AdminOrdersPage() {
         scrollbarWidth: 'none', msOverflowStyle: 'none'
       }}>
         {[
-          { id: 'all', label: `Barchasi (${orders.length})` },
-          { id: 'processing', label: `Jarayonda (${countByStatus('accepted')})` },
-          { id: 'confirmed', label: `Tasdiqlandi (${countByStatus('packing')})` },
-          { id: 'delivering', label: `Yo'lda (${countByStatus('courier_assigned')})` },
-          { id: 'delivered', label: `Yetkazildi (${countByStatus('delivered')})` },
-        ].map(t => (
-          <button
-            key={t.id}
-            onClick={() => setActiveTab(t.id as AdminTab)}
-            style={{
-              padding: '8px 16px',
-              borderRadius: 20,
-              border: activeTab === t.id ? 'none' : '1px solid #cbd5e1',
-              background: activeTab === t.id ? '#0f172a' : '#ffffff',
-              color: activeTab === t.id ? '#ffffff' : '#475569',
-              fontWeight: 600, fontSize: 14,
-              whiteSpace: 'nowrap', flexShrink: 0,
-              cursor: 'pointer'
-            }}
-          >
-            {t.label}
-          </button>
-        ))}
+          { id: 'all',        label: `Barchasi (${orders.length})`,                   red: false },
+          { id: 'processing', label: `Jarayonda (${countByStatus('accepted')})`,       red: false },
+          { id: 'confirmed',  label: `Tasdiqlandi (${countByStatus('packing')})`,      red: false },
+          { id: 'delivering', label: `Yo'lda (${countByStatus('courier_assigned')})`,  red: false },
+          { id: 'delivered',  label: `Yetkazildi (${countByStatus('delivered')})`,     red: false },
+          { id: 'cancelled',  label: `Bekor (${countByStatus('cancelled')})`,          red: true  },
+        ].map(t => {
+          const isActive = activeTab === t.id
+          return (
+            <button
+              key={t.id}
+              onClick={() => setActiveTab(t.id as AdminTab)}
+              style={{
+                padding: '8px 16px',
+                borderRadius: 20,
+                border: isActive ? 'none' : t.red ? '1px solid #fca5a5' : '1px solid #cbd5e1',
+                background: isActive ? (t.red ? '#dc2626' : '#0f172a') : (t.red ? '#fef2f2' : '#ffffff'),
+                color: isActive ? '#ffffff' : (t.red ? '#dc2626' : '#475569'),
+                fontWeight: 600, fontSize: 14,
+                whiteSpace: 'nowrap', flexShrink: 0,
+                cursor: 'pointer'
+              }}
+            >
+              {t.label}
+            </button>
+          )
+        })}
       </div>
 
       {/* Orders List */}
@@ -162,9 +177,14 @@ function AdminOrderCard({ order, searchQuery }: { order: any; searchQuery: strin
   const [expanded, setExpanded] = useState(false)
 
   const handleStatusChange = async (statusId: string, label: string) => {
-    if (order._docId) {
-      await updateFirebaseOrderStatus(order._docId, statusId, label, order)
+    if (!order._docId) return
+    if (statusId === 'cancelled') {
+      const confirmed = window.confirm(
+        `Buyurtma #${order.id} ni bekor qilishni tasdiqlaysizmi?\n(bu amalni qaytarib bo'lmaydi)`
+      )
+      if (!confirmed) return
     }
+    await updateFirebaseOrderStatus(order._docId, statusId, label, order)
   }
 
   // Format date
@@ -177,11 +197,12 @@ function AdminOrderCard({ order, searchQuery }: { order: any; searchQuery: strin
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       style={{
-        background: '#ffffff',
+        background: order.status === 'cancelled' ? '#fff9f9' : '#ffffff',
         borderRadius: 16,
         padding: '16px',
-        border: '1px solid #e2e8f0',
-        boxShadow: '0 2px 10px rgba(0,0,0,0.02)'
+        border: order.status === 'cancelled' ? '1px solid #fca5a5' : '1px solid #e2e8f0',
+        boxShadow: '0 2px 10px rgba(0,0,0,0.02)',
+        opacity: order.status === 'cancelled' ? 0.85 : 1,
       }}
     >
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
@@ -192,12 +213,12 @@ function AdminOrderCard({ order, searchQuery }: { order: any; searchQuery: strin
           <p style={{ color: '#94a3b8', fontSize: 12, marginTop: 4 }}>{formattedDate}</p>
         </div>
         <span style={{
-          background: order.status === 'accepted' ? '#e0f2fe' : '#ffedd5',
-          color: order.status === 'accepted' ? '#0369a1' : '#c2410c',
+          background: (STATUS_BADGE_COLORS[order.status] ?? STATUS_BADGE_COLORS.accepted).bg,
+          color: (STATUS_BADGE_COLORS[order.status] ?? STATUS_BADGE_COLORS.accepted).color,
           padding: '4px 10px',
           borderRadius: 20,
           fontSize: 12,
-          fontWeight: 600,
+          fontWeight: 700,
         }}>
           {order.status_label || 'Jarayonda'}
         </span>
@@ -237,24 +258,53 @@ function AdminOrderCard({ order, searchQuery }: { order: any; searchQuery: strin
       <div style={{ marginBottom: 16 }}>
         <p style={{ fontSize: 12, color: '#64748b', marginBottom: 8 }}>Holatni o'zgartirish:</p>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-          {STATUSES.map(st => (
+          {STATUSES.filter(st => !st.cancel).map(st => {
+            const isActive = order.status === st.id
+            return (
+              <button
+                key={st.id}
+                onClick={() => handleStatusChange(st.id, st.label)}
+                style={{
+                  padding: '6px 12px',
+                  borderRadius: 6,
+                  border: isActive ? 'none' : '1px solid #cbd5e1',
+                  background: isActive ? '#0f172a' : '#ffffff',
+                  color: isActive ? '#ffffff' : '#475569',
+                  fontSize: 13, fontWeight: 600,
+                  cursor: 'pointer'
+                }}
+              >
+                {st.label}
+              </button>
+            )
+          })}
+        </div>
+        {/* Cancel button — separated, destructive */}
+        {order.status !== 'cancelled' && (
+          <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid #f1f5f9' }}>
             <button
-              key={st.id}
-              onClick={() => handleStatusChange(st.id, st.label)}
+              onClick={() => handleStatusChange('cancelled', 'Bekor qilindi')}
               style={{
-                padding: '6px 12px',
+                padding: '6px 14px',
                 borderRadius: 6,
-                border: order.status === st.id ? 'none' : '1px solid #cbd5e1',
-                background: order.status === st.id ? '#0f172a' : '#ffffff',
-                color: order.status === st.id ? '#ffffff' : '#475569',
-                fontSize: 13, fontWeight: 600,
-                cursor: 'pointer'
+                border: '1px solid #fca5a5',
+                background: '#fef2f2',
+                color: '#dc2626',
+                fontSize: 13, fontWeight: 700,
+                cursor: 'pointer',
               }}
             >
-              {st.label}
+              ✕ Buyurtmani bekor qilish
             </button>
-          ))}
-        </div>
+          </div>
+        )}
+        {order.status === 'cancelled' && (
+          <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid #f1f5f9' }}>
+            <span style={{ fontSize: 13, color: '#dc2626', fontWeight: 600 }}>
+              ✕ Buyurtma bekor qilingan
+            </span>
+          </div>
+        )}
       </div>
 
       <button 
