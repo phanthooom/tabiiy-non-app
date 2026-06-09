@@ -38,18 +38,18 @@ export const ordersApi = {
   },
   updateStatus: async (order: Order, status: string): Promise<Order> => {
     const ref = doc(db, 'orders', String(order.id))
-    await updateDoc(ref, { status })
-    
+    const STATUS_LABELS: Record<string, string> = {
+      accepted: '✅ Принят',
+      packing: '📦 Упаковывается',
+      courier_assigned: '🚗 Курьер в пути',
+      delivered: '✅ Доставлен',
+      cancelled: '❌ Отменён',
+    }
+    const statusText = STATUS_LABELS[status] || status
+    await updateDoc(ref, { status, status_label: statusText })
+
     try {
       const telegramId = (order as any).user_id || order.user?.id || (order as any).customer_id
-      const STATUS_LABELS: Record<string, string> = {
-        accepted: '✅ Принят',
-        packing: '📦 Упаковывается',
-        courier_assigned: '🚗 Курьер в пути',
-        delivered: '✅ Доставлен',
-        cancelled: '❌ Отменён',
-      }
-      const statusText = STATUS_LABELS[status] || status
       const message = `📦 *Обновление заказа #${order.id}*\n\nСтатус вашего заказа изменён на: *${statusText}*\nСумма: ${order.total_amount} сум\n\nСпасибо, что выбираете Tabiiy Non! 🍞`
       
       const BOT_TOKEN = '8957857177:AAFNSzeeQR7NTZHoQ7BbKajJhQyfKrizJSU'

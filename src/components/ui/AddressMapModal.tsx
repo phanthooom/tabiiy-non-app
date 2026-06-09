@@ -66,11 +66,11 @@ export function AddressMapModal({ isOpen, onClose, onConfirm, apiKey }: AddressM
         if (name) return name
       } catch {}
 
-      return `${lat.toFixed(5)}, ${lon.toFixed(5)}`
+      return null
     }
 
     const text = await resolveAddress()
-    setAddress(text)
+    if (text) setAddress(text)
     setIsFetching(false)
   }, [language, apiKey])
 
