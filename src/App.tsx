@@ -52,12 +52,20 @@ function AppShell() {
       const webAppAny = window.Telegram.WebApp as any
       // Попытка запустить абсолютный Fullscreen (Telegram v7.7+)
       if (typeof webAppAny.requestFullscreen === 'function') {
-        webAppAny.requestFullscreen()
+        try {
+          webAppAny.requestFullscreen()
+        } catch (e) {
+          console.warn('requestFullscreen is not supported', e)
+        }
       }
       
       // Отключаем свайп вниз для закрытия приложения, чтобы не мешал скроллу
       if (typeof webAppAny.disableVerticalSwipes === 'function') {
-        webAppAny.disableVerticalSwipes()
+        try {
+          webAppAny.disableVerticalSwipes()
+        } catch (e) {
+          console.warn('disableVerticalSwipes is not supported', e)
+        }
       }
     }
   }, [])
