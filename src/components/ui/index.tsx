@@ -95,8 +95,8 @@ export function ProductPhoto({ fileId, alt = '', style, fallback = <span style={
 
 interface ProductCardProps {
   product: Product
-  onAdd: (product: Product) => void
-  onRemove: (product: Product) => void
+  onAdd?: (product: Product) => void
+  onRemove?: (product: Product) => void
   onSetQty: (product: Product, qty: number) => void
   cartQty: number
   addLabel: string
@@ -106,18 +106,24 @@ interface ProductCardProps {
   language?: string
 }
 
-export function ProductCard({ product, onAdd, onRemove, onSetQty, cartQty, addLabel, outLabel, sumLabel, addDisabled, language = 'ru' }: ProductCardProps) {
+export function ProductCard({ product, onSetQty, cartQty, addLabel, outLabel, sumLabel, addDisabled, language = 'ru' }: ProductCardProps) {
   const [showSheet, setShowSheet] = useState(false)
-  // Local qty for immediate UI feedback; synced to API via debounce
+  // Optimistic local qty for sheet
   const [localQty, setLocalQty] = useState(cartQty)
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  // Optimistic local qty for card (separate to avoid cross-interference)
+  const [localCardQty, setLocalCardQty] = useState(cartQty)
+  const sheetDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const cardDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const price = product.price.toLocaleString('ru-RU')
   const lang = language === 'uz'
   const available = product.is_available && !addDisabled
 
-  // Keep local in sync when external cart changes (e.g. sheet closed, then opened again)
-  useEffect(() => { setLocalQty(cartQty) }, [cartQty])
+  // Sync both local states when server cart confirms
+  useEffect(() => {
+    setLocalQty(cartQty)
+    setLocalCardQty(cartQty)
+  }, [cartQty])
 
   // Lock body scroll when sheet open (prevent background scroll on iOS)
   useEffect(() => {
@@ -136,26 +142,48 @@ export function ProductCard({ product, onAdd, onRemove, onSetQty, cartQty, addLa
     }
   }, [showSheet])
 
+  // ── Sheet stepper ───────────────────────────────────────
   const sheetInc = () => {
     if (localQty >= product.quantity) return
     const next = localQty + 1
     setLocalQty(next)
-    scheduleSync(next)
+    scheduleSheetSync(next)
   }
-
   const sheetDec = () => {
     if (localQty <= 0) return
     const next = localQty - 1
     setLocalQty(next)
-    scheduleSync(next)
+    scheduleSheetSync(next)
+  }
+  const scheduleSheetSync = (qty: number) => {
+    if (sheetDebounceRef.current) clearTimeout(sheetDebounceRef.current)
+    sheetDebounceRef.current = setTimeout(() => { onSetQty(product, qty) }, 400)
   }
 
-  // Debounce: fire API 420ms after last tap
-  const scheduleSync = (qty: number) => {
-    if (debounceRef.current) clearTimeout(debounceRef.current)
-    debounceRef.current = setTimeout(() => {
-      onSetQty(product, qty)
-    }, 420)
+  // ── Card stepper ─────────────────────────────────────────
+  const cardInc = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (localCardQty >= product.quantity) return
+    const next = localCardQty + 1
+    setLocalCardQty(next)
+    scheduleCardSync(next)
+  }
+  const cardDec = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (localCardQty <= 0) return
+    const next = localCardQty - 1
+    setLocalCardQty(next)
+    scheduleCardSync(next)
+  }
+  const cardFirstAdd = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (!available) return
+    setLocalCardQty(1)
+    scheduleCardSync(1)
+  }
+  const scheduleCardSync = (qty: number) => {
+    if (cardDebounceRef.current) clearTimeout(cardDebounceRef.current)
+    cardDebounceRef.current = setTimeout(() => { onSetQty(product, qty) }, 400)
   }
 
   const imgNode = product.image_url ? (
@@ -183,14 +211,14 @@ export function ProductCard({ product, onAdd, onRemove, onSetQty, cartQty, addLa
           }}
         >
           {imgNode}
-          {cartQty > 0 && (
+          {localCardQty > 0 && (
             <div style={{
               position: 'absolute', top: 10, right: 10,
               background: '#e8751a', color: '#fff',
               borderRadius: 20, padding: '3px 10px',
               fontSize: 12, fontWeight: 700,
             }}>
-              {cartQty}
+              {localCardQty}
             </div>
           )}
         </div>
@@ -209,10 +237,10 @@ export function ProductCard({ product, onAdd, onRemove, onSetQty, cartQty, addLa
             </p>
           </div>
 
-          {cartQty === 0 ? (
+          {localCardQty === 0 ? (
             <motion.button
               whileTap={{ scale: 0.93 }}
-              onClick={(e) => { e.stopPropagation(); if (available) onAdd(product) }}
+              onClick={cardFirstAdd}
               disabled={!available}
               style={{
                 flexShrink: 0, border: 'none', borderRadius: 12, padding: '10px 14px',
@@ -227,32 +255,35 @@ export function ProductCard({ product, onAdd, onRemove, onSetQty, cartQty, addLa
               {product.is_available ? addLabel : outLabel}
             </motion.button>
           ) : (
-            <div style={{
-              flexShrink: 0, display: 'flex', alignItems: 'center',
-              background: '#fff6ef', border: '1.5px solid #e8751a', borderRadius: 12,
-            }}>
+            <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
+              {/* − gray square */}
               <motion.button
-                whileTap={{ scale: 0.82 }}
-                onClick={(e) => { e.stopPropagation(); onRemove(product) }}
+                whileTap={{ scale: 0.85 }}
+                onClick={cardDec}
                 style={{
-                  width: 36, height: 38, background: 'transparent', border: 'none',
-                  fontSize: 22, color: '#e8751a', cursor: 'pointer',
+                  width: 40, height: 40, border: 'none', borderRadius: 11,
+                  background: '#f1f5f9', fontSize: 22, fontWeight: 400,
+                  color: '#0f172a', cursor: 'pointer',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  lineHeight: 1,
+                  boxShadow: '0 1px 4px rgba(0,0,0,0.08)', userSelect: 'none',
                 }}
               >−</motion.button>
-              <span style={{ fontSize: 15, fontWeight: 700, color: '#e8751a', minWidth: 20, textAlign: 'center' }}>
-                {cartQty}
+
+              <span style={{ fontSize: 16, fontWeight: 800, color: '#0f172a', minWidth: 22, textAlign: 'center', userSelect: 'none' }}>
+                {localCardQty}
               </span>
+
+              {/* + orange square */}
               <motion.button
-                whileTap={{ scale: 0.82 }}
-                onClick={(e) => { e.stopPropagation(); onAdd(product) }}
+                whileTap={{ scale: 0.85 }}
+                onClick={cardInc}
                 disabled={addDisabled}
                 style={{
-                  width: 36, height: 38, background: 'transparent', border: 'none',
-                  fontSize: 22, color: '#e8751a', cursor: 'pointer',
+                  width: 40, height: 40, border: 'none', borderRadius: 11,
+                  background: '#e8751a', fontSize: 22, fontWeight: 400,
+                  color: '#fff', cursor: 'pointer',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  lineHeight: 1,
+                  boxShadow: '0 2px 8px rgba(232,117,26,0.35)', userSelect: 'none',
                 }}
               >+</motion.button>
             </div>
@@ -371,7 +402,7 @@ export function ProductCard({ product, onAdd, onRemove, onSetQty, cartQty, addLa
                 {localQty === 0 ? (
                   <motion.button
                     whileTap={{ scale: 0.97 }}
-                    onClick={() => { setLocalQty(1); scheduleSync(1) }}
+                    onClick={() => { setLocalQty(1); scheduleSheetSync(1) }}
                     disabled={!available}
                     style={{
                       width: '100%', border: 'none', borderRadius: 14, padding: '15px',
