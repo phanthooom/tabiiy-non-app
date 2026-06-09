@@ -1,25 +1,32 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
-import { Search, User, MapPin, ChevronDown } from 'lucide-react'
+import { Search, User, MapPin, ChevronDown, Truck, Store } from 'lucide-react'
 import { useFirebaseOrders, updateFirebaseOrderStatus } from '@/hooks/useFirebaseOrders'
 import { useBackButton } from '@/hooks/useTelegram'
 import { AddressText } from '@/components/ui/AddressText'
 
-type AdminTab = 'all' | 'processing' | 'confirmed' | 'delivering' | 'delivered' | 'cancelled'
+type AdminSection = 'delivery' | 'pickup'
+type AdminTab = 'all' | 'processing' | 'confirmed' | 'delivering' | 'ready' | 'delivered' | 'cancelled'
 
-const STATUSES = [
-  { id: 'accepted', label: 'Jarayonda', cancel: false },
-  { id: 'packing', label: 'Tasdiqlandi', cancel: false },
-  { id: 'courier_assigned', label: "Yo'lda", cancel: false },
-  { id: 'delivered', label: 'Yetkazildi', cancel: false },
-  { id: 'cancelled', label: '✕ Bekor qilindi', cancel: true },
+const DELIVERY_STATUSES = [
+  { id: 'accepted',         label: 'Jarayonda' },
+  { id: 'packing',          label: 'Tasdiqlandi' },
+  { id: 'courier_assigned', label: "Yo'lda" },
+  { id: 'delivered',        label: 'Yetkazildi' },
+]
+
+const PICKUP_STATUSES = [
+  { id: 'accepted', label: 'Jarayonda' },
+  { id: 'packing',  label: 'Tasdiqlandi' },
+  { id: 'ready',    label: 'Tayyor' },
+  { id: 'delivered', label: 'Olindi' },
 ]
 
 const STATUS_BADGE_COLORS: Record<string, { bg: string; color: string }> = {
   accepted:         { bg: '#e0f2fe', color: '#0369a1' },
   packing:          { bg: '#fff7ed', color: '#c2410c' },
-  courier_assigned: { bg: '#f0fdf4', color: '#166534' },
+  courier_assigned: { bg: '#ede9fe', color: '#6d28d9' },
   ready:            { bg: '#f0fdf4', color: '#166534' },
   delivered:        { bg: '#dcfce7', color: '#166534' },
   cancelled:        { bg: '#fef2f2', color: '#dc2626' },
@@ -29,60 +36,124 @@ export function AdminOrdersPage() {
   const navigate = useNavigate()
   useBackButton(() => navigate('/'))
 
-  const { orders, loading } = useFirebaseOrders(null) // null = all orders
+  const { orders, loading } = useFirebaseOrders(null)
+  const [section, setSection] = useState<AdminSection>('delivery')
   const [activeTab, setActiveTab] = useState<AdminTab>('all')
   const [searchQuery, setSearchQuery] = useState('')
 
-  const filteredOrders = orders.filter(o => {
-    // 1. Filter by Tab
+  const sectionOrders = orders.filter(o => {
+    const dt = (o as any).delivery_type
+    return section === 'pickup' ? dt === 'pickup' : dt !== 'pickup'
+  })
+
+  const filteredOrders = sectionOrders.filter(o => {
     let tabMatch = true
     if (activeTab === 'processing') tabMatch = o.status === 'accepted'
-    if (activeTab === 'confirmed') tabMatch = o.status === 'packing'
+    if (activeTab === 'confirmed')  tabMatch = o.status === 'packing'
     if (activeTab === 'delivering') tabMatch = o.status === 'courier_assigned'
-    if (activeTab === 'delivered') tabMatch = o.status === 'delivered'
-    if (activeTab === 'cancelled') tabMatch = o.status === 'cancelled'
-    
-    // 2. Filter by Search Query
+    if (activeTab === 'ready')      tabMatch = o.status === 'ready'
+    if (activeTab === 'delivered')  tabMatch = o.status === 'delivered'
+    if (activeTab === 'cancelled')  tabMatch = o.status === 'cancelled'
+
     let searchMatch = true
     if (searchQuery) {
       const q = searchQuery.toLowerCase()
       const oAny = o as any
-      const searchString = `
-        ${o.id || ''} 
-        ${oAny.user_name || ''} 
-        ${oAny.user_phone || ''} 
-        ${o.address || ''}
-      `.toLowerCase()
+      const searchString = `${o.id || ''} ${oAny.user_name || ''} ${oAny.user_phone || ''} ${o.address || ''}`.toLowerCase()
       searchMatch = searchString.includes(q)
     }
 
     return tabMatch && searchMatch
   })
 
-  const countByStatus = (status: string) => orders.filter(o => o.status === status).length
+  const countIn = (status: string) => sectionOrders.filter(o => o.status === status).length
+
+  const deliveryTabs = [
+    { id: 'all',        label: `Barchasi (${sectionOrders.length})`,            red: false },
+    { id: 'processing', label: `Jarayonda (${countIn('accepted')})`,             red: false },
+    { id: 'confirmed',  label: `Tasdiqlandi (${countIn('packing')})`,            red: false },
+    { id: 'delivering', label: `Yo'lda (${countIn('courier_assigned')})`,        red: false },
+    { id: 'delivered',  label: `Yetkazildi (${countIn('delivered')})`,           red: false },
+    { id: 'cancelled',  label: `Bekor (${countIn('cancelled')})`,                red: true  },
+  ]
+
+  const pickupTabs = [
+    { id: 'all',       label: `Barchasi (${sectionOrders.length})`,              red: false },
+    { id: 'processing', label: `Jarayonda (${countIn('accepted')})`,             red: false },
+    { id: 'confirmed',  label: `Tasdiqlandi (${countIn('packing')})`,            red: false },
+    { id: 'ready',      label: `Tayyor (${countIn('ready')})`,                   red: false },
+    { id: 'delivered',  label: `Olindi (${countIn('delivered')})`,               red: false },
+    { id: 'cancelled',  label: `Bekor (${countIn('cancelled')})`,                red: true  },
+  ]
+
+  const tabs = section === 'pickup' ? pickupTabs : deliveryTabs
+
+  const handleSectionChange = (s: AdminSection) => {
+    setSection(s)
+    setActiveTab('all')
+  }
 
   return (
-    <div style={{ 
-      padding: 'calc(var(--tg-safe-area-inset-top, 20px) + 12px) 16px 100px', 
-      background: '#f8fafc', 
-      minHeight: '100vh' 
+    <div style={{
+      padding: 'calc(var(--tg-safe-area-inset-top, 20px) + 12px) 16px 100px',
+      background: '#f8fafc',
+      minHeight: '100vh'
     }}>
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 800, color: '#0f172a', letterSpacing: '-0.02em' }}>Buyurtmalar (Admin)</h1>
+        <h1 style={{ fontSize: 24, fontWeight: 800, color: '#0f172a', letterSpacing: '-0.02em' }}>Buyurtmalar</h1>
       </div>
 
-      {/* Search Bar */}
-      <div style={{ position: 'relative', marginBottom: 24 }}>
-        <div style={{
-          position: 'absolute', top: 0, left: 14, height: '100%',
-          display: 'flex', alignItems: 'center', pointerEvents: 'none'
-        }}>
+      {/* Section toggle */}
+      <div style={{ display: 'flex', gap: 0, marginBottom: 20, background: '#e2e8f0', borderRadius: 12, padding: 4 }}>
+        {([
+          { id: 'delivery', label: "Yetkazib berish", icon: <Truck size={15} />, count: orders.filter(o => (o as any).delivery_type !== 'pickup').length },
+          { id: 'pickup',   label: "O'z olish",       icon: <Store size={15} />, count: orders.filter(o => (o as any).delivery_type === 'pickup').length },
+        ] as const).map(s => {
+          const isActive = section === s.id
+          return (
+            <button
+              key={s.id}
+              onClick={() => handleSectionChange(s.id)}
+              style={{
+                flex: 1,
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                padding: '10px 12px',
+                borderRadius: 9,
+                border: 'none',
+                background: isActive ? '#ffffff' : 'transparent',
+                color: isActive ? '#0f172a' : '#64748b',
+                fontWeight: 700, fontSize: 13,
+                cursor: 'pointer',
+                boxShadow: isActive ? '0 1px 4px rgba(0,0,0,0.1)' : 'none',
+                transition: 'all 0.18s',
+                fontFamily: 'inherit',
+              }}
+            >
+              {s.icon}
+              {s.label}
+              <span style={{
+                background: isActive ? '#e8751a' : '#94a3b8',
+                color: '#fff',
+                borderRadius: 99,
+                padding: '1px 7px',
+                fontSize: 11, fontWeight: 700,
+              }}>
+                {s.count}
+              </span>
+            </button>
+          )
+        })}
+      </div>
+
+      {/* Search */}
+      <div style={{ position: 'relative', marginBottom: 16 }}>
+        <div style={{ position: 'absolute', top: 0, left: 14, height: '100%', display: 'flex', alignItems: 'center', pointerEvents: 'none' }}>
           <Search size={18} color="#94a3b8" />
         </div>
-        <input 
-          type="text" 
-          placeholder="ID, ism, raqam yoki manzil bo'yicha qidiruv..." 
+        <input
+          type="text"
+          placeholder="ID, ism, raqam yoki manzil..."
           value={searchQuery}
           onChange={e => setSearchQuery(e.target.value)}
           style={{
@@ -91,42 +162,35 @@ export function AdminOrdersPage() {
             border: '1px solid #e2e8f0',
             borderRadius: 12,
             padding: '12px 16px 12px 40px',
-            fontSize: 15,
-            color: '#0f172a',
+            fontSize: 15, color: '#0f172a',
             outline: 'none',
             boxShadow: '0 2px 8px rgba(0,0,0,0.02)',
-            fontFamily: 'inherit'
+            fontFamily: 'inherit',
           }}
         />
       </div>
 
-      {/* Tabs */}
-      <div style={{ 
+      {/* Status tabs */}
+      <div style={{
         display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 12, marginBottom: 12,
-        scrollbarWidth: 'none', msOverflowStyle: 'none'
+        scrollbarWidth: 'none', msOverflowStyle: 'none',
       }}>
-        {[
-          { id: 'all',        label: `Barchasi (${orders.length})`,                   red: false },
-          { id: 'processing', label: `Jarayonda (${countByStatus('accepted')})`,       red: false },
-          { id: 'confirmed',  label: `Tasdiqlandi (${countByStatus('packing')})`,      red: false },
-          { id: 'delivering', label: `Yo'lda (${countByStatus('courier_assigned')})`,  red: false },
-          { id: 'delivered',  label: `Yetkazildi (${countByStatus('delivered')})`,     red: false },
-          { id: 'cancelled',  label: `Bekor (${countByStatus('cancelled')})`,          red: true  },
-        ].map(t => {
+        {tabs.map(t => {
           const isActive = activeTab === t.id
           return (
             <button
               key={t.id}
               onClick={() => setActiveTab(t.id as AdminTab)}
               style={{
-                padding: '8px 16px',
+                padding: '8px 14px',
                 borderRadius: 20,
                 border: isActive ? 'none' : t.red ? '1px solid #fca5a5' : '1px solid #cbd5e1',
                 background: isActive ? (t.red ? '#dc2626' : '#0f172a') : (t.red ? '#fef2f2' : '#ffffff'),
                 color: isActive ? '#ffffff' : (t.red ? '#dc2626' : '#475569'),
-                fontWeight: 600, fontSize: 14,
+                fontWeight: 600, fontSize: 13,
                 whiteSpace: 'nowrap', flexShrink: 0,
-                cursor: 'pointer'
+                cursor: 'pointer',
+                fontFamily: 'inherit',
               }}
             >
               {t.label}
@@ -135,13 +199,18 @@ export function AdminOrdersPage() {
         })}
       </div>
 
-      {/* Orders List */}
+      {/* Orders list */}
       {loading ? (
         <p style={{ textAlign: 'center', color: '#64748b', marginTop: 40 }}>Yuklanmoqda...</p>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           {filteredOrders.map(order => (
-            <AdminOrderCard key={order.id} order={order} searchQuery={searchQuery} />
+            <AdminOrderCard
+              key={order.id}
+              order={order}
+              searchQuery={searchQuery}
+              isPickup={section === 'pickup'}
+            />
           ))}
           {filteredOrders.length === 0 && (
             <p style={{ textAlign: 'center', color: '#64748b', marginTop: 40 }}>Buyurtmalar topilmadi</p>
@@ -157,7 +226,6 @@ function Highlight({ text, query }: { text: string | number; query: string }) {
   const str = String(text)
   const regex = new RegExp(`(${query})`, 'gi')
   const parts = str.split(regex)
-
   return (
     <>
       {parts.map((part, i) =>
@@ -173,8 +241,9 @@ function Highlight({ text, query }: { text: string | number; query: string }) {
   )
 }
 
-function AdminOrderCard({ order, searchQuery }: { order: any; searchQuery: string }) {
+function AdminOrderCard({ order, searchQuery, isPickup }: { order: any; searchQuery: string; isPickup: boolean }) {
   const [expanded, setExpanded] = useState(false)
+  const statuses = isPickup ? PICKUP_STATUSES : DELIVERY_STATUSES
 
   const handleStatusChange = async (statusId: string, label: string) => {
     if (!order._docId) return
@@ -187,10 +256,13 @@ function AdminOrderCard({ order, searchQuery }: { order: any; searchQuery: strin
     await updateFirebaseOrderStatus(order._docId, statusId, label, order)
   }
 
-  // Format date
   const dateObj = new Date(order.created_at)
-  const formattedDate = dateObj.toLocaleDateString('uz-UZ', { day: 'numeric', month: 'short' }) + ', ' + 
-                        dateObj.toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit' })
+  const formattedDate =
+    dateObj.toLocaleDateString('uz-UZ', { day: 'numeric', month: 'short' }) +
+    ', ' +
+    dateObj.toLocaleTimeString('uz-UZ', { hour: '2-digit', minute: '2-digit' })
+
+  const badgeColors = STATUS_BADGE_COLORS[order.status] ?? STATUS_BADGE_COLORS.accepted
 
   return (
     <motion.div
@@ -205,6 +277,7 @@ function AdminOrderCard({ order, searchQuery }: { order: any; searchQuery: strin
         opacity: order.status === 'cancelled' ? 0.85 : 1,
       }}
     >
+      {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
         <div>
           <p style={{ fontWeight: 700, color: '#334155', fontSize: 14 }}>
@@ -213,8 +286,8 @@ function AdminOrderCard({ order, searchQuery }: { order: any; searchQuery: strin
           <p style={{ color: '#94a3b8', fontSize: 12, marginTop: 4 }}>{formattedDate}</p>
         </div>
         <span style={{
-          background: (STATUS_BADGE_COLORS[order.status] ?? STATUS_BADGE_COLORS.accepted).bg,
-          color: (STATUS_BADGE_COLORS[order.status] ?? STATUS_BADGE_COLORS.accepted).color,
+          background: badgeColors.bg,
+          color: badgeColors.color,
           padding: '4px 10px',
           borderRadius: 20,
           fontSize: 12,
@@ -224,6 +297,7 @@ function AdminOrderCard({ order, searchQuery }: { order: any; searchQuery: strin
         </span>
       </div>
 
+      {/* Total */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
         <p style={{ color: '#64748b', fontSize: 14 }}>Jami summa:</p>
         <p style={{ fontWeight: 800, fontSize: 18, color: '#0f172a' }}>
@@ -231,6 +305,7 @@ function AdminOrderCard({ order, searchQuery }: { order: any; searchQuery: strin
         </p>
       </div>
 
+      {/* User + address */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 16 }}>
         <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
           <User size={18} color="#64748b" style={{ marginTop: 2 }} />
@@ -243,10 +318,17 @@ function AdminOrderCard({ order, searchQuery }: { order: any; searchQuery: strin
             </p>
           </div>
         </div>
+
         <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-          <MapPin size={18} color="#64748b" style={{ marginTop: 2, flexShrink: 0 }} />
+          {isPickup
+            ? <Store size={18} color="#e8751a" style={{ marginTop: 2, flexShrink: 0 }} />
+            : <MapPin size={18} color="#64748b" style={{ marginTop: 2, flexShrink: 0 }} />}
           <div style={{ color: '#334155', fontSize: 14, lineHeight: 1.4 }}>
-            {order.address ? (
+            {isPickup ? (
+              <span style={{ color: '#e8751a', fontWeight: 600 }}>
+                Tabiiy Non — ул. Самарканд Дарвоза, 2/1
+              </span>
+            ) : order.address ? (
               <AddressText address={order.address} language="uz" clickable={true} />
             ) : (
               'Manzil kiritilmagan'
@@ -255,10 +337,11 @@ function AdminOrderCard({ order, searchQuery }: { order: any; searchQuery: strin
         </div>
       </div>
 
+      {/* Status buttons */}
       <div style={{ marginBottom: 16 }}>
         <p style={{ fontSize: 12, color: '#64748b', marginBottom: 8 }}>Holatni o'zgartirish:</p>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-          {STATUSES.filter(st => !st.cancel).map(st => {
+          {statuses.map(st => {
             const isActive = order.status === st.id
             return (
               <button
@@ -271,7 +354,8 @@ function AdminOrderCard({ order, searchQuery }: { order: any; searchQuery: strin
                   background: isActive ? '#0f172a' : '#ffffff',
                   color: isActive ? '#ffffff' : '#475569',
                   fontSize: 13, fontWeight: 600,
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  fontFamily: 'inherit',
                 }}
               >
                 {st.label}
@@ -279,8 +363,8 @@ function AdminOrderCard({ order, searchQuery }: { order: any; searchQuery: strin
             )
           })}
         </div>
-        {/* Cancel button — separated, destructive */}
-        {order.status !== 'cancelled' && (
+
+        {order.status !== 'cancelled' ? (
           <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid #f1f5f9' }}>
             <button
               onClick={() => handleStatusChange('cancelled', 'Bekor qilindi')}
@@ -292,22 +376,21 @@ function AdminOrderCard({ order, searchQuery }: { order: any; searchQuery: strin
                 color: '#dc2626',
                 fontSize: 13, fontWeight: 700,
                 cursor: 'pointer',
+                fontFamily: 'inherit',
               }}
             >
               ✕ Buyurtmani bekor qilish
             </button>
           </div>
-        )}
-        {order.status === 'cancelled' && (
+        ) : (
           <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid #f1f5f9' }}>
-            <span style={{ fontSize: 13, color: '#dc2626', fontWeight: 600 }}>
-              ✕ Buyurtma bekor qilingan
-            </span>
+            <span style={{ fontSize: 13, color: '#dc2626', fontWeight: 600 }}>✕ Buyurtma bekor qilingan</span>
           </div>
         )}
       </div>
 
-      <button 
+      {/* Expand items */}
+      <button
         onClick={() => setExpanded(!expanded)}
         style={{
           width: '100%',
@@ -315,7 +398,8 @@ function AdminOrderCard({ order, searchQuery }: { order: any; searchQuery: strin
           background: 'none', border: 'none',
           color: '#0f172a', fontWeight: 600, fontSize: 14,
           cursor: 'pointer', padding: '8px 0',
-          borderTop: '1px solid #f1f5f9', marginTop: 8, paddingTop: 16
+          borderTop: '1px solid #f1f5f9', marginTop: 8, paddingTop: 16,
+          fontFamily: 'inherit',
         }}
       >
         Tovarlarni ko'rsatish
