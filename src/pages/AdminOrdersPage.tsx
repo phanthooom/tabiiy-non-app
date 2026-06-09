@@ -98,6 +98,8 @@ export function AdminOrdersPage() {
           { id: 'all', label: `Barchasi (${orders.length})` },
           { id: 'processing', label: `Jarayonda (${countByStatus('accepted')})` },
           { id: 'confirmed', label: `Tasdiqlandi (${countByStatus('packing')})` },
+          { id: 'delivering', label: `Yo'lda (${countByStatus('courier_assigned')})` },
+          { id: 'delivered', label: `Yetkazildi (${countByStatus('delivered')})` },
         ].map(t => (
           <button
             key={t.id}
