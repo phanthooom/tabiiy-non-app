@@ -13,7 +13,7 @@ interface AddressMapModalProps {
 
 const TASHKENT_CENTER = [41.2995, 69.2401]
 
-const fetchWithTimeout = (url: string, opts: RequestInit = {}, ms = 4000) => {
+const fetchWithTimeout = (url: string, opts: RequestInit = {}, ms = 5000) => {
   const ctrl = new AbortController()
   const id = setTimeout(() => ctrl.abort(), ms)
   return fetch(url, { ...opts, signal: ctrl.signal }).finally(() => clearTimeout(id))
@@ -27,49 +27,55 @@ export function AddressMapModal({ isOpen, onClose, onConfirm, apiKey }: AddressM
   const mapRef = useRef<any>(null)
   const ymapsRef = useRef<any>(null)
   const timerRef = useRef<any>(null)
-  const hardTimeoutRef = useRef<any>(null)
+  const reqIdRef = useRef(0)
   const centerRef = useRef(TASHKENT_CENTER)
 
   const detectingLabel = language === 'uz' ? 'Manzil aniqlanmoqda...' : 'Определение адреса...'
   const fallbackLabel  = language === 'uz' ? 'Tanlangan manzil' : 'Выбранная локация'
 
   const fetchAddress = useCallback(async (coords: number[]) => {
+    const reqId = ++reqIdRef.current
     setIsFetching(true)
     const [lat, lon] = coords
 
-    // Cancel any previous hard timeout
-    if (hardTimeoutRef.current) clearTimeout(hardTimeoutRef.current)
-
-    // Hard failsafe: 8 seconds → force-set fallback so button is never stuck
-    hardTimeoutRef.current = setTimeout(() => {
-      setAddress(prev => (prev === detectingLabel || !prev) ? fallbackLabel : prev)
-      setIsFetching(false)
-      hardTimeoutRef.current = null
-    }, 8000)
-
     const resolveAddress = async (): Promise<string> => {
-      // ── 1. Yandex ymaps SDK geocode (first — already loaded, no CORS) ──
+      // ── 1. Yandex ymaps SDK geocode ──
+      // Most reliable: SDK already loaded, no CORS, same API key as map
       if (ymapsRef.current) {
         try {
           const res = await Promise.race<any>([
             ymapsRef.current.geocode([lat, lon], { results: 1 }),
-            new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 3500)),
+            new Promise<never>((_, rej) => setTimeout(() => rej(new Error('t')), 5000)),
           ])
           const obj = res?.geoObjects?.get(0)
-          const name = obj?.getAddressLine?.() || obj?.properties?.get('text')
-          if (name) return name
+          if (obj) {
+            const name = obj.properties.get('name') || ''
+            const desc = obj.properties.get('description') || ''
+            const full = [name, desc].filter(Boolean).join(', ')
+            if (full) return full
+          }
         } catch { /* skip */ }
       }
 
-      // ── 2. Nominatim (OpenStreetMap) ──
+      // ── 2. Nominatim — build clean address from components ──
       try {
         const resp = await fetchWithTimeout(
           `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1`,
           { headers: { 'Accept-Language': language === 'uz' ? 'uz' : 'ru' } },
-          4000,
+          5000,
         )
         if (resp.ok) {
           const data = await resp.json()
+          if (data?.address) {
+            const a = data.address
+            const parts = [
+              a.road || a.pedestrian || a.footway || a.street,
+              a.house_number,
+              a.suburb || a.neighbourhood || a.quarter,
+              a.city || a.town || a.village || a.municipality,
+            ].filter(Boolean)
+            if (parts.length >= 2) return parts.join(', ')
+          }
           if (data?.display_name) return data.display_name
         }
       } catch { /* skip */ }
@@ -79,7 +85,7 @@ export function AddressMapModal({ isOpen, onClose, onConfirm, apiKey }: AddressM
         const res = await fetchWithTimeout(
           `https://geocode-maps.yandex.ru/1.x/?apikey=${apiKey}&geocode=${lon},${lat}&format=json&lang=${language === 'uz' ? 'uz_UZ' : 'ru_RU'}`,
           {},
-          4000,
+          5000,
         )
         if (res.ok) {
           const data = await res.json()
@@ -89,28 +95,21 @@ export function AddressMapModal({ isOpen, onClose, onConfirm, apiKey }: AddressM
         }
       } catch { /* skip */ }
 
-      // ── All failed: return fallback so button is never disabled ──
       return fallbackLabel
     }
 
-    try {
-      const text = await resolveAddress()
-      if (hardTimeoutRef.current) {
-        clearTimeout(hardTimeoutRef.current)
-        hardTimeoutRef.current = null
-        setAddress(text)
-        setIsFetching(false)
-      }
-      // If hardTimeout already fired — don't overwrite with stale result
-    } catch {
-      if (hardTimeoutRef.current) {
-        clearTimeout(hardTimeoutRef.current)
-        hardTimeoutRef.current = null
-        setAddress(fallbackLabel)
-        setIsFetching(false)
-      }
-    }
-  }, [language, apiKey, detectingLabel, fallbackLabel])
+    // Race all methods against 12s hard timeout
+    const text = await Promise.race([
+      resolveAddress(),
+      new Promise<string>(resolve => setTimeout(() => resolve(fallbackLabel), 12000)),
+    ])
+
+    // Discard stale result if user already moved the map
+    if (reqId !== reqIdRef.current) return
+
+    setAddress(text)
+    setIsFetching(false)
+  }, [language, apiKey, fallbackLabel])
 
   const handleBoundsChange = (e: any) => {
     const newCenter = e.get('newCenter')
