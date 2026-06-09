@@ -465,7 +465,7 @@ export function OrderDetailPage() {
         boxShadow: '0 8px 32px rgba(0,0,0,0.1)' 
       }}>
         {(() => {
-          const step = order.status === 'yakunlandi' ? 3 : order.status === 'yolda' ? 2 : 1;
+          const step = order.status === 'delivered' ? 3 : order.status === 'courier_assigned' ? 2 : 1;
           const statusTextUz = step === 3 ? 'Yetkazildi' : step === 2 ? 'Yetkazib berishda' : 'Tayyorlanmoqda';
           const statusTextRu = step === 3 ? 'Доставлено' : step === 2 ? 'В доставке' : 'Готовится';
           return (
@@ -475,7 +475,7 @@ export function OrderDetailPage() {
           )
         })()}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          {order.status !== 'yakunlandi' ? (
+          {order.status !== 'delivered' ? (
             <>
               <h2 style={{ fontSize: 24, fontWeight: 700, color: '#0f172a', margin: 0 }}>15-20 {language === 'uz' ? 'daqiqa' : 'минут'}</h2>
               <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#fff6ef', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -489,7 +489,7 @@ export function OrderDetailPage() {
 
         {/* Progress Bar */}
         {(() => {
-          const step = order.status === 'yakunlandi' ? 3 : order.status === 'yolda' ? 2 : 1;
+          const step = order.status === 'delivered' ? 3 : order.status === 'courier_assigned' ? 2 : 1;
           return (
             <div style={{ display: 'flex', gap: 4, marginBottom: 8 }}>
               <div style={{ height: 4, flex: 1, background: step >= 1 ? '#e8751a' : '#e2e8f0', borderRadius: 2 }} />
