@@ -167,6 +167,55 @@ export function CheckoutPage() {
         })}
       </div>
 
+      {/* Pickup info card */}
+      <AnimatePresence>
+        {deliveryType === 'pickup' && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            style={{ overflow: 'hidden', marginBottom: 24 }}
+          >
+            <div style={{
+              background: '#fff6ef',
+              border: '1px solid #fed7aa',
+              borderRadius: 12,
+              padding: '14px 16px',
+              display: 'flex', flexDirection: 'column', gap: 10,
+            }}>
+              <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                <Store size={18} color="#e8751a" style={{ marginTop: 2, flexShrink: 0 }} />
+                <div>
+                  <p style={{ fontWeight: 700, fontSize: 14, color: '#0f172a', marginBottom: 2 }}>
+                    Tabiiy Non
+                  </p>
+                  <p style={{ fontSize: 13, color: '#475569', lineHeight: 1.4 }}>
+                    {language === 'uz'
+                      ? "Samarqand Darvoza ko'chasi, 2/1"
+                      : 'ул. Самарканд Дарвоза, 2/1'}
+                  </p>
+                </div>
+              </div>
+              <a
+                href="https://yandex.ru/navi/org/tabiiy_non/129776015209?si=v82649gguzaktuhfb0bkqcznkm"
+                target="_blank"
+                rel="noreferrer"
+                style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                  background: '#e8751a', color: '#fff',
+                  borderRadius: 8, padding: '10px 16px',
+                  fontSize: 13, fontWeight: 700,
+                  textDecoration: 'none',
+                }}
+              >
+                <MapPin size={14} color="#fff" />
+                {language === 'uz' ? 'Yandex navigatorda ochish' : 'Открыть в Яндекс Навигаторе'}
+              </a>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Address fields */}
       <AnimatePresence>
         {deliveryType === 'delivery' && (

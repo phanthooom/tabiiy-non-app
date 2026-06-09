@@ -22,10 +22,16 @@ export function AddressText({ address, language, clickable = true }: { address: 
     const lat = parts[0].trim()
     const lon = parts[1].trim()
 
+    const fetchWithTimeout = (url: string, opts: RequestInit = {}, ms = 5000) => {
+      const ctrl = new AbortController()
+      const id = setTimeout(() => ctrl.abort(), ms)
+      return fetch(url, { ...opts, signal: ctrl.signal }).finally(() => clearTimeout(id))
+    }
+
     const resolveAddress = async () => {
       // Primary: Nominatim (OpenStreetMap)
       try {
-        const resp = await fetch(
+        const resp = await fetchWithTimeout(
           `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1`,
           { headers: { 'Accept-Language': language === 'uz' ? 'uz' : 'ru' } }
         )
@@ -37,7 +43,9 @@ export function AddressText({ address, language, clickable = true }: { address: 
 
       // Fallback: Yandex REST
       try {
-        const res = await fetch(`https://geocode-maps.yandex.ru/1.x/?apikey=fcd5b77b-d255-480e-b530-ec10724a2275&geocode=${lon},${lat}&format=json&lang=${language === 'uz' ? 'uz_UZ' : 'ru_RU'}`)
+        const res = await fetchWithTimeout(
+          `https://geocode-maps.yandex.ru/1.x/?apikey=fcd5b77b-d255-480e-b530-ec10724a2275&geocode=${lon},${lat}&format=json&lang=${language === 'uz' ? 'uz_UZ' : 'ru_RU'}`
+        )
         if (res.ok) {
           const data = await res.json()
           const featureMember = data?.response?.GeoObjectCollection?.featureMember
