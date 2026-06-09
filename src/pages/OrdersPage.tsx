@@ -213,7 +213,7 @@ function OrderCard({ order, onClick, language }: { order: Order; onClick: () => 
             </div>
           ) : (
             <p style={{ fontSize: 11, color: '#64748b', marginTop: 8, textAlign: 'right', fontWeight: 500 }}>
-              {language === 'uz' ? 'Taxminiy vaqt: 45 min' : 'Est. Delivery: 45 mins'}
+              {language === 'uz' ? 'Taxminiy vaqt: 45 min' : 'Примерно 45 мин'}
             </p>
           )}
         </div>
@@ -279,7 +279,7 @@ function OrderCard({ order, onClick, language }: { order: Order; onClick: () => 
           {isPickup && <Store size={13} color="#e8751a" />}
           {isPickup
             ? (language === 'uz' ? 'Batafsil' : 'Подробнее')
-            : (language === 'uz' ? 'Kuzatish' : 'Track Order')}
+            : (language === 'uz' ? 'Kuzatish' : 'Отследить')}
         </button>
       </div>
     </motion.div>
@@ -366,7 +366,7 @@ export function OrdersPage() {
         animate={{ opacity: 1, y: 0 }}
         style={{ fontFamily: 'var(--font-display)', fontSize: 26, fontWeight: 700, color: 'var(--primary)', marginBottom: 16 }}
       >
-        {language === 'uz' ? 'Mening buyurtmalarim' : 'My Orders'}
+        {language === 'uz' ? 'Mening buyurtmalarim' : 'Мои заказы'}
       </motion.h1>
 
       {/* Tabs */}
@@ -376,10 +376,10 @@ export function OrdersPage() {
         marginBottom: 20,
       }}>
         <button style={tabStyle(tab === 'active')} onClick={() => setTab('active')}>
-          {language === 'uz' ? 'Faol' : 'Active'}
+          {language === 'uz' ? 'Faol' : 'Активные'}
         </button>
         <button style={tabStyle(tab === 'history')} onClick={() => setTab('history')}>
-          {language === 'uz' ? 'Tarix' : 'History'}
+          {language === 'uz' ? 'Tarix' : 'История'}
         </button>
       </div>
 
