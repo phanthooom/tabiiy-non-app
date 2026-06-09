@@ -16,13 +16,7 @@ export function CatalogPage() {
   const { tg } = useTelegram()
   const queryClient = useQueryClient()
 
-  const {
-    data: products,
-    isLoading,
-    isError,
-    isFetching,
-    refetch,
-  } = useQuery({
+  const { data: products, isLoading, isError, isFetching, refetch } = useQuery({
     queryKey: queryKeys.products(),
     queryFn: () => BYPASS_MODE ? Promise.resolve(mockProducts) : productsApi.list(),
     staleTime: STALE_TIME.products,
@@ -58,6 +52,35 @@ export function CatalogPage() {
     },
   })
 
+  const removeMutation = useMutation({
+    mutationFn: ({ product, qty }: { product: Product; qty: number }) => {
+      if (BYPASS_MODE) {
+        if (qty <= 1) {
+          const newItems = (cart?.items ?? []).filter(i => i.product_id !== product.id)
+          const total = newItems.reduce((s, i) => s + i.subtotal, 0)
+          return Promise.resolve({ items: newItems, total, items_count: newItems.length })
+        }
+        const newItems = (cart?.items ?? []).map(i =>
+          i.product_id === product.id
+            ? { ...i, quantity: i.quantity - 1, subtotal: i.price * (i.quantity - 1) }
+            : i
+        )
+        const total = newItems.reduce((s, i) => s + i.subtotal, 0)
+        return Promise.resolve({ items: newItems, total, items_count: newItems.length })
+      }
+      if (qty <= 1) return cartApi.removeItem(product.id)
+      return cartApi.updateItem(product.id, qty - 1)
+    },
+    onSuccess: (newCart) => {
+      setCart(newCart)
+      queryClient.setQueryData(queryKeys.cart(), newCart)
+      tg?.HapticFeedback.selectionChanged?.()
+    },
+    onError: (err: unknown) => {
+      tg?.showAlert(apiErrorMessage(err, 'Ошибка'))
+    },
+  })
+
   const handleAdd = (product: Product) => {
     const cartItem = cart?.items.find(i => i.product_id === product.id)
     if (cartItem && cartItem.quantity >= product.quantity) {
@@ -68,12 +91,15 @@ export function CatalogPage() {
     addMutation.mutate(product)
   }
 
+  const handleRemove = (product: Product) => {
+    const cartItem = cart?.items.find(i => i.product_id === product.id)
+    if (!cartItem) return
+    removeMutation.mutate({ product, qty: cartItem.quantity })
+  }
+
   if (isError) {
     return (
-      <div style={{
-        display: 'flex', flexDirection: 'column',
-        alignItems: 'center', padding: '48px 24px 100px', gap: 16, textAlign: 'center',
-      }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '48px 24px 100px', gap: 16, textAlign: 'center' }}>
         <p style={{ color: 'var(--text-2)', fontWeight: 600 }}>{t('error')}</p>
         <Button onClick={() => { void refetch() }} loading={isFetching}>
           {language === 'uz' ? 'Qayta urinish' : 'Повторить'}
@@ -91,49 +117,38 @@ export function CatalogPage() {
   }
 
   return (
-    <div style={{ padding: '24px 16px 120px', background: '#f1f8f8', minHeight: '100dvh' }}>
-      
-      {/* Premium Header */}
-      <div style={{ marginBottom: 24, padding: '0 4px' }}>
-        <h1 style={{
-          fontSize: 28,
-          fontWeight: 800,
-          color: '#1a1a1a',
-          letterSpacing: '-0.03em',
-          marginBottom: 6,
-        }}>
+    <div style={{ padding: '20px 12px 120px', background: '#f1f8f8', minHeight: '100dvh' }}>
+
+      {/* Header */}
+      <div style={{ marginBottom: 20, padding: '0 4px' }}>
+        <h1 style={{ fontSize: 26, fontWeight: 800, color: '#1a1a1a', letterSpacing: '-0.03em', marginBottom: 4 }}>
           {language === 'uz' ? 'Tabiiy va issiq' : 'Свежий и горячий'}
         </h1>
-        <p style={{
-          fontSize: 15,
-          color: '#64748b',
-          fontWeight: 500,
-        }}>
+        <p style={{ fontSize: 14, color: '#64748b', fontWeight: 500 }}>
           {language === 'uz' ? 'O\'zingizga yoqqan nonni tanlang' : 'Выберите хлеб по вкусу'}
         </p>
       </div>
-      {/* Grid */}
+
+      {/* 2-column grid */}
       <AnimatePresence>
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 16,
-        }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
           {(products ?? []).map((product, i) => (
             <motion.div
               key={product.id}
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.05 }}
+              transition={{ delay: i * 0.04 }}
             >
               <ProductCard
                 product={product}
                 onAdd={handleAdd}
+                onRemove={handleRemove}
                 cartQty={cart?.items.find(x => x.product_id === product.id)?.quantity ?? 0}
                 addLabel={t('addToCart')}
                 outLabel={t('outOfStock')}
                 sumLabel={t('sum')}
                 addDisabled={addMutation.isPending}
+                language={language}
               />
             </motion.div>
           ))}
