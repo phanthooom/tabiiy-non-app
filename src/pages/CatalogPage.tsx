@@ -104,6 +104,9 @@ export function CatalogPage() {
         return Promise.resolve({ items: newItems, total, items_count: newItems.length })
       }
       if (qty === 0) return cartApi.removeItem(product.id)
+      // updateItem only works if item already exists — use addItem for first-time add
+      const itemInCart = cart?.items.find(i => String(i.product_id) === String(product.id))
+      if (!itemInCart) return cartApi.addItem(product.id, qty)
       return cartApi.updateItem(product.id, qty)
     },
     onSuccess: (newCart) => {
