@@ -22,7 +22,9 @@ type Status = 'loading' | 'ok' | 'error'
 type ErrorContext = 'telegram' | 'dev-browser' | null
 
 export function AuthProvider({ children }: Props) {
-  const [status, setStatus] = useState<Status>('loading')
+  const isAdminRoute = typeof window !== 'undefined' && window.location.pathname.startsWith('/admin')
+
+  const [status, setStatus] = useState<Status>(isAdminRoute ? 'ok' : 'loading')
   const [errorContext, setErrorContext] = useState<ErrorContext>(null)
   const [errorMsg, setErrorMsg] = useState<string>('')
   const { setAuth } = useAuthStore()
@@ -39,6 +41,7 @@ export function AuthProvider({ children }: Props) {
 
   useEffect(() => {
     const init = async () => {
+      if (isAdminRoute) return
       try {
         // Mode 0: BYPASS AUTH (Only if not opened inside Telegram)
         if (import.meta.env.VITE_BYPASS_AUTH === 'true' && !hasTelegramInitData()) {
