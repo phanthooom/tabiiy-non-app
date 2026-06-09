@@ -95,128 +95,146 @@ export function AdminOrdersPage() {
 
   return (
     <div style={{
-      padding: 'calc(var(--tg-safe-area-inset-top, 20px) + 12px) 16px 100px',
+      position: 'fixed',
+      inset: 0,
+      display: 'flex',
+      flexDirection: 'column',
       background: '#f8fafc',
-      minHeight: '100vh'
     }}>
-      {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <h1 style={{ fontSize: 24, fontWeight: 800, color: '#0f172a', letterSpacing: '-0.02em' }}>Buyurtmalar</h1>
-      </div>
-
-      {/* Section toggle */}
-      <div style={{ display: 'flex', gap: 0, marginBottom: 20, background: '#e2e8f0', borderRadius: 12, padding: 4 }}>
-        {([
-          { id: 'delivery', label: "Yetkazib berish", icon: <Truck size={15} />, count: orders.filter(o => (o as any).delivery_type !== 'pickup').length },
-          { id: 'pickup',   label: "O'z olish",       icon: <Store size={15} />, count: orders.filter(o => (o as any).delivery_type === 'pickup').length },
-        ] as const).map(s => {
-          const isActive = section === s.id
-          return (
-            <button
-              key={s.id}
-              onClick={() => handleSectionChange(s.id)}
-              style={{
-                flex: 1,
-                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
-                padding: '10px 12px',
-                borderRadius: 9,
-                border: 'none',
-                background: isActive ? '#ffffff' : 'transparent',
-                color: isActive ? '#0f172a' : '#64748b',
-                fontWeight: 700, fontSize: 13,
-                cursor: 'pointer',
-                boxShadow: isActive ? '0 1px 4px rgba(0,0,0,0.1)' : 'none',
-                transition: 'all 0.18s',
-                fontFamily: 'inherit',
-              }}
-            >
-              {s.icon}
-              {s.label}
-              <span style={{
-                background: isActive ? '#e8751a' : '#94a3b8',
-                color: '#fff',
-                borderRadius: 99,
-                padding: '1px 7px',
-                fontSize: 11, fontWeight: 700,
-              }}>
-                {s.count}
-              </span>
-            </button>
-          )
-        })}
-      </div>
-
-      {/* Search */}
-      <div style={{ position: 'relative', marginBottom: 16 }}>
-        <div style={{ position: 'absolute', top: 0, left: 14, height: '100%', display: 'flex', alignItems: 'center', pointerEvents: 'none' }}>
-          <Search size={18} color="#94a3b8" />
-        </div>
-        <input
-          type="text"
-          placeholder="ID, ism, raqam yoki manzil..."
-          value={searchQuery}
-          onChange={e => setSearchQuery(e.target.value)}
-          style={{
-            width: '100%',
-            background: '#ffffff',
-            border: '1px solid #e2e8f0',
-            borderRadius: 12,
-            padding: '12px 16px 12px 40px',
-            fontSize: 15, color: '#0f172a',
-            outline: 'none',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.02)',
-            fontFamily: 'inherit',
-          }}
-        />
-      </div>
-
-      {/* Status tabs */}
+      {/* ── Fixed top sections ── */}
       <div style={{
-        display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 12, marginBottom: 12,
-        scrollbarWidth: 'none', msOverflowStyle: 'none',
+        flexShrink: 0,
+        padding: 'calc(var(--tg-safe-area-inset-top, 20px) + 12px) 16px 0',
+        background: '#f8fafc',
+        borderBottom: '1px solid #e2e8f0',
+        boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
       }}>
-        {tabs.map(t => {
-          const isActive = activeTab === t.id
-          return (
-            <button
-              key={t.id}
-              onClick={() => setActiveTab(t.id as AdminTab)}
-              style={{
-                padding: '8px 14px',
-                borderRadius: 20,
-                border: isActive ? 'none' : t.red ? '1px solid #fca5a5' : '1px solid #cbd5e1',
-                background: isActive ? (t.red ? '#dc2626' : '#0f172a') : (t.red ? '#fef2f2' : '#ffffff'),
-                color: isActive ? '#ffffff' : (t.red ? '#dc2626' : '#475569'),
-                fontWeight: 600, fontSize: 13,
-                whiteSpace: 'nowrap', flexShrink: 0,
-                cursor: 'pointer',
-                fontFamily: 'inherit',
-              }}
-            >
-              {t.label}
-            </button>
-          )
-        })}
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 14 }}>
+          <h1 style={{ fontSize: 22, fontWeight: 800, color: '#0f172a', letterSpacing: '-0.02em' }}>Buyurtmalar</h1>
+        </div>
+
+        {/* Section toggle */}
+        <div style={{ display: 'flex', gap: 0, marginBottom: 12, background: '#e2e8f0', borderRadius: 12, padding: 4 }}>
+          {([
+            { id: 'delivery', label: "Yetkazib berish", icon: <Truck size={14} />, count: orders.filter(o => (o as any).delivery_type !== 'pickup').length },
+            { id: 'pickup',   label: "O'z olish",       icon: <Store size={14} />, count: orders.filter(o => (o as any).delivery_type === 'pickup').length },
+          ] as const).map(s => {
+            const isActive = section === s.id
+            return (
+              <button
+                key={s.id}
+                onClick={() => handleSectionChange(s.id)}
+                style={{
+                  flex: 1,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                  padding: '9px 12px',
+                  borderRadius: 9,
+                  border: 'none',
+                  background: isActive ? '#ffffff' : 'transparent',
+                  color: isActive ? '#0f172a' : '#64748b',
+                  fontWeight: 700, fontSize: 13,
+                  cursor: 'pointer',
+                  boxShadow: isActive ? '0 1px 4px rgba(0,0,0,0.1)' : 'none',
+                  transition: 'all 0.18s',
+                  fontFamily: 'inherit',
+                }}
+              >
+                {s.icon}
+                {s.label}
+                <span style={{
+                  background: isActive ? '#e8751a' : '#94a3b8',
+                  color: '#fff',
+                  borderRadius: 99,
+                  padding: '1px 7px',
+                  fontSize: 11, fontWeight: 700,
+                }}>
+                  {s.count}
+                </span>
+              </button>
+            )
+          })}
+        </div>
+
+        {/* Search */}
+        <div style={{ position: 'relative', marginBottom: 12 }}>
+          <div style={{ position: 'absolute', top: 0, left: 14, height: '100%', display: 'flex', alignItems: 'center', pointerEvents: 'none' }}>
+            <Search size={17} color="#94a3b8" />
+          </div>
+          <input
+            type="text"
+            placeholder="ID, ism, raqam yoki manzil..."
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            style={{
+              width: '100%',
+              background: '#ffffff',
+              border: '1px solid #e2e8f0',
+              borderRadius: 10,
+              padding: '10px 16px 10px 38px',
+              fontSize: 14, color: '#0f172a',
+              outline: 'none',
+              fontFamily: 'inherit',
+            }}
+          />
+        </div>
+
+        {/* Status tabs */}
+        <div style={{
+          display: 'flex', gap: 8, overflowX: 'auto',
+          paddingBottom: 12,
+          scrollbarWidth: 'none', msOverflowStyle: 'none',
+        }}>
+          {tabs.map(t => {
+            const isActive = activeTab === t.id
+            return (
+              <button
+                key={t.id}
+                onClick={() => setActiveTab(t.id as AdminTab)}
+                style={{
+                  padding: '7px 13px',
+                  borderRadius: 20,
+                  border: isActive ? 'none' : t.red ? '1px solid #fca5a5' : '1px solid #cbd5e1',
+                  background: isActive ? (t.red ? '#dc2626' : '#0f172a') : (t.red ? '#fef2f2' : '#ffffff'),
+                  color: isActive ? '#ffffff' : (t.red ? '#dc2626' : '#475569'),
+                  fontWeight: 600, fontSize: 12,
+                  whiteSpace: 'nowrap', flexShrink: 0,
+                  cursor: 'pointer',
+                  fontFamily: 'inherit',
+                }}
+              >
+                {t.label}
+              </button>
+            )
+          })}
+        </div>
       </div>
 
-      {/* Orders list */}
-      {loading ? (
-        <p style={{ textAlign: 'center', color: '#64748b', marginTop: 40 }}>Yuklanmoqda...</p>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          {filteredOrders.map(order => (
-            <AdminOrderCard
-              key={order.id}
-              order={order}
-              searchQuery={searchQuery}
-              isPickup={section === 'pickup'}
-            />
-          ))}
-          {filteredOrders.length === 0 && (
-            <p style={{ textAlign: 'center', color: '#64748b', marginTop: 40 }}>Buyurtmalar topilmadi</p>
-          )}
-        </div>
-      )}
+      {/* ── Scrollable orders list ── */}
+      <div style={{
+        flex: 1,
+        overflowY: 'auto',
+        padding: '16px 16px calc(env(safe-area-inset-bottom, 16px) + 16px)',
+        WebkitOverflowScrolling: 'touch',
+      } as React.CSSProperties}>
+        {loading ? (
+          <p style={{ textAlign: 'center', color: '#64748b', marginTop: 40 }}>Yuklanmoqda...</p>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            {filteredOrders.map(order => (
+              <AdminOrderCard
+                key={order.id}
+                order={order}
+                searchQuery={searchQuery}
+                isPickup={section === 'pickup'}
+              />
+            ))}
+            {filteredOrders.length === 0 && (
+              <p style={{ textAlign: 'center', color: '#64748b', marginTop: 40 }}>Buyurtmalar topilmadi</p>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   )
 }
