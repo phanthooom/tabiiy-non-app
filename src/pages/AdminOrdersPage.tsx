@@ -161,7 +161,7 @@ function AdminOrderCard({ order, searchQuery }: { order: any; searchQuery: strin
 
   const handleStatusChange = async (statusId: string, label: string) => {
     if (order._docId) {
-      await updateFirebaseOrderStatus(order._docId, statusId, label)
+      await updateFirebaseOrderStatus(order._docId, statusId, label, order)
     }
   }
 

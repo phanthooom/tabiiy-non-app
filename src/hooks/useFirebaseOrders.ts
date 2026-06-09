@@ -66,10 +66,33 @@ export async function createFirebaseOrder(orderData: Partial<Order> & { telegram
   return { id: shortId }
 }
 
-export async function updateFirebaseOrderStatus(docId: string, status: string, label: string) {
+export async function updateFirebaseOrderStatus(docId: string, status: string, label: string, order?: any) {
   const ref = doc(db, 'orders', docId)
   await updateDoc(ref, {
     status,
     status_label: label
   })
+
+  // Send telegram notification if order is passed
+  try {
+    if (order) {
+      const telegramId = order.telegram_id || order.user_id || order.customer_id;
+      if (telegramId) {
+        const BOT_TOKEN = '8957857177:AAFNSzeeQR7NTZHoQ7BbKajJhQyfKrizJSU'
+        const message = `📦 *Buyurtma #${order.id} holati o'zgardi*\n\nYangi holat: *${label}*\nJami: ${order.total_amount?.toLocaleString('ru-RU')} so'm\n\nTabiiy Non bilan qolganingiz uchun rahmat! 🍞`
+        
+        fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id: telegramId,
+            text: message,
+            parse_mode: 'Markdown',
+          })
+        }).catch(err => console.error("Telegram notification fetch error:", err))
+      }
+    }
+  } catch (err) {
+    console.error("Failed to send telegram notification:", err)
+  }
 }
