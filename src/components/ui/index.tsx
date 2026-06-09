@@ -387,51 +387,56 @@ export function ProductCard({ product, onAdd, onRemove, onSetQty, cartQty, addLa
                   </motion.button>
                 ) : (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    {/* Big stepper */}
-                    <div style={{
-                      flex: 1, display: 'flex', alignItems: 'center',
-                      background: '#fff6ef', border: '2px solid #e8751a', borderRadius: 14,
-                      overflow: 'hidden',
-                    }}>
-                      <motion.button
-                        whileTap={{ scale: 0.85, background: '#ffe8d4' }}
-                        onClick={sheetDec}
-                        style={{
-                          flex: 1, height: 52, background: 'transparent', border: 'none',
-                          fontSize: 28, fontWeight: 300, color: '#e8751a', cursor: 'pointer',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          userSelect: 'none',
-                        }}
-                      >−</motion.button>
-                      <span style={{
-                        fontSize: 20, fontWeight: 800, color: '#e8751a',
-                        minWidth: 36, textAlign: 'center',
-                      }}>
-                        {localQty}
-                      </span>
-                      <motion.button
-                        whileTap={{ scale: 0.85, background: '#ffe8d4' }}
-                        onClick={sheetInc}
-                        style={{
-                          flex: 1, height: 52, background: 'transparent', border: 'none',
-                          fontSize: 28, fontWeight: 300, color: '#e8751a', cursor: 'pointer',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          userSelect: 'none',
-                        }}
-                      >+</motion.button>
-                    </div>
+                    {/* − light square */}
+                    <motion.button
+                      whileTap={{ scale: 0.88 }}
+                      onClick={sheetDec}
+                      style={{
+                        width: 52, height: 52, flexShrink: 0, border: 'none',
+                        borderRadius: 14, background: '#f1f5f9',
+                        fontSize: 26, fontWeight: 400, color: '#0f172a', cursor: 'pointer',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        boxShadow: '0 1px 4px rgba(0,0,0,0.08)',
+                        userSelect: 'none',
+                      }}
+                    >−</motion.button>
 
-                    {/* Done button */}
+                    {/* Count */}
+                    <span style={{
+                      fontSize: 22, fontWeight: 800, color: '#0f172a',
+                      minWidth: 32, textAlign: 'center', userSelect: 'none',
+                    }}>
+                      {localQty}
+                    </span>
+
+                    {/* + orange square */}
+                    <motion.button
+                      whileTap={{ scale: 0.88 }}
+                      onClick={sheetInc}
+                      style={{
+                        width: 52, height: 52, flexShrink: 0, border: 'none',
+                        borderRadius: 14, background: '#e8751a',
+                        fontSize: 26, fontWeight: 400, color: '#fff', cursor: 'pointer',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        boxShadow: '0 2px 10px rgba(232,117,26,0.35)',
+                        userSelect: 'none',
+                      }}
+                    >+</motion.button>
+
+                    {/* Корзина pill */}
                     <motion.button
                       whileTap={{ scale: 0.97 }}
                       onClick={() => setShowSheet(false)}
                       style={{
-                        height: 52, paddingInline: 18, border: 'none', borderRadius: 14,
-                        background: '#e8751a', color: '#fff', fontSize: 14, fontWeight: 700,
-                        cursor: 'pointer', fontFamily: 'var(--font-body)', whiteSpace: 'nowrap',
+                        flex: 1, height: 52, border: 'none', borderRadius: 14,
+                        background: '#e8751a', color: '#fff', fontSize: 15, fontWeight: 700,
+                        cursor: 'pointer', fontFamily: 'var(--font-body)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7,
+                        boxShadow: '0 2px 10px rgba(232,117,26,0.3)',
                       }}
                     >
-                      {lang ? 'Tayyor' : 'Готово'}
+                      <ShoppingCart size={17} strokeWidth={2.5} />
+                      {lang ? 'Savat' : 'Корзина'}
                     </motion.button>
                   </div>
                 )}
