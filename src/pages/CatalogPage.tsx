@@ -131,7 +131,7 @@ export function CatalogPage() {
 
       {/* 2-column grid */}
       <AnimatePresence>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {(products ?? []).map((product, i) => (
             <motion.div
               key={product.id}
