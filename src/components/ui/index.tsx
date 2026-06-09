@@ -183,7 +183,7 @@ export function ProductCard({ product, onAdd, onRemove, cartQty, addLabel, outLa
               }}
             >
               <ShoppingCart size={14} strokeWidth={2.5} />
-              {product.is_available ? (lang ? 'Savatga' : 'В корзину') : outLabel}
+              {product.is_available ? addLabel : outLabel}
             </motion.button>
           ) : (
             <div
@@ -344,7 +344,7 @@ export function ProductCard({ product, onAdd, onRemove, cartQty, addLabel, outLa
                     }}
                   >
                     <ShoppingCart size={20} strokeWidth={2.5} />
-                    {product.is_available ? (lang ? 'Savatga qo\'shish' : 'Добавить в корзину') : outLabel}
+                    {product.is_available ? addLabel : outLabel}
                   </motion.button>
                 ) : (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
