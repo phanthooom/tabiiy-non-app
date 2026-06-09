@@ -104,14 +104,19 @@ export function AdminOrdersPage() {
       {/* ── Fixed top sections ── */}
       <div style={{
         flexShrink: 0,
-        padding: 'calc(var(--tg-safe-area-inset-top, 20px) + 12px) 16px 0',
+        padding: 'calc(var(--tg-content-safe-area-inset-top, var(--tg-safe-area-inset-top, 44px)) + 12px) 16px 0',
         background: '#f8fafc',
         borderBottom: '1px solid #e2e8f0',
         boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
       }}>
-        {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'center', marginBottom: 14 }}>
-          <h1 style={{ fontSize: 22, fontWeight: 800, color: '#0f172a', letterSpacing: '-0.02em' }}>Buyurtmalar</h1>
+        {/* Header — centered title */}
+        <div style={{ textAlign: 'center', marginBottom: 14 }}>
+          <h1 style={{
+            fontSize: 20, fontWeight: 800, color: '#0f172a',
+            letterSpacing: '-0.02em', margin: 0,
+          }}>
+            Buyurtmalar
+          </h1>
         </div>
 
         {/* Section toggle */}
