@@ -27,7 +27,7 @@ import {
 } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import type { Cart, CartItem, DeliveryType, Language, Order, OrderItem, Product, UserProfile } from '@/types'
-import { HARDCODED_DESCRIPTIONS } from './product-descriptions'
+
 
 // ── Helpers ───────────────────────────────────────────────────────────────
 
@@ -41,16 +41,15 @@ const col = {
 function toProduct(id: string, data: DocumentData): Product {
   const numId = Number(id)
   const finalId = Number.isNaN(numId) ? id : numId
-  const loc = HARDCODED_DESCRIPTIONS[String(id)]
-  const descRu = loc ? loc.ru : (data.description_ru ?? null)
-  const descUz = loc ? loc.uz : (data.description_uz ?? null)
-  const imageUrl = loc ? loc.image_url : (data.image_url ?? null)
+  const descRu = data.description_ru ?? null
+  const descUz = data.description_uz ?? null
+  const imageUrl = data.image_url ?? null
   return {
     id:              finalId,
-    name:            loc ? loc.name_ru : (data.name_ru ?? data.name ?? ''),
-    name_ru:         loc ? loc.name_ru : (data.name_ru ?? ''),
-    name_uz:         loc ? loc.name_uz : (data.name_uz ?? ''),
-    price:           loc ? loc.price : (data.price ?? 0),
+    name:            data.name_ru ?? data.name ?? '',
+    name_ru:         data.name_ru ?? '',
+    name_uz:         data.name_uz ?? '',
+    price:           data.price ?? 0,
     quantity:        data.quantity ?? 0,
     photo_file_id:   data.photo_file_id ?? null,
     image_url:       imageUrl,
@@ -94,9 +93,7 @@ export const firestoreProducts = {
     const snap = await getDocs(
       query(col.products(), where('is_available', '==', true))
     )
-    return snap.docs
-      .filter(d => ['1', '2'].includes(String(d.id)))
-      .map(d => toProduct(d.id, d.data()))
+    return snap.docs.map(d => toProduct(d.id, d.data()))
   },
 
   /** Получить один продукт по ID */
@@ -110,9 +107,7 @@ export const firestoreProducts = {
   subscribe: (onUpdate: (products: Product[]) => void): Unsubscribe => {
     const q = query(col.products(), where('is_available', '==', true))
     return onSnapshot(q, snap => {
-      onUpdate(snap.docs
-        .filter(d => ['1', '2'].includes(String(d.id)))
-        .map(d => toProduct(d.id, d.data())))
+      onUpdate(snap.docs.map(d => toProduct(d.id, d.data())))
     })
   },
 }

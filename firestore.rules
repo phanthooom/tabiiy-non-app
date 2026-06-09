@@ -3,27 +3,34 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ── Products — читают все, пишет только admin ──────────────────────────
+    // Функция проверки, авторизован ли пользователь как админ
+    function isAdmin() {
+      return request.auth != null && request.auth.token.email == 'admin@tabiiy-non.uz';
+    }
+
+    // ── Products ──────────────────────────
     match /products/{productId} {
-      allow read: if true;
-      allow write: if false; // управляется через Admin SDK / seed script
+      allow read: if true; // Все могут видеть товары
+      allow write: if isAdmin(); // Только админ может добавлять/изменять товары
     }
 
-    // ── Users — FCM токены, пишет сам клиент ──────────────────────────────
-    match /users/{telegramId} {
-      allow read, write: if true; // нет Firebase Auth, клиент сохраняет FCM токен
+    // ── Users ──────────────────────────────
+    match /users/{userId} {
+      allow read, write: if true; // Разрешаем клиентам (без Firebase Auth) читать и писать профили
     }
 
-    // ── Carts ─────────────────────────────────────────────────────────────
-    match /carts/{telegramId} {
-      allow read, write: if true;
+    // ── Carts ─────────────────────────────
+    match /carts/{userId} {
+      allow read, write: if true; // Разрешаем клиентам (без Firebase Auth) обновлять корзины
     }
 
-    // ── Orders — создаёт клиент, читают все (фильтр по telegram_id в запросе)
+    // ── Orders ────────────────────────────
     match /orders/{orderId} {
-      allow create: if true;   // CheckoutPage пишет копию после backend заказа
-      allow read:   if true;   // useFirebaseOrders фильтрует по telegram_id
-      allow update: if true;   // admin panel обновляет статус
+      // Клиент может создавать заказы и читать заказы
+      allow read, create: if true; 
+      // Обновлять (особенно статус) может только админ
+      allow update: if isAdmin();
+      // Удалять заказы нельзя
       allow delete: if false;
     }
   }

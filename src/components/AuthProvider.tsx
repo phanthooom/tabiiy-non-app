@@ -90,11 +90,10 @@ export function AuthProvider({ children }: Props) {
           const userId = user.id
           setCurrentUser(userId)
           
-          // Fallback token for auth store compatibility, we don't really use it
+          // Fallback token for auth store compatibility
           const fakeToken = `tg_${userId}`
           localStorage.setItem('access_token', fakeToken)
 
-          // Загружаем данные из Firestore (там может быть сохраненный телефон)
           const firestoreUser = await firestoreUsers.get(userId)
 
           const userProfile = {
@@ -107,14 +106,12 @@ export function AuthProvider({ children }: Props) {
           setAuth(fakeToken, userProfile as any)
           setLanguage(userProfile.language)
 
-          // Сохраняем пользователя в Firestore (обновляем имя/ник)
           firestoreUsers.upsert(userId, {
             full_name: userProfile.full_name,
             username: userProfile.username,
             language: userProfile.language,
           }).catch(console.warn)
 
-          // Загружаем корзину
           const cart = await cartApi.get()
           setCart(cart)
 

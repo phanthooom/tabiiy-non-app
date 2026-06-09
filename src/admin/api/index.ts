@@ -1,17 +1,15 @@
-import { collection, doc, getDocs, updateDoc, query, orderBy, limit, deleteDoc, addDoc } from 'firebase/firestore'
-import { db } from '../../lib/firebase'
+import { collection, doc, getDocs, updateDoc, query, orderBy, limit, deleteDoc, addDoc, onSnapshot } from 'firebase/firestore'
+import { signInWithEmailAndPassword } from 'firebase/auth'
+import { db, auth } from '../../lib/firebase'
 import type { Order, Product, User, PaginatedList, CallDeliveryResult } from '../types/index'
 
 export const authApi = {
   login: async (username: string, password: string) => {
-    if (username === 'admin' && password === 'admin') {
-      return { access_token: 'fake-admin-token', token_type: 'bearer' }
-    }
-    throw new Error('Неверный логин или пароль')
+    const userCredential = await signInWithEmailAndPassword(auth, username, password)
+    const token = await userCredential.user.getIdToken()
+    return { access_token: token, token_type: 'bearer' }
   },
 }
-
-import { onSnapshot } from 'firebase/firestore'
 
 export const ordersApi = {
   subscribe: (
@@ -52,9 +50,9 @@ export const ordersApi = {
       const telegramId = (order as any).user_id || order.user?.id || (order as any).customer_id
       const message = `📦 *Обновление заказа #${order.id}*\n\nСтатус вашего заказа изменён на: *${statusText}*\nСумма: ${order.total_amount} сум\n\nСпасибо, что выбираете Tabiiy Non! 🍞`
       
-      const BOT_TOKEN = '8957857177:AAFNSzeeQR7NTZHoQ7BbKajJhQyfKrizJSU'
+      const BOT_TOKEN = import.meta.env.VITE_BOT_TOKEN
       
-      if (telegramId) {
+      if (telegramId && BOT_TOKEN) {
         await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
