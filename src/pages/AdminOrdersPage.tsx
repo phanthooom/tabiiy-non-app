@@ -10,8 +10,8 @@ type AdminTab = 'all' | 'processing' | 'confirmed' | 'delivering' | 'delivered'
 
 const STATUSES = [
   { id: 'accepted', label: 'Jarayonda' },
-  { id: 'cooking', label: 'Tasdiqlandi' }, // We map cooking to Tasdiqlandi for UX
-  { id: 'courier', label: "Yo'lda" },
+  { id: 'packing', label: 'Tasdiqlandi' }, // We map cooking to Tasdiqlandi for UX
+  { id: 'courier_assigned', label: "Yo'lda" },
   { id: 'delivered', label: 'Yetkazildi' }
 ]
 
@@ -27,8 +27,8 @@ export function AdminOrdersPage() {
     // 1. Filter by Tab
     let tabMatch = true
     if (activeTab === 'processing') tabMatch = o.status === 'accepted'
-    if (activeTab === 'confirmed') tabMatch = o.status === 'cooking'
-    if (activeTab === 'delivering') tabMatch = o.status === 'courier'
+    if (activeTab === 'confirmed') tabMatch = o.status === 'packing'
+    if (activeTab === 'delivering') tabMatch = o.status === 'courier_assigned'
     if (activeTab === 'delivered') tabMatch = o.status === 'delivered'
     
     // 2. Filter by Search Query
@@ -97,7 +97,7 @@ export function AdminOrdersPage() {
         {[
           { id: 'all', label: `Barchasi (${orders.length})` },
           { id: 'processing', label: `Jarayonda (${countByStatus('accepted')})` },
-          { id: 'confirmed', label: `Tasdiqlandi (${countByStatus('cooking')})` },
+          { id: 'confirmed', label: `Tasdiqlandi (${countByStatus('packing')})` },
         ].map(t => (
           <button
             key={t.id}
