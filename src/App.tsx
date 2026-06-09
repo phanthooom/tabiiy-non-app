@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { QueryClientProvider } from '@tanstack/react-query'
 import { AnimatePresence } from 'framer-motion'
@@ -7,6 +7,7 @@ import { AuthProvider } from '@/components/AuthProvider'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { BottomNav } from '@/components/layout/BottomNav'
 import { TopAppBar } from '@/components/layout/TopAppBar'
+import { SplashScreen } from '@/components/SplashScreen'
 import { queryClient } from '@/lib/query-client'
 
 
@@ -23,9 +24,12 @@ import { useDeliveryStore } from '@/store'
 const AdminApp = lazy(() => import('./admin/AdminApp'))
 
 export default function App() {
+  const [splashDone, setSplashDone] = useState(false)
+
   return (
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
+        {!splashDone && <SplashScreen onDone={() => setSplashDone(true)} />}
         <BrowserRouter>
           <AuthProvider>
             <AppShell />
