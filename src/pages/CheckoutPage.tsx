@@ -2,7 +2,7 @@ import { useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { MapPin, Store } from 'lucide-react'
+import { MapPin, Store, LocateFixed, Loader2 } from 'lucide-react'
 import { apiErrorMessage, ordersApi } from '@/api'
 import { mutationRetryOptions, withRetry } from '@/lib/retry'
 import { BYPASS_MODE } from '@/lib/mock-data'
@@ -14,7 +14,6 @@ import { useBackButton } from '@/hooks/useTelegram'
 import { useTelegram } from '@/hooks/useTelegram'
 import type { DeliveryType, Order } from '@/types'
 import { AddressMapModal } from '@/components/ui/AddressMapModal'
-import { AddressText } from '@/components/ui/AddressText'
 
 export function CheckoutPage() {
   const navigate = useNavigate()
@@ -28,7 +27,47 @@ export function CheckoutPage() {
   const [address, setAddress] = useState(savedAddress)
   const [comment, setComment] = useState('')
   const [isMapOpen, setIsMapOpen] = useState(false)
+  const [locating, setLocating] = useState(false)
   const idempotencyKey = useRef(crypto.randomUUID())
+
+  const detectLocation = async () => {
+    if (!navigator.geolocation) return
+    setLocating(true)
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const { latitude: lat, longitude: lon } = pos.coords
+        const resolveAddress = async (): Promise<string> => {
+          try {
+            const resp = await fetch(
+              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1`,
+              { headers: { 'Accept-Language': language === 'uz' ? 'uz' : 'ru' } }
+            )
+            if (resp.ok) {
+              const data = await resp.json()
+              if (data?.display_name) return data.display_name
+            }
+          } catch {}
+          try {
+            const res = await fetch(
+              `https://geocode-maps.yandex.ru/1.x/?apikey=fcd5b77b-d255-480e-b530-ec10724a2275&geocode=${lon},${lat}&format=json&lang=${language === 'uz' ? 'uz_UZ' : 'ru_RU'}`
+            )
+            if (res.ok) {
+              const data = await res.json()
+              const item = data?.response?.GeoObjectCollection?.featureMember?.[0]?.GeoObject
+              const text = item?.metaDataProperty?.GeocoderMetaData?.text || item?.name
+              if (text) return text
+            }
+          } catch {}
+          return ''
+        }
+        const resolved = await resolveAddress()
+        if (resolved) setAddress(resolved)
+        setLocating(false)
+      },
+      () => setLocating(false),
+      { timeout: 10000, enableHighAccuracy: true }
+    )
+  }
 
   useBackButton(() => navigate('/cart'))
 
@@ -138,22 +177,47 @@ export function CheckoutPage() {
             style={{ overflow: 'hidden', marginBottom: 24 }}
           >
             <label style={labelStyle}>{t('address')}</label>
-            <div 
-              style={{ position: 'relative', cursor: 'pointer' }}
-              onClick={() => setIsMapOpen(true)}
-            >
-              <div style={{ ...inputStyle, paddingRight: 40, minHeight: 46, display: 'flex', alignItems: 'center' }}>
-                {address ? (
-                  <AddressText address={address} language={language} clickable={false} />
-                ) : (
-                  <span style={{ color: '#94a3b8' }}>{t('addressPlaceholder')}</span>
-                )}
-              </div>
-              <MapPin
-                size={18}
-                color="#e8751a"
-                style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)' }}
+            <div style={{ position: 'relative' }}>
+              <input
+                type="text"
+                value={address}
+                onChange={e => setAddress(e.target.value)}
+                placeholder={locating
+                  ? (language === 'uz' ? 'Manzil aniqlanmoqda...' : 'Определение адреса...')
+                  : t('addressPlaceholder')}
+                style={{
+                  ...inputStyle,
+                  paddingRight: 88,
+                  color: '#0f172a',
+                }}
               />
+              {/* GPS button */}
+              <button
+                type="button"
+                onClick={detectLocation}
+                disabled={locating}
+                style={{
+                  position: 'absolute', right: 44, top: '50%', transform: 'translateY(-50%)',
+                  background: 'none', border: 'none', cursor: locating ? 'wait' : 'pointer',
+                  padding: 4, display: 'flex', alignItems: 'center', opacity: locating ? 0.5 : 1,
+                }}
+              >
+                {locating
+                  ? <Loader2 size={18} color="#e8751a" style={{ animation: 'spin 1s linear infinite' }} />
+                  : <LocateFixed size={18} color="#e8751a" />}
+              </button>
+              {/* Map picker button */}
+              <button
+                type="button"
+                onClick={() => setIsMapOpen(true)}
+                style={{
+                  position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)',
+                  background: 'none', border: 'none', cursor: 'pointer', padding: 4,
+                  display: 'flex', alignItems: 'center',
+                }}
+              >
+                <MapPin size={18} color="#e8751a" />
+              </button>
             </div>
             {address && (
               <p style={{ fontSize: 12, color: '#64748b', marginTop: 8 }}>
