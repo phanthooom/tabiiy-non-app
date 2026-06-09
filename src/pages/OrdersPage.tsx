@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useNavigate, useParams } from 'react-router-dom'
-import { CheckCircle, Clock, MapPin, Phone } from 'lucide-react'
+import { CheckCircle, Clock, MapPin, Phone, Store } from 'lucide-react'
 import { YMaps, Map as YandexMap } from '@pbe/react-yandex-maps'
 
 import { Button, Spinner } from '@/components/ui'
@@ -93,10 +93,21 @@ const STATUS_PROGRESS: Record<string, number> = {
   cancelled: 0,
 }
 
+const PICKUP_PROGRESS: Record<string, number> = {
+  accepted: 33,
+  packing: 66,
+  ready: 100,
+  delivered: 100,
+  cancelled: 0,
+}
+
 function OrderCard({ order, onClick, language }: { order: Order; onClick: () => void; language: string }) {
   const t = useT(language as 'ru' | 'uz')
   const badge = STATUS_BADGE[order.status]
-  const progress = STATUS_PROGRESS[order.status] ?? 0
+  const isPickup = order.delivery_type === 'pickup'
+  const progress = isPickup
+    ? (PICKUP_PROGRESS[order.status] ?? 0)
+    : (STATUS_PROGRESS[order.status] ?? 0)
   const isActive = ACTIVE_STATUSES.has(order.status)
   const firstItem = order.items[0]
 
@@ -107,7 +118,7 @@ function OrderCard({ order, onClick, language }: { order: Order; onClick: () => 
       animate={{ opacity: 1, y: 0 }}
       style={{
         background: '#ffffff',
-        border: '1px solid #e2e8f0',
+        border: isPickup ? '1px solid #fed7aa' : '1px solid #e2e8f0',
         borderRadius: 16,
         marginBottom: 16,
         padding: '16px',
@@ -121,9 +132,26 @@ function OrderCard({ order, onClick, language }: { order: Order; onClick: () => 
         alignItems: 'center',
         marginBottom: 8,
       }}>
-        <span style={{ fontWeight: 800, fontSize: 13, color: '#0f172a' }}>
-          #TN-{order.id}
-        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontWeight: 800, fontSize: 13, color: '#0f172a' }}>
+            #TN-{order.id}
+          </span>
+          {isPickup && (
+            <span style={{
+              fontSize: 10, fontWeight: 800,
+              color: '#e8751a',
+              background: '#fff6ef',
+              borderRadius: 6,
+              padding: '3px 7px',
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em',
+              display: 'flex', alignItems: 'center', gap: 3,
+            }}>
+              <Store size={10} color="#e8751a" />
+              {language === 'uz' ? "O'z olish" : 'Самовывоз'}
+            </span>
+          )}
+        </div>
         {badge && (
           <span style={{
             fontSize: 10, fontWeight: 800,
@@ -151,26 +179,43 @@ function OrderCard({ order, onClick, language }: { order: Order; onClick: () => 
       {/* Progress bar (only for active orders) */}
       {isActive && (
         <div style={{ marginBottom: 16 }}>
-          <div style={{
-            height: 4,
-            background: '#e2e8f0',
-            borderRadius: 99,
-            overflow: 'hidden',
-          }}>
-            <motion.div
-              initial={{ width: 0 }}
-              animate={{ width: `${progress}%` }}
-              transition={{ duration: 0.8, ease: 'easeOut' }}
-              style={{
-                height: '100%',
-                background: '#e8751a',
-                borderRadius: 99,
-              }}
-            />
-          </div>
-          <p style={{ fontSize: 11, color: '#64748b', marginTop: 8, textAlign: 'right', fontWeight: 500 }}>
-            {language === 'uz' ? 'Taxminiy vaqt: 45 min' : 'Est. Delivery: 45 mins'}
-          </p>
+          {isPickup ? (
+            /* Pickup: 3-step segmented bar */
+            <div style={{ display: 'flex', gap: 4 }}>
+              {[33, 66, 100].map((threshold, i) => (
+                <div key={i} style={{ height: 4, flex: 1, background: progress >= threshold ? '#e8751a' : '#e2e8f0', borderRadius: 2 }} />
+              ))}
+            </div>
+          ) : (
+            <div style={{
+              height: 4,
+              background: '#e2e8f0',
+              borderRadius: 99,
+              overflow: 'hidden',
+            }}>
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${progress}%` }}
+                transition={{ duration: 0.8, ease: 'easeOut' }}
+                style={{
+                  height: '100%',
+                  background: '#e8751a',
+                  borderRadius: 99,
+                }}
+              />
+            </div>
+          )}
+          {isPickup ? (
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: '#64748b', marginTop: 6, fontWeight: 600 }}>
+              <span>{language === 'uz' ? 'Tayyorlanmoqda' : 'Готовится'}</span>
+              <span>{language === 'uz' ? 'Tayyor' : 'Готов'}</span>
+              <span>{language === 'uz' ? 'Olingan' : 'Получен'}</span>
+            </div>
+          ) : (
+            <p style={{ fontSize: 11, color: '#64748b', marginTop: 8, textAlign: 'right', fontWeight: 500 }}>
+              {language === 'uz' ? 'Taxminiy vaqt: 45 min' : 'Est. Delivery: 45 mins'}
+            </p>
+          )}
         </div>
       )}
 
@@ -192,8 +237,8 @@ function OrderCard({ order, onClick, language }: { order: Order; onClick: () => 
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             border: '1px solid #f1f5f9',
           }}>
-            <img 
-              src="https://images.unsplash.com/photo-1509440159596-0249088772ff?q=80&w=200&auto=format&fit=crop" 
+            <img
+              src="https://images.unsplash.com/photo-1509440159596-0249088772ff?q=80&w=200&auto=format&fit=crop"
               alt="Bread"
               style={{ width: '100%', height: '100%', objectFit: 'cover' }}
             />
@@ -215,22 +260,26 @@ function OrderCard({ order, onClick, language }: { order: Order; onClick: () => 
         </p>
       </div>
 
-      {/* Track order button */}
+      {/* Action button */}
       <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
         <button
           onClick={onClick}
           style={{
-            background: '#ffffff',
-            border: '1px solid #cbd5e1',
+            background: isPickup ? '#fff6ef' : '#ffffff',
+            border: isPickup ? '1px solid #fed7aa' : '1px solid #cbd5e1',
             borderRadius: 10,
             padding: '8px 16px',
             fontSize: 13, fontWeight: 700,
-            color: '#0f172a',
+            color: isPickup ? '#e8751a' : '#0f172a',
             cursor: 'pointer',
             transition: 'all 0.2s',
+            display: 'flex', alignItems: 'center', gap: 6,
           }}
         >
-          {language === 'uz' ? 'Kuzatish' : 'Track Order'}
+          {isPickup && <Store size={13} color="#e8751a" />}
+          {isPickup
+            ? (language === 'uz' ? 'Batafsil' : 'Подробнее')
+            : (language === 'uz' ? 'Kuzatish' : 'Track Order')}
         </button>
       </div>
     </motion.div>
@@ -438,6 +487,128 @@ export function OrderDetailPage() {
     )
   }
 
+  const isPickup = order.delivery_type === 'pickup'
+
+  if (isPickup) {
+    const pickupStep = order.status === 'delivered' ? 3 : order.status === 'ready' ? 2 : 1
+    const pickupStatusRu = pickupStep === 3 ? 'Получен' : pickupStep === 2 ? 'Готов к выдаче!' : 'Готовится...'
+    const pickupStatusUz = pickupStep === 3 ? 'Olingan' : pickupStep === 2 ? "Olib ketishga tayyor!" : 'Tayyorlanmoqda...'
+    const isDone = order.status === 'delivered'
+
+    return (
+      <div style={{ position: 'fixed', inset: 0, zIndex: 50, overflow: 'hidden', background: '#f8fafc', display: 'flex', flexDirection: 'column' }}>
+        {/* Back button */}
+        <div style={{ padding: 'calc(env(safe-area-inset-top, 20px) + 12px) 16px 0', flexShrink: 0 }}>
+          <button
+            onClick={() => navigate('/orders')}
+            style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 10, padding: '8px 14px', fontSize: 13, fontWeight: 700, color: '#0f172a', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
+          >
+            ← {language === 'uz' ? 'Orqaga' : 'Назад'}
+          </button>
+        </div>
+
+        {/* Store icon area */}
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 24px' }}>
+          <motion.div
+            initial={{ scale: 0.7, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: 'spring', stiffness: 200, damping: 15 }}
+            style={{
+              width: 96, height: 96, borderRadius: '50%',
+              background: isDone ? '#d1fae5' : '#fff6ef',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              marginBottom: 20,
+              boxShadow: '0 4px 24px rgba(232,117,26,0.12)',
+            }}
+          >
+            {isDone
+              ? <CheckCircle size={48} color="#10b981" strokeWidth={1.5} />
+              : <Store size={48} color="#e8751a" strokeWidth={1.5} />}
+          </motion.div>
+
+          <motion.p
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 }}
+            style={{ fontSize: 11, fontWeight: 800, color: '#e8751a', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}
+          >
+            {language === 'uz' ? "O'z olish" : 'Самовывоз'} · #TN-{order.id}
+          </motion.p>
+
+          <motion.h2
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            style={{ fontSize: 26, fontWeight: 800, color: isDone ? '#10b981' : '#0f172a', textAlign: 'center', marginBottom: 24 }}
+          >
+            {language === 'uz' ? pickupStatusUz : pickupStatusRu}
+          </motion.h2>
+
+          {/* 3-step progress */}
+          <div style={{ width: '100%', maxWidth: 320 }}>
+            <div style={{ display: 'flex', gap: 4, marginBottom: 8 }}>
+              <div style={{ height: 4, flex: 1, background: pickupStep >= 1 ? '#e8751a' : '#e2e8f0', borderRadius: 2 }} />
+              <div style={{ height: 4, flex: 1, background: pickupStep >= 2 ? '#e8751a' : '#e2e8f0', borderRadius: 2 }} />
+              <div style={{ height: 4, flex: 1, background: pickupStep >= 3 ? '#e8751a' : '#e2e8f0', borderRadius: 2 }} />
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, fontWeight: 600, color: '#64748b' }}>
+              <span>{language === 'uz' ? 'Tayyorlanmoqda' : 'Готовится'}</span>
+              <span>{language === 'uz' ? 'Tayyor' : 'Готов'}</span>
+              <span>{language === 'uz' ? 'Olingan' : 'Получен'}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Bottom card: store info */}
+        <motion.div
+          initial={{ y: '100%' }}
+          animate={{ y: 0 }}
+          transition={{ type: 'spring', damping: 25, stiffness: 200 }}
+          style={{
+            flexShrink: 0,
+            background: '#ffffff',
+            borderRadius: '20px 20px 0 0',
+            padding: '20px 20px calc(20px + env(safe-area-inset-bottom, 0px))',
+            boxShadow: '0 -4px 24px rgba(0,0,0,0.08)',
+          }}
+        >
+          <p style={{ fontSize: 11, fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 14 }}>
+            {language === 'uz' ? 'Do\'kon manzili' : 'Адрес магазина'}
+          </p>
+
+          <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', marginBottom: 16 }}>
+            <div style={{ width: 44, height: 44, borderRadius: 12, background: '#fff6ef', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <Store size={22} color="#e8751a" />
+            </div>
+            <div>
+              <p style={{ fontWeight: 700, fontSize: 15, color: '#0f172a', marginBottom: 3 }}>Tabiiy Non</p>
+              <p style={{ fontSize: 13, color: '#475569', lineHeight: 1.4 }}>
+                {language === 'uz' ? "Samarqand Darvoza ko'chasi, 2/1" : 'ул. Самарканд Дарвоза, 2/1'}
+              </p>
+            </div>
+          </div>
+
+          <a
+            href="https://yandex.ru/navi/org/tabiiy_non/129776015209?si=v82649gguzaktuhfb0bkqcznkm"
+            target="_blank"
+            rel="noreferrer"
+            style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+              background: '#e8751a', color: '#fff',
+              borderRadius: 12, padding: '14px 16px',
+              fontSize: 14, fontWeight: 700,
+              textDecoration: 'none',
+              width: '100%',
+            }}
+          >
+            <MapPin size={15} color="#fff" />
+            {language === 'uz' ? 'Yandex navigatorda ochish' : 'Открыть в Яндекс Навигаторе'}
+          </a>
+        </motion.div>
+      </div>
+    )
+  }
+
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 50, overflow: 'hidden', background: '#f8fafc' }}>
       <div style={{ position: 'absolute', inset: 0, zIndex: 0 }}>
@@ -453,16 +624,16 @@ export function OrderDetailPage() {
       </div>
 
       {/* Bottom Card */}
-      <motion.div 
+      <motion.div
         initial={{ y: '100%' }}
         animate={{ y: 0 }}
         transition={{ type: 'spring', damping: 25, stiffness: 200, delay: 0.1 }}
-        style={{ 
-        position: 'absolute', 
-        bottom: 'calc(env(safe-area-inset-bottom, 0px) + 32px)', 
-        left: 16, right: 16, zIndex: 10, 
-        background: '#ffffff', borderRadius: 20, padding: 20, 
-        boxShadow: '0 8px 32px rgba(0,0,0,0.1)' 
+        style={{
+        position: 'absolute',
+        bottom: 'calc(env(safe-area-inset-bottom, 0px) + 32px)',
+        left: 16, right: 16, zIndex: 10,
+        background: '#ffffff', borderRadius: 20, padding: 20,
+        boxShadow: '0 8px 32px rgba(0,0,0,0.1)'
       }}>
         {(() => {
           const step = order.status === 'delivered' ? 3 : order.status === 'courier_assigned' ? 2 : 1;
