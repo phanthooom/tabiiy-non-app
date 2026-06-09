@@ -40,20 +40,33 @@ export const ordersApi = {
     const ref = doc(db, 'orders', String(order.id))
     await updateDoc(ref, { status })
     
-    // Вызываем нашу серверную функцию Vercel для отправки уведомления
     try {
-      await fetch('/api/notify', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          orderId: order.id,
-          telegramId: (order as any).user_id || order.user?.id, // Берем ID пользователя из заказа
-          status,
-          totalAmount: order.total_amount
+      const telegramId = (order as any).user_id || order.user?.id || (order as any).customer_id
+      const STATUS_LABELS: Record<string, string> = {
+        accepted: '✅ Принят',
+        packing: '📦 Упаковывается',
+        courier_assigned: '🚗 Курьер в пути',
+        delivered: '✅ Доставлен',
+        cancelled: '❌ Отменён',
+      }
+      const statusText = STATUS_LABELS[status] || status
+      const message = `📦 *Обновление заказа #${order.id}*\n\nСтатус вашего заказа изменён на: *${statusText}*\nСумма: ${order.total_amount} сум\n\nСпасибо, что выбираете Tabiiy Non! 🍞`
+      
+      const BOT_TOKEN = '8957857177:AAFNSzeeQR7NTZHoQ7BbKajJhQyfKrizJSU'
+      
+      if (telegramId) {
+        await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id: telegramId,
+            text: message,
+            parse_mode: 'Markdown',
+          })
         })
-      })
+      }
     } catch (e) {
-      console.error('Failed to call notify API', e)
+      console.error('Failed to send Telegram notification', e)
     }
 
     return { ...order, status } as any as Order
