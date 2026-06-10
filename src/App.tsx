@@ -74,14 +74,15 @@ function AppShell() {
   const isWelcome = pathname === '/welcome'
   const isDeliveryLocation = pathname === '/delivery-location'
   const isOrderTracking = pathname.startsWith('/orders/') && pathname !== '/orders'
+  const isProfileSub = pathname.startsWith('/profile/')
   const isPreAuth = isWelcome || isDeliveryLocation
-  const showNav = !isAdmin && !isPreAuth && !isOrderTracking
+  const showNav = !isAdmin && !isPreAuth && !isOrderTracking && !isProfileSub
 
   if (!isAdmin && deliveryType === null && !isPreAuth) {
     return <Navigate to="/welcome" replace />
   }
 
-  const showTopBar = !isAdmin && !isPreAuth && !isOrderTracking
+  const showTopBar = !isAdmin && !isPreAuth && !isOrderTracking && !isProfileSub
 
   return (
     <div
@@ -121,6 +122,10 @@ function AppShell() {
             <Route path="/order-success/:id" element={<OrderSuccessPage />} />
             <Route path="/admin-orders" element={<AdminOrdersPage />} />
             <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/profile/personal-info" element={<ProfilePage sub="personal-info" />} />
+            <Route path="/profile/addresses" element={<ProfilePage sub="addresses" />} />
+            <Route path="/profile/payments" element={<ProfilePage sub="payments" />} />
+            <Route path="/profile/notifications" element={<ProfilePage sub="notifications" />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </AnimatePresence>

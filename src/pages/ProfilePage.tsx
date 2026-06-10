@@ -1,24 +1,210 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  User, MapPin, CreditCard, Bell, Globe, LogOut, ChevronRight, Shield
+  User, MapPin, CreditCard, Bell, Globe, LogOut, ChevronRight, Shield, ArrowLeft
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore, useLangStore, useDeliveryStore, useCartStore } from '@/store'
 import { BYPASS_MODE, mockUser } from '@/lib/mock-data'
 import type { Language } from '@/types'
 
-export function ProfilePage() {
+interface ProfilePageProps {
+  sub?: 'personal-info' | 'addresses' | 'payments' | 'notifications'
+}
+
+function SubPageShell({ title, children }: { title: string; children: React.ReactNode }) {
+  const navigate = useNavigate()
+  return (
+    <div style={{ padding: '0 0 40px' }}>
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 12,
+        padding: '16px 16px 12px',
+        borderBottom: '1px solid var(--border)',
+        background: 'var(--surface)',
+        position: 'sticky', top: 0, zIndex: 10,
+      }}>
+        <button
+          onClick={() => navigate('/profile')}
+          style={{
+            width: 36, height: 36, borderRadius: '50%',
+            background: 'var(--surface-2)', border: '1px solid var(--border)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            cursor: 'pointer', flexShrink: 0,
+          }}
+        >
+          <ArrowLeft size={18} color="var(--text)" strokeWidth={2} />
+        </button>
+        <span style={{ fontSize: 17, fontWeight: 700, color: 'var(--text)' }}>{title}</span>
+      </div>
+      {children}
+    </div>
+  )
+}
+
+function PersonalInfoPage({ lang }: { lang: Language }) {
+  const { user } = useAuthStore()
+  const displayUser = BYPASS_MODE ? mockUser : user
+  const title = lang === 'uz' ? "Mening ma'lumotlarim" : 'Мои данные'
+  return (
+    <SubPageShell title={title}>
+      <div style={{ padding: '24px 16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <Field label={lang === 'uz' ? 'Ism familiya' : 'Имя и фамилия'} value={displayUser?.full_name ?? '—'} />
+        <Field label={lang === 'uz' ? 'Telefon raqam' : 'Телефон'} value={displayUser?.phone ?? '—'} />
+        <p style={{ fontSize: 13, color: 'var(--text-3)', textAlign: 'center', marginTop: 8 }}>
+          {lang === 'uz' ? "Ma'lumotlarni yangilash uchun operatorga murojaat qiling" : 'Для изменения данных обратитесь к оператору'}
+        </p>
+      </div>
+    </SubPageShell>
+  )
+}
+
+function AddressesPage({ lang }: { lang: Language }) {
+  const title = lang === 'uz' ? 'Manzillarim' : 'Мои адреса'
+  return (
+    <SubPageShell title={title}>
+      <div style={{ padding: '60px 20px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+        <div style={{
+          width: 80, height: 80, borderRadius: 40,
+          background: 'var(--surface-2)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: 36, marginBottom: 8,
+        }}>
+          <MapPin size={36} color="var(--primary)" strokeWidth={1.5} />
+        </div>
+        <p style={{ fontSize: 17, fontWeight: 700, color: 'var(--text)' }}>
+          {lang === 'uz' ? 'Manzillar yo\'q' : 'Нет адресов'}
+        </p>
+        <p style={{ fontSize: 14, color: 'var(--text-3)', maxWidth: 240 }}>
+          {lang === 'uz' ? 'Yetkazib berish uchun manzil qo\'shing' : 'Добавьте адрес для доставки'}
+        </p>
+      </div>
+    </SubPageShell>
+  )
+}
+
+function PaymentsPage({ lang }: { lang: Language }) {
+  const title = lang === 'uz' ? "To'lov usullari" : 'Способы оплаты'
+  return (
+    <SubPageShell title={title}>
+      <div style={{ padding: '60px 20px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+        <div style={{
+          width: 80, height: 80, borderRadius: 40,
+          background: 'var(--surface-2)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          marginBottom: 8,
+        }}>
+          <CreditCard size={36} color="var(--primary)" strokeWidth={1.5} />
+        </div>
+        <p style={{ fontSize: 17, fontWeight: 700, color: 'var(--text)' }}>
+          {lang === 'uz' ? "To'lov usullari yo'q" : 'Нет способов оплаты'}
+        </p>
+        <p style={{ fontSize: 14, color: 'var(--text-3)', maxWidth: 240 }}>
+          {lang === 'uz' ? 'Naqd pul orqali to\'lov qilishingiz mumkin' : 'Оплата производится наличными при получении'}
+        </p>
+      </div>
+    </SubPageShell>
+  )
+}
+
+function NotificationsPage({ lang }: { lang: Language }) {
+  const title = lang === 'uz' ? 'Xabarnomalar' : 'Уведомления'
+  const [orderNotif, setOrderNotif] = useState(true)
+  const [promoNotif, setPromoNotif] = useState(false)
+
+  return (
+    <SubPageShell title={title}>
+      <div style={{ padding: '20px 16px', display: 'flex', flexDirection: 'column', gap: 2 }}>
+        <NotifRow
+          label={lang === 'uz' ? 'Buyurtma holati' : 'Статус заказа'}
+          desc={lang === 'uz' ? 'Buyurtma yetib kelganda xabar oling' : 'Уведомления о статусе заказа'}
+          enabled={orderNotif}
+          onChange={setOrderNotif}
+        />
+        <NotifRow
+          label={lang === 'uz' ? 'Aksiyalar va chegirmalar' : 'Акции и скидки'}
+          desc={lang === 'uz' ? 'Yangi aksiyalar haqida xabardor bo\'ling' : 'Узнавайте о новых акциях'}
+          enabled={promoNotif}
+          onChange={setPromoNotif}
+        />
+      </div>
+    </SubPageShell>
+  )
+}
+
+function Field({ label, value }: { label: string; value: string }) {
+  return (
+    <div style={{
+      background: 'var(--surface)',
+      border: '1px solid var(--border)',
+      borderRadius: 12,
+      padding: '14px 16px',
+    }}>
+      <p style={{ fontSize: 12, color: 'var(--text-3)', marginBottom: 4 }}>{label}</p>
+      <p style={{ fontSize: 16, fontWeight: 600, color: 'var(--text)' }}>{value}</p>
+    </div>
+  )
+}
+
+function NotifRow({ label, desc, enabled, onChange }: {
+  label: string; desc: string; enabled: boolean; onChange: (v: boolean) => void
+}) {
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', gap: 14,
+      padding: '16px',
+      background: 'var(--surface)',
+      borderRadius: 12,
+      border: '1px solid var(--border)',
+      marginBottom: 8,
+    }}>
+      <div style={{ flex: 1 }}>
+        <p style={{ fontSize: 15, fontWeight: 600, color: 'var(--text)', marginBottom: 2 }}>{label}</p>
+        <p style={{ fontSize: 13, color: 'var(--text-3)' }}>{desc}</p>
+      </div>
+      <button
+        onClick={() => onChange(!enabled)}
+        style={{
+          width: 48, height: 28,
+          borderRadius: 14,
+          background: enabled ? 'var(--accent, #e8751a)' : 'var(--surface-2)',
+          border: '1px solid var(--border)',
+          cursor: 'pointer',
+          position: 'relative',
+          transition: 'background 0.2s',
+          flexShrink: 0,
+        }}
+      >
+        <div style={{
+          width: 22, height: 22,
+          borderRadius: '50%',
+          background: '#fff',
+          position: 'absolute',
+          top: 2,
+          left: enabled ? 22 : 2,
+          transition: 'left 0.2s',
+          boxShadow: '0 1px 4px rgba(0,0,0,0.15)',
+        }} />
+      </button>
+    </div>
+  )
+}
+
+export function ProfilePage({ sub }: ProfilePageProps = {}) {
   const navigate = useNavigate()
   const { language, setLanguage } = useLangStore()
   const { user, clear: clearAuth } = useAuthStore()
   const { clearCart } = useCartStore()
   const { setDeliveryType } = useDeliveryStore()
   const displayUser = BYPASS_MODE ? mockUser : user
-  
+
   const isAdmin = window.Telegram?.WebApp?.initDataUnsafe?.user?.id === 638384527 || import.meta.env.VITE_BYPASS_AUTH === 'true'
 
   const [showLangPicker, setShowLangPicker] = useState(false)
+
+  if (sub === 'personal-info') return <PersonalInfoPage lang={language} />
+  if (sub === 'addresses') return <AddressesPage lang={language} />
+  if (sub === 'payments') return <PaymentsPage lang={language} />
+  if (sub === 'notifications') return <NotificationsPage lang={language} />
 
   const handleLogout = () => {
     clearAuth()
@@ -28,14 +214,14 @@ export function ProfilePage() {
   }
 
   const menuItems = [
-    { icon: <User size={20} strokeWidth={1.8} />, label: language === 'uz' ? "Mening ma'lumotlarim" : 'Мои данные', action: () => {} },
-    { icon: <MapPin size={20} strokeWidth={1.8} />, label: language === 'uz' ? 'Manzillarim' : 'Мои адреса', action: () => {} },
-    { icon: <CreditCard size={20} strokeWidth={1.8} />, label: language === 'uz' ? "To'lov usullari" : 'Способы оплаты', action: () => {} },
-    { icon: <Bell size={20} strokeWidth={1.8} />, label: language === 'uz' ? 'Xabarnomalar' : 'Уведомления', action: () => {} },
-    ...(isAdmin ? [{ 
-      icon: <Shield size={20} strokeWidth={1.8} />, 
-      label: 'Admin paneli', 
-      action: () => navigate('/admin-orders') 
+    { icon: <User size={20} strokeWidth={1.8} />, label: language === 'uz' ? "Mening ma'lumotlarim" : 'Мои данные', action: () => navigate('/profile/personal-info') },
+    { icon: <MapPin size={20} strokeWidth={1.8} />, label: language === 'uz' ? 'Manzillarim' : 'Мои адреса', action: () => navigate('/profile/addresses') },
+    { icon: <CreditCard size={20} strokeWidth={1.8} />, label: language === 'uz' ? "To'lov usullari" : 'Способы оплаты', action: () => navigate('/profile/payments') },
+    { icon: <Bell size={20} strokeWidth={1.8} />, label: language === 'uz' ? 'Xabarnomalar' : 'Уведомления', action: () => navigate('/profile/notifications') },
+    ...(isAdmin ? [{
+      icon: <Shield size={20} strokeWidth={1.8} />,
+      label: 'Admin paneli',
+      action: () => navigate('/admin-orders')
     }] : []),
     {
       icon: <Globe size={20} strokeWidth={1.8} />,
@@ -75,10 +261,10 @@ export function ProfilePage() {
           overflow: 'hidden',
         }}>
           {window.Telegram?.WebApp?.initDataUnsafe?.user?.photo_url ? (
-            <img 
-              src={window.Telegram.WebApp.initDataUnsafe.user.photo_url} 
-              alt="Profile" 
-              style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+            <img
+              src={window.Telegram.WebApp.initDataUnsafe.user.photo_url}
+              alt="Profile"
+              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
             />
           ) : '🧑'}
         </div>
