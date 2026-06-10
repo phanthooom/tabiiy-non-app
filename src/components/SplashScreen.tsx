@@ -5,8 +5,7 @@ interface SplashScreenProps {
   onDone: () => void
 }
 
-// #3d2009 matches the PNG's own brown background — edges blend seamlessly
-const BG = '#3d2009'
+const BG = '#f1f8f8'
 
 export function SplashScreen({ onDone }: SplashScreenProps) {
   const [visible, setVisible] = useState(true)
@@ -36,20 +35,30 @@ export function SplashScreen({ onDone }: SplashScreenProps) {
             gap: 32,
           }}
         >
-          {/* Logo — no clipping needed; PNG brown matches page background */}
-          <motion.img
-            src="/logo.png"
-            alt="Tabiiy Non"
+          {/* Logo clipped to circle — hides PNG brown background */}
+          <motion.div
             initial={{ scale: 0.7, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ type: 'spring', stiffness: 240, damping: 20, delay: 0.1 }}
             style={{
-              width: 280,
-              height: 280,
-              objectFit: 'contain',
-              display: 'block',
+              width: 240,
+              height: 240,
+              borderRadius: '50%',
+              overflow: 'hidden',
+              flexShrink: 0,
             }}
-          />
+          >
+            <img
+              src="/logo.png"
+              alt="Tabiiy Non"
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                transform: 'scale(1.15)',
+              }}
+            />
+          </motion.div>
 
           {/* Dots loader */}
           <motion.div
