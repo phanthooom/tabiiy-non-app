@@ -5,7 +5,7 @@ interface SplashScreenProps {
   onDone: () => void
 }
 
-const BG = '#f1f8f8'
+const BG = '#faebd7'
 
 export function SplashScreen({ onDone }: SplashScreenProps) {
   const [visible, setVisible] = useState(true)
