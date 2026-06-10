@@ -7,7 +7,7 @@ import { useCartStore, useLangStore } from '@/store'
 import { useT } from '@/utils/i18n'
 import { useTelegram } from '@/hooks/useTelegram'
 import { BYPASS_MODE, mockProducts } from '@/lib/mock-data'
-import type { Product } from '@/types'
+import type { Product, Cart } from '@/types'
 
 export function CatalogPage() {
   const { language } = useLangStore()
@@ -104,9 +104,12 @@ export function CatalogPage() {
         return Promise.resolve({ items: newItems, total, items_count: newItems.reduce((s, i) => s + i.quantity, 0) })
       }
       if (qty === 0) return cartApi.removeItem(product.id)
-      // updateItem only works if item already exists — use addItem for first-time add
-      const itemInCart = cart?.items.find(i => String(i.product_id) === String(product.id))
-      if (!itemInCart) return cartApi.addItem(product.id, qty)
+      // Use query cache (server-confirmed) — not the optimistically-updated local store.
+      // handleQtyChange already added the item to the store optimistically, so checking
+      // `cart` here would always find it and call updateItem even for first-time adds.
+      const serverCart = queryClient.getQueryData<Cart>(queryKeys.cart())
+      const itemOnServer = serverCart?.items.find(i => String(i.product_id) === String(product.id))
+      if (!itemOnServer) return cartApi.addItem(product.id, qty)
       return cartApi.updateItem(product.id, qty)
     },
     onSuccess: (newCart) => {
