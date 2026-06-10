@@ -18,7 +18,7 @@ function SubPageShell({ title, children }: { title: string; children: React.Reac
     <div style={{ padding: '0 0 40px' }}>
       <div style={{
         display: 'flex', alignItems: 'center', gap: 12,
-        padding: '16px 16px 12px',
+        padding: 'calc(var(--tg-content-safe-area-inset-top, 0px) + 16px) 16px 12px',
         borderBottom: '1px solid var(--border)',
         background: 'var(--surface)',
         position: 'sticky', top: 0, zIndex: 10,
