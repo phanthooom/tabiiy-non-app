@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  User, MapPin, CreditCard, Bell, Globe, LogOut, ChevronRight, Shield, ArrowLeft, Trash2
+  User, MapPin, CreditCard, Bell, Globe, LogOut, ChevronRight, Shield, ArrowLeft, Trash2,
+  Phone, Mail, Save, Pencil
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore, useLangStore, useDeliveryStore, useCartStore } from '@/store'
@@ -45,16 +46,143 @@ function PersonalInfoPage({ lang }: { lang: Language }) {
   const { user } = useAuthStore()
   const displayUser = BYPASS_MODE ? mockUser : user
   const title = lang === 'uz' ? "Mening ma'lumotlarim" : 'Мои данные'
+  const [email, setEmail] = useState('')
+  const [saved, setSaved] = useState(false)
+  const fileRef = useRef<HTMLInputElement>(null)
+  const [avatarSrc, setAvatarSrc] = useState<string | null>(
+    window.Telegram?.WebApp?.initDataUnsafe?.user?.photo_url ?? null
+  )
+
+  const handleSave = () => {
+    setSaved(true)
+    setTimeout(() => setSaved(false), 2000)
+  }
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const url = URL.createObjectURL(file)
+    setAvatarSrc(url)
+  }
+
   return (
     <SubPageShell title={title}>
-      <div style={{ padding: '24px 16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
-        <Field label={lang === 'uz' ? 'Ism familiya' : 'Имя и фамилия'} value={displayUser?.full_name ?? '—'} />
-        <Field label={lang === 'uz' ? 'Telefon raqam' : 'Телефон'} value={displayUser?.phone ?? '—'} />
-        <p style={{ fontSize: 13, color: 'var(--text-3)', textAlign: 'center', marginTop: 8 }}>
-          {lang === 'uz' ? "Ma'lumotlarni yangilash uchun operatorga murojaat qiling" : 'Для изменения данных обратитесь к оператору'}
-        </p>
+      <div style={{ padding: '28px 16px 24px', display: 'flex', flexDirection: 'column', gap: 20 }}>
+
+        {/* Avatar */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+          <div style={{ position: 'relative', display: 'inline-block' }}>
+            <div style={{
+              width: 100, height: 100, borderRadius: 16,
+              overflow: 'hidden', background: 'var(--surface-2)',
+              border: '2px solid var(--border)',
+            }}>
+              {avatarSrc
+                ? <img src={avatarSrc} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 44 }}>🧑</div>
+              }
+            </div>
+            <button
+              onClick={() => fileRef.current?.click()}
+              style={{
+                position: 'absolute', bottom: -4, right: -4,
+                width: 28, height: 28, borderRadius: 8,
+                background: '#1e293b', border: '2px solid #fff',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                cursor: 'pointer',
+              }}
+            >
+              <Pencil size={13} color="#fff" strokeWidth={2.5} />
+            </button>
+          </div>
+          <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFileChange} />
+          <button
+            onClick={() => fileRef.current?.click()}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-body)' }}
+          >
+            <span style={{ fontSize: 14, color: '#e8751a', fontWeight: 600 }}>
+              {lang === 'uz' ? "Rasmni o'zgartirish" : 'Изменить фото'}
+            </span>
+          </button>
+        </div>
+
+        {/* Fields */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <FormField
+            label={lang === 'uz' ? 'Ism' : 'Имя'}
+            icon={<User size={18} color="#94a3b8" strokeWidth={2} />}
+            value={displayUser?.full_name ?? ''}
+            readOnly
+          />
+          <FormField
+            label={lang === 'uz' ? 'Telefon raqam' : 'Телефон'}
+            icon={<Phone size={18} color="#94a3b8" strokeWidth={2} />}
+            value={displayUser?.phone ?? ''}
+            readOnly
+          />
+          <FormField
+            label={lang === 'uz' ? 'Elektron pochta' : 'Эл. почта'}
+            icon={<Mail size={18} color="#94a3b8" strokeWidth={2} />}
+            value={email}
+            placeholder={lang === 'uz' ? 'Emailingizni kiriting' : 'Введите email'}
+            onChange={setEmail}
+          />
+        </div>
+
+        {/* Save button */}
+        <motion.button
+          whileTap={{ scale: 0.97 }}
+          onClick={handleSave}
+          style={{
+            width: '100%', padding: '16px',
+            background: saved ? '#22c55e' : '#e8751a',
+            border: 'none', borderRadius: 14,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+            cursor: 'pointer', fontFamily: 'var(--font-body)',
+            transition: 'background 0.25s',
+          }}
+        >
+          <Save size={18} color="#fff" strokeWidth={2.5} />
+          <span style={{ fontSize: 15, fontWeight: 800, color: '#fff', letterSpacing: '0.06em' }}>
+            {saved ? (lang === 'uz' ? 'SAQLANDI ✓' : 'СОХРАНЕНО ✓') : (lang === 'uz' ? 'SAQLASH' : 'СОХРАНИТЬ')}
+          </span>
+        </motion.button>
       </div>
     </SubPageShell>
+  )
+}
+
+function FormField({ label, icon, value, readOnly, placeholder, onChange }: {
+  label: string
+  icon: React.ReactNode
+  value: string
+  readOnly?: boolean
+  placeholder?: string
+  onChange?: (v: string) => void
+}) {
+  return (
+    <div>
+      <p style={{ fontSize: 13, fontWeight: 600, color: '#e8751a', marginBottom: 6 }}>{label}</p>
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: 10,
+        background: '#fff', border: '1.5px solid var(--border)',
+        borderRadius: 12, padding: '13px 14px',
+      }}>
+        <span style={{ flexShrink: 0, display: 'flex' }}>{icon}</span>
+        <input
+          value={value}
+          readOnly={readOnly}
+          placeholder={placeholder}
+          onChange={e => onChange?.(e.target.value)}
+          style={{
+            flex: 1, border: 'none', outline: 'none', background: 'transparent',
+            fontSize: 15, fontWeight: readOnly ? 500 : 400,
+            color: readOnly ? 'var(--text)' : 'var(--text)',
+            fontFamily: 'var(--font-body)',
+          }}
+        />
+      </div>
+    </div>
   )
 }
 
@@ -260,19 +388,6 @@ function NotificationsPage({ lang }: { lang: Language }) {
   )
 }
 
-function Field({ label, value }: { label: string; value: string }) {
-  return (
-    <div style={{
-      background: 'var(--surface)',
-      border: '1px solid var(--border)',
-      borderRadius: 12,
-      padding: '14px 16px',
-    }}>
-      <p style={{ fontSize: 12, color: 'var(--text-3)', marginBottom: 4 }}>{label}</p>
-      <p style={{ fontSize: 16, fontWeight: 600, color: 'var(--text)' }}>{value}</p>
-    </div>
-  )
-}
 
 function NotifRow({ label, desc, enabled, onChange }: {
   label: string; desc: string; enabled: boolean; onChange: (v: boolean) => void
