@@ -5,6 +5,87 @@ import type { HTMLMotionProps } from 'framer-motion'
 import { photoUrl } from '@/api'
 import type { Product } from '@/types'
 
+// ── Description Renderer ─────────────────────────────────────────────────
+
+function DescriptionRenderer({ text }: { text: string }) {
+  const lines = text.split('\n')
+  const nodes: React.ReactNode[] = []
+
+  lines.forEach((raw, i) => {
+    const line = raw.trim()
+
+    if (!line) {
+      nodes.push(<div key={i} style={{ height: 4 }} />)
+      return
+    }
+
+    // 🍞 product name header — skip, already shown as title
+    if (line.startsWith('🍞')) return
+
+    // Info pills: emoji lines like 🌾 / ⚖️ / 💵
+    const INFO: [string, string, string][] = [
+      ['🌾', '#f0fdf4', '#15803d'],
+      ['⚖️', '#eff6ff', '#1e40af'],
+      ['💵', '#fff7ed', '#c2410c'],
+    ]
+    const pill = INFO.find(([e]) => line.startsWith(e))
+    if (pill) {
+      const sp = line.indexOf(' ')
+      const emoji = sp > 0 ? line.slice(0, sp) : line
+      const rest  = sp > 0 ? line.slice(sp + 1) : ''
+      const [, bg, color] = pill
+      nodes.push(
+        <div key={i} style={{
+          display: 'flex', alignItems: 'flex-start', gap: 8,
+          background: bg, borderRadius: 10, padding: '7px 11px',
+        }}>
+          <span style={{ fontSize: 15 }}>{emoji}</span>
+          <span style={{ fontSize: 13, color, fontWeight: 500, lineHeight: 1.5 }}>{rest}</span>
+        </div>
+      )
+      return
+    }
+
+    // ✨ section heading
+    if (line.startsWith('✨')) {
+      const label = line.replace('✨', '').replace(/:$/, '').trim()
+      nodes.push(
+        <p key={i} style={{
+          fontSize: 11, fontWeight: 700, color: '#94a3b8',
+          textTransform: 'uppercase', letterSpacing: '0.08em',
+          marginTop: 6, marginBottom: 2,
+        }}>
+          ✨ {label}
+        </p>
+      )
+      return
+    }
+
+    // Benefit line: "Title: body text"
+    const colon = line.indexOf(': ')
+    if (colon > 0 && colon < 36) {
+      const title = line.slice(0, colon)
+      const body  = line.slice(colon + 2)
+      nodes.push(
+        <div key={i} style={{
+          borderLeft: '3px solid #e8751a', paddingLeft: 10, marginBottom: 2,
+        }}>
+          <span style={{ fontWeight: 700, color: '#0f172a', fontSize: 13 }}>{title}: </span>
+          <span style={{ color: '#475569', fontSize: 13, lineHeight: 1.65 }}>{body}</span>
+        </div>
+      )
+      return
+    }
+
+    // Default
+    nodes.push(
+      <p key={i} style={{ fontSize: 13, color: '#475569', lineHeight: 1.65 }}>{line}</p>
+    )
+  })
+
+  return <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>{nodes}</div>
+}
+
 // ── Button ────────────────────────────────────────────────────────────────
 
 type ButtonProps = Omit<HTMLMotionProps<'button'>, 'size' | 'children'> & {
@@ -376,15 +457,10 @@ export function ProductCard({ product, onSetQty, onQtyChange, cartQty, addLabel,
                     </div>
                   )}
 
-                  {product.description && (
-                    <>
-                      <p style={{ fontSize: 12, fontWeight: 700, color: '#94a3b8', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                        {lang ? 'Tavsif' : 'Описание'}
-                      </p>
-                      <p style={{ fontSize: 14, color: '#475569', lineHeight: 1.65, marginBottom: 12 }}>
-                        {product.description}
-                      </p>
-                    </>
+                  {(lang ? product.description_uz : product.description_ru) && (
+                    <div style={{ marginBottom: 12 }}>
+                      <DescriptionRenderer text={(lang ? product.description_uz : product.description_ru)!} />
+                    </div>
                   )}
                 </div>
               </div>
