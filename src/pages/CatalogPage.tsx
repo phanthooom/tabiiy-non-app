@@ -138,6 +138,24 @@ export function CatalogPage() {
     setQtyMutation.mutate({ product, qty })
   }
 
+  const handleQtyChange = (product: Product, qty: number) => {
+    if (!cart) return
+    const existing = cart.items.find(i => i.product_id === product.id)
+    const newItems = qty === 0
+      ? cart.items.filter(i => i.product_id !== product.id)
+      : existing
+        ? cart.items.map(i => i.product_id === product.id
+            ? { ...i, quantity: qty, subtotal: i.price * qty }
+            : i)
+        : [...cart.items, {
+            product_id: product.id, product_name: product.name,
+            price: product.price, quantity: qty, subtotal: product.price * qty,
+            photo_file_id: null, image_url: null,
+          }]
+    const total = newItems.reduce((s, i) => s + i.subtotal, 0)
+    setCart({ items: newItems, total, items_count: newItems.reduce((s, i) => s + i.quantity, 0) })
+  }
+
   if (isError) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '48px 24px 100px', gap: 16, textAlign: 'center' }}>
@@ -185,6 +203,7 @@ export function CatalogPage() {
                 onAdd={handleAdd}
                 onRemove={handleRemove}
                 onSetQty={handleSetQty}
+                onQtyChange={handleQtyChange}
                 cartQty={cart?.items.find(x => x.product_id === product.id)?.quantity ?? 0}
                 addLabel={t('addToCart')}
                 outLabel={t('outOfStock')}

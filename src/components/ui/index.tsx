@@ -98,6 +98,7 @@ interface ProductCardProps {
   onAdd?: (product: Product) => void
   onRemove?: (product: Product) => void
   onSetQty: (product: Product, qty: number) => void
+  onQtyChange?: (product: Product, qty: number) => void
   cartQty: number
   addLabel: string
   outLabel: string
@@ -106,7 +107,7 @@ interface ProductCardProps {
   language?: string
 }
 
-export function ProductCard({ product, onSetQty, cartQty, addLabel, outLabel, sumLabel, addDisabled, language = 'ru' }: ProductCardProps) {
+export function ProductCard({ product, onSetQty, onQtyChange, cartQty, addLabel, outLabel, sumLabel, addDisabled, language = 'ru' }: ProductCardProps) {
   const [showSheet, setShowSheet] = useState(false)
   // Single shared qty — used by BOTH card and sheet (no sync issues)
   const [localQty, setLocalQty] = useState(cartQty)
@@ -152,6 +153,7 @@ export function ProductCard({ product, onSetQty, cartQty, addLabel, outLabel, su
     if (qtyRef.current >= product.quantity) return
     qtyRef.current += 1
     setLocalQty(qtyRef.current)
+    onQtyChange?.(product, qtyRef.current)
     scheduleSync(qtyRef.current)
   }
 
@@ -160,6 +162,7 @@ export function ProductCard({ product, onSetQty, cartQty, addLabel, outLabel, su
     if (qtyRef.current <= 0) return
     qtyRef.current -= 1
     setLocalQty(qtyRef.current)
+    onQtyChange?.(product, qtyRef.current)
     scheduleSync(qtyRef.current)
   }
 
@@ -168,6 +171,7 @@ export function ProductCard({ product, onSetQty, cartQty, addLabel, outLabel, su
     if (!available) return
     qtyRef.current = 1
     setLocalQty(1)
+    onQtyChange?.(product, 1)
     scheduleSync(1)
   }
 
