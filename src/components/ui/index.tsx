@@ -318,21 +318,27 @@ export function ProductCard({ product, onSetQty, onQtyChange, cartQty, addLabel,
             >
               {/* Handle row */}
               <div style={{
-                flexShrink: 0, padding: '12px 16px 8px',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                position: 'relative', cursor: 'grab',
+                flexShrink: 0, padding: '14px 16px 10px',
+                display: 'flex', alignItems: 'center',
+                cursor: 'grab',
               }}>
-                <div style={{ width: 40, height: 4, borderRadius: 2, background: '#dde3ec' }} />
+                {/* Spacer to balance the X button */}
+                <div style={{ width: 32 }} />
+                {/* Drag pill — centered */}
+                <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
+                  <div style={{ width: 40, height: 4, borderRadius: 2, background: '#dde3ec' }} />
+                </div>
+                {/* Close button */}
                 <button
                   onClick={() => setShowSheet(false)}
                   style={{
-                    position: 'absolute', right: 16, top: '50%', transform: 'translateY(-50%)',
-                    width: 28, height: 28, borderRadius: '50%',
-                    background: '#eef2f7', border: 'none', cursor: 'pointer',
+                    width: 32, height: 32, borderRadius: '50%',
+                    background: '#f1f5f9', border: 'none', cursor: 'pointer',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    flexShrink: 0,
                   }}
                 >
-                  <X size={14} color="#64748b" strokeWidth={2.5} />
+                  <X size={15} color="#64748b" strokeWidth={2.5} />
                 </button>
               </div>
 
