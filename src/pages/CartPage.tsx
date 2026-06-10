@@ -38,7 +38,7 @@ export function CartPage() {
       .map(i => i.product_id === pid ? { ...i, quantity: qty, subtotal: i.price * qty } : i)
       .filter(i => i.quantity > 0)
     const total = items.reduce((s, i) => s + i.subtotal, 0)
-    return { items, total, items_count: items.length }
+    return { items, total, items_count: items.reduce((s, i) => s + i.quantity, 0) }
   }
 
   const updateMutation = useMutation({
@@ -54,7 +54,7 @@ export function CartPage() {
       if (BYPASS_MODE) {
         const items = (cart?.items ?? []).filter(i => String(i.product_id) !== String(pid))
         const total = items.reduce((s, i) => s + i.subtotal, 0)
-        return Promise.resolve({ items, total, items_count: items.length })
+        return Promise.resolve({ items, total, items_count: items.reduce((s, i) => s + i.quantity, 0) })
       }
       return cartApi.removeItem(pid)
     },

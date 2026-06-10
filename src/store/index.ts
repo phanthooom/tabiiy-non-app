@@ -39,7 +39,7 @@ interface CartState {
 
 export const useCartStore = create<CartState>()((set) => ({
   cart: null,
-  setCart: (cart) => set({ cart }),
+  setCart: (cart) => set({ cart: { ...cart, items_count: cart.items.reduce((s, i) => s + i.quantity, 0) } }),
   clearCart: () => set({ cart: null }),
 }))
 

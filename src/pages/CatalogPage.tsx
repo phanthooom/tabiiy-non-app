@@ -37,7 +37,7 @@ export function CatalogPage() {
               photo_file_id: null, image_url: null,
             }]
         const total = newItems.reduce((s, i) => s + i.subtotal, 0)
-        return Promise.resolve({ items: newItems, total, items_count: newItems.length })
+        return Promise.resolve({ items: newItems, total, items_count: newItems.reduce((s, i) => s + i.quantity, 0) })
       }
       return cartApi.addItem(product.id, 1)
     },
@@ -58,7 +58,7 @@ export function CatalogPage() {
         if (qty <= 1) {
           const newItems = (cart?.items ?? []).filter(i => i.product_id !== product.id)
           const total = newItems.reduce((s, i) => s + i.subtotal, 0)
-          return Promise.resolve({ items: newItems, total, items_count: newItems.length })
+          return Promise.resolve({ items: newItems, total, items_count: newItems.reduce((s, i) => s + i.quantity, 0) })
         }
         const newItems = (cart?.items ?? []).map(i =>
           i.product_id === product.id
@@ -66,7 +66,7 @@ export function CatalogPage() {
             : i
         )
         const total = newItems.reduce((s, i) => s + i.subtotal, 0)
-        return Promise.resolve({ items: newItems, total, items_count: newItems.length })
+        return Promise.resolve({ items: newItems, total, items_count: newItems.reduce((s, i) => s + i.quantity, 0) })
       }
       if (qty <= 1) return cartApi.removeItem(product.id)
       return cartApi.updateItem(product.id, qty - 1)
@@ -88,7 +88,7 @@ export function CatalogPage() {
         if (qty === 0) {
           const newItems = (cart?.items ?? []).filter(i => i.product_id !== product.id)
           const total = newItems.reduce((s, i) => s + i.subtotal, 0)
-          return Promise.resolve({ items: newItems, total, items_count: newItems.length })
+          return Promise.resolve({ items: newItems, total, items_count: newItems.reduce((s, i) => s + i.quantity, 0) })
         }
         const existingItem = cart?.items.find(i => i.product_id === product.id)
         const newItems = existingItem
@@ -101,7 +101,7 @@ export function CatalogPage() {
               photo_file_id: null, image_url: null,
             }]
         const total = newItems.reduce((s, i) => s + i.subtotal, 0)
-        return Promise.resolve({ items: newItems, total, items_count: newItems.length })
+        return Promise.resolve({ items: newItems, total, items_count: newItems.reduce((s, i) => s + i.quantity, 0) })
       }
       if (qty === 0) return cartApi.removeItem(product.id)
       // updateItem only works if item already exists — use addItem for first-time add
