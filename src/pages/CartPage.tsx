@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
+import { Trash2 } from 'lucide-react'
 import { cartApi } from '@/api'
 import { Button, ProductPhoto, Spinner, Stepper } from '@/components/ui'
 import { queryKeys, STALE_TIME } from '@/lib/query-keys'
@@ -64,7 +65,21 @@ export function CartPage() {
     },
   })
 
-  const mutationPending = updateMutation.isPending || removeMutation.isPending
+  const clearMutation = useMutation({
+    mutationFn: () => {
+      if (BYPASS_MODE) {
+        return Promise.resolve()
+      }
+      return cartApi.clear()
+    },
+    onSuccess: () => {
+      const empty = { items: [], total: 0, items_count: 0 }
+      syncCartCache(empty)
+      tg?.HapticFeedback.impactOccurred('medium')
+    },
+  })
+
+  const mutationPending = updateMutation.isPending || removeMutation.isPending || clearMutation.isPending
 
   if (isError) {
     return (
@@ -131,6 +146,30 @@ export function CartPage() {
 
   return (
     <div style={{ padding: '16px 16px 32px' }}>
+      {/* Header row */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+        <p style={{ fontSize: 18, fontWeight: 800, color: '#0f172a' }}>
+          {language === 'uz' ? 'Savat' : 'Корзина'}
+        </p>
+        <motion.button
+          whileTap={{ scale: 0.9 }}
+          onClick={() => clearMutation.mutate()}
+          disabled={mutationPending}
+          style={{
+            display: 'flex', alignItems: 'center', gap: 6,
+            background: 'none', border: '1px solid #fca5a5',
+            borderRadius: 10, padding: '7px 12px',
+            color: '#ef4444', fontSize: 13, fontWeight: 600,
+            cursor: mutationPending ? 'not-allowed' : 'pointer',
+            opacity: mutationPending ? 0.5 : 1,
+            fontFamily: 'var(--font-body)',
+          }}
+        >
+          <Trash2 size={14} strokeWidth={2.5} />
+          {language === 'uz' ? 'Tozalash' : 'Очистить'}
+        </motion.button>
+      </div>
+
       {/* Cart items */}
       <AnimatePresence initial={false}>
         {items.map((item) => (
