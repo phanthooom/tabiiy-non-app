@@ -18,7 +18,7 @@ function SubPageShell({ title, children }: { title: string; children: React.Reac
   return (
     <div style={{ padding: '0 0 40px' }}>
       <div style={{
-        display: 'flex', alignItems: 'center', gap: 16,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
         padding: 'calc(var(--tg-content-safe-area-inset-top, 0px) + 16px) 16px 20px',
         background: 'linear-gradient(180deg, var(--surface) 0%, transparent 100%)',
         position: 'sticky', top: 0, zIndex: 10,
@@ -26,15 +26,16 @@ function SubPageShell({ title, children }: { title: string; children: React.Reac
         <button
           onClick={() => navigate('/profile')}
           style={{
+            position: 'absolute', left: 20,
             background: 'none', border: 'none',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            cursor: 'pointer', flexShrink: 0, padding: 0,
+            cursor: 'pointer', padding: 0,
           }}
         >
-          <ArrowLeft size={22} color="var(--text)" strokeWidth={2} />
+          <ArrowLeft size={24} color="var(--text)" strokeWidth={2} />
         </button>
         <span style={{ fontSize: 20, fontWeight: 700, color: 'var(--text)' }}>
-          {title.length > 18 ? title.slice(0, 18) + '...' : title}
+          {title.length > 20 ? title.slice(0, 20) + '...' : title}
         </span>
       </div>
       {children}
@@ -194,9 +195,9 @@ function AddressesPage({ lang }: { lang: Language }) {
   const navigate = useNavigate()
 
   const getIcon = (type: string) => {
-    if (type === 'home') return <Home size={20} color="#0f172a" />
-    if (type === 'work') return <Briefcase size={20} color="#0f172a" />
-    return <MapPin size={20} color="#0f172a" />
+    if (type === 'home') return <Home size={22} color="#0f172a" />
+    if (type === 'work') return <Briefcase size={22} color="#0f172a" />
+    return <MapPin size={22} color="#0f172a" />
   }
 
   return (
@@ -224,7 +225,7 @@ function AddressesPage({ lang }: { lang: Language }) {
         >
           <span style={{ fontSize: 18, color: '#fff', fontWeight: 600, display: 'flex' }}><Plus size={20} strokeWidth={2.5}/></span>
           <span style={{ fontSize: 14, fontWeight: 700, color: '#fff', letterSpacing: '0.05em' }}>
-            {lang === 'uz' ? 'YANGI MANZIL QO\'SHISH' : 'ДОБАВИТЬ НОВЫЙ АДРЕС'}
+            {lang === 'uz' ? '+ YANGI MANZIL QO\'SHISH' : '+ ДОБАВИТЬ НОВЫЙ АДРЕС'}
           </span>
         </motion.button>
 
@@ -251,7 +252,7 @@ function AddressesPage({ lang }: { lang: Language }) {
             >
               {/* Icon */}
               <div style={{
-                width: 48, height: 48, borderRadius: 14,
+                width: 52, height: 52, borderRadius: 14,
                 background: '#f1f5f9',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 flexShrink: 0
@@ -260,36 +261,36 @@ function AddressesPage({ lang }: { lang: Language }) {
               </div>
 
               {/* Info */}
-              <div style={{ flex: 1, paddingRight: 40 }}>
+              <div style={{ flex: 1, paddingRight: 56 }}>
                 <p style={{ fontSize: 18, fontWeight: 700, color: '#0f172a', marginBottom: 4 }}>
                   {addr.title}
                 </p>
-                <p style={{ fontSize: 14, color: '#475569', lineHeight: 1.4, marginBottom: 6 }}>
+                <p style={{ fontSize: 14, color: '#475569', lineHeight: 1.4, marginBottom: 8 }}>
                   {addr.address}
                 </p>
                 {addr.details && (
                   <p style={{ fontSize: 12, color: '#64748b' }}>
-                    {lang === 'uz' ? 'Mo\'ljal: ' : 'Ориентир: '}{addr.details}
+                    <span style={{ opacity: 0.8 }}>{lang === 'uz' ? 'Mo\'ljal: ' : 'Ориентир: '}</span>{addr.details.replace('Mo\'ljal: ', '')}
                   </p>
                 )}
               </div>
 
               {/* Actions */}
               <div style={{
-                position: 'absolute', top: 16, right: 16,
-                display: 'flex', gap: 8
+                position: 'absolute', top: 18, right: 16,
+                display: 'flex', gap: 12
               }}>
                 <button
                   onClick={(e) => { e.stopPropagation(); /* edit logic */ }}
                   style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: '#64748b' }}
                 >
-                  <Pencil size={18} />
+                  <Pencil size={20} strokeWidth={2} />
                 </button>
                 <button
                   onClick={(e) => { e.stopPropagation(); removeAddress(addr.id) }}
                   style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: '#64748b' }}
                 >
-                  <Trash2 size={18} />
+                  <Trash2 size={20} strokeWidth={2} />
                 </button>
               </div>
             </motion.div>
