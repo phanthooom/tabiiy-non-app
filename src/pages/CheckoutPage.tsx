@@ -2,7 +2,7 @@ import { useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { MapPin, Store, LocateFixed, Loader2 } from 'lucide-react'
+import { MapPin, Store, LocateFixed, Loader2, ChevronDown } from 'lucide-react'
 import { apiErrorMessage, ordersApi } from '@/api'
 import { mutationRetryOptions, withRetry } from '@/lib/retry'
 import { BYPASS_MODE } from '@/lib/mock-data'
@@ -19,7 +19,7 @@ export function CheckoutPage() {
   const navigate = useNavigate()
   const { language } = useLangStore()
   const { cart, clearCart } = useCartStore()
-  const { deliveryType: savedDeliveryType, address: savedAddress } = useDeliveryStore()
+  const { deliveryType: savedDeliveryType, address: savedAddress, savedAddresses } = useDeliveryStore()
   const t = useT(language)
   const { tg } = useTelegram()
   const queryClient = useQueryClient()
@@ -226,6 +226,34 @@ export function CheckoutPage() {
             style={{ overflow: 'hidden', marginBottom: 24 }}
           >
             <label style={labelStyle}>{t('address')}</label>
+            
+            {savedAddresses && savedAddresses.length > 0 && (
+              <div style={{ position: 'relative', marginBottom: 12 }}>
+                <select
+                  value={savedAddresses.some(a => a.address === address) ? address : ''}
+                  onChange={e => {
+                    if (e.target.value !== '') {
+                      setAddress(e.target.value)
+                    }
+                  }}
+                  style={{
+                    ...inputStyle,
+                    appearance: 'none',
+                    paddingRight: 40,
+                    cursor: 'pointer',
+                    background: '#f8fafc',
+                    fontWeight: 600,
+                  }}
+                >
+                  <option value="" disabled>{language === 'uz' ? 'Saqlangan manzillardan tanlang' : 'Выберите из сохраненных адресов'}</option>
+                  {savedAddresses.map(a => (
+                    <option key={a.id} value={a.address}>{a.title} ({a.address.slice(0, 25)}{a.address.length > 25 ? '...' : ''})</option>
+                  ))}
+                </select>
+                <ChevronDown size={18} color="#64748b" style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+              </div>
+            )}
+
             <div style={{ position: 'relative' }}>
               <input
                 type="text"
