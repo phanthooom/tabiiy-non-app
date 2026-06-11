@@ -2,11 +2,12 @@ import { useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   User, MapPin, CreditCard, Bell, Globe, LogOut, ChevronRight, Shield, ArrowLeft, Trash2,
-  Phone, Mail, Save, Pencil, Home, Briefcase, Plus
+  Phone, Mail, Save, Pencil, Home, Briefcase, Plus, Map
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { useAuthStore, useLangStore, useDeliveryStore, useCartStore } from '@/store'
+import { useAuthStore, useLangStore, useDeliveryStore, useCartStore, SavedAddress } from '@/store'
 import { BYPASS_MODE, mockUser } from '@/lib/mock-data'
+import { AddressMapModal } from '@/components/ui/AddressMapModal'
 import type { Language } from '@/types'
 
 interface ProfilePageProps {
@@ -191,13 +192,134 @@ function FormField({ label, icon, value, readOnly, placeholder, onChange }: {
 
 function AddressesPage({ lang }: { lang: Language }) {
   const title = lang === 'uz' ? 'Manzillarim' : 'Мои адреса'
-  const { savedAddresses, removeAddress, setAddress } = useDeliveryStore()
+  const { savedAddresses, removeAddress, setAddress, addAddress, updateAddress } = useDeliveryStore()
   const navigate = useNavigate()
+
+  const [editingAddr, setEditingAddr] = useState<Partial<SavedAddress> | null>(null)
+  const [isMapOpen, setIsMapOpen] = useState(false)
 
   const getIcon = (type: string) => {
     if (type === 'home') return <Home size={22} color="#0f172a" />
     if (type === 'work') return <Briefcase size={22} color="#0f172a" />
     return <MapPin size={22} color="#0f172a" />
+  }
+
+  const handleSave = () => {
+    if (!editingAddr?.address) return
+    const addrToSave = {
+      type: editingAddr.type || 'other',
+      title: editingAddr.title || (lang === 'uz' ? 'Yangi manzil' : 'Новый адрес'),
+      address: editingAddr.address,
+      details: editingAddr.details || ''
+    }
+    if (editingAddr.id) {
+      updateAddress(editingAddr.id, addrToSave)
+    } else {
+      addAddress(addrToSave)
+    }
+    setEditingAddr(null)
+  }
+
+  if (editingAddr) {
+    return (
+      <SubPageShell title={editingAddr.id ? (lang === 'uz' ? 'Manzilni tahrirlash' : 'Редактировать адрес') : (lang === 'uz' ? 'Yangi manzil' : 'Новый адрес')}>
+        <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+          
+          <div style={{ display: 'flex', gap: 12, marginBottom: 8 }}>
+            {(['home', 'work', 'other'] as const).map(t => (
+              <button
+                key={t}
+                onClick={() => setEditingAddr({ ...editingAddr, type: t, title: t === 'home' ? (lang === 'uz' ? 'Uy' : 'Дом') : t === 'work' ? (lang === 'uz' ? 'Ish' : 'Работа') : editingAddr.title })}
+                style={{
+                  flex: 1, padding: '12px 0',
+                  background: editingAddr.type === t ? '#fff' : 'var(--surface-2)',
+                  border: editingAddr.type === t ? '1.5px solid #e8751a' : '1px solid transparent',
+                  borderRadius: 12, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
+                  cursor: 'pointer', transition: 'all 0.2s',
+                  boxShadow: editingAddr.type === t ? '0 2px 8px rgba(232,117,26,0.1)' : 'none'
+                }}
+              >
+                {getIcon(t)}
+                <span style={{ fontSize: 13, fontWeight: 600, color: editingAddr.type === t ? '#e8751a' : '#64748b' }}>
+                  {t === 'home' ? (lang === 'uz' ? 'Uy' : 'Дом') : t === 'work' ? (lang === 'uz' ? 'Ish' : 'Работа') : (lang === 'uz' ? 'Boshqa' : 'Другое')}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          <FormField
+            label={lang === 'uz' ? 'Manzil nomi' : 'Название адреса'}
+            icon={<Pencil size={18} color="#475569" strokeWidth={2} />}
+            value={editingAddr.title || ''}
+            placeholder={lang === 'uz' ? 'Masalan: Uy, Ish, Ota-onamnikida' : 'Например: Дом, Работа'}
+            onChange={(v) => setEditingAddr({ ...editingAddr, title: v })}
+          />
+
+          <div>
+            <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>
+              {lang === 'uz' ? 'Manzil' : 'Адрес'}
+            </p>
+            <div
+              onClick={() => setIsMapOpen(true)}
+              style={{
+                display: 'flex', alignItems: 'center', gap: 12,
+                background: '#fff', border: '1px solid #cbd5e1',
+                borderRadius: 12, padding: '14px 16px',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.02)',
+                cursor: 'pointer'
+              }}
+            >
+              <span style={{ flexShrink: 0, display: 'flex' }}><Map size={18} color="#475569" /></span>
+              <span style={{ flex: 1, fontSize: 15, color: editingAddr.address ? 'var(--text)' : '#94a3b8', fontFamily: 'var(--font-body)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {editingAddr.address || (lang === 'uz' ? 'Xaritadan tanlang' : 'Выберите на карте')}
+              </span>
+              <ChevronRight size={18} color="#94a3b8" />
+            </div>
+          </div>
+
+          <FormField
+            label={lang === 'uz' ? 'Mo\'ljal / Kvartira' : 'Ориентир / Квартира'}
+            icon={<MapPin size={18} color="#475569" strokeWidth={2} />}
+            value={editingAddr.details || ''}
+            placeholder={lang === 'uz' ? 'Masalan: 45-xonadon' : 'Например: кв. 45'}
+            onChange={(v) => setEditingAddr({ ...editingAddr, details: v })}
+          />
+
+          <div style={{ display: 'flex', gap: 12, marginTop: 12 }}>
+            <motion.button
+              whileTap={{ scale: 0.97 }}
+              onClick={() => setEditingAddr(null)}
+              style={{
+                flex: 1, padding: '16px', background: 'var(--surface-2)', border: 'none', borderRadius: 14,
+                fontSize: 15, fontWeight: 700, color: 'var(--text-2)', cursor: 'pointer', fontFamily: 'var(--font-body)'
+              }}
+            >
+              {lang === 'uz' ? 'BEKOR QILISH' : 'ОТМЕНА'}
+            </motion.button>
+            <motion.button
+              whileTap={{ scale: 0.97 }}
+              onClick={handleSave}
+              disabled={!editingAddr.address || !editingAddr.title}
+              style={{
+                flex: 1, padding: '16px', background: (!editingAddr.address || !editingAddr.title) ? '#cbd5e1' : '#e8751a', border: 'none', borderRadius: 14,
+                fontSize: 15, fontWeight: 700, color: '#fff', cursor: (!editingAddr.address || !editingAddr.title) ? 'not-allowed' : 'pointer', fontFamily: 'var(--font-body)'
+              }}
+            >
+              {lang === 'uz' ? 'SAQLASH' : 'СОХРАНИТЬ'}
+            </motion.button>
+          </div>
+        </div>
+
+        <AddressMapModal
+          isOpen={isMapOpen}
+          onClose={() => setIsMapOpen(false)}
+          onConfirm={(addr) => {
+            setEditingAddr({ ...editingAddr, address: addr })
+          }}
+          apiKey="fcd5b77b-d255-480e-b530-ec10724a2275"
+        />
+      </SubPageShell>
+    )
   }
 
   return (
@@ -207,9 +329,7 @@ function AddressesPage({ lang }: { lang: Language }) {
         {/* Add new address button */}
         <motion.button
           whileTap={{ scale: 0.98 }}
-          onClick={() => {
-            navigate('/delivery-location', { state: { returnToProfile: true } })
-          }}
+          onClick={() => setEditingAddr({ type: 'home' })}
           style={{
             width: '100%',
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
@@ -281,7 +401,7 @@ function AddressesPage({ lang }: { lang: Language }) {
                 display: 'flex', gap: 12
               }}>
                 <button
-                  onClick={(e) => { e.stopPropagation(); /* edit logic */ }}
+                  onClick={(e) => { e.stopPropagation(); setEditingAddr(addr) }}
                   style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: '#64748b' }}
                 >
                   <Pencil size={20} strokeWidth={2} />

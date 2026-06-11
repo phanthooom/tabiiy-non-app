@@ -60,6 +60,7 @@ interface DeliveryState {
   setDeliveryType: (type: DeliveryType | null) => void
   setAddress: (address: string) => void
   addAddress: (addr: Omit<SavedAddress, 'id'>) => void
+  updateAddress: (id: string, addr: Omit<SavedAddress, 'id'>) => void
   removeAddress: (id: string) => void
 }
 
@@ -95,6 +96,9 @@ export const useDeliveryStore = create<DeliveryState>()(
       setAddress: (address) => set({ address }),
       addAddress: (addr) => set((state) => ({
         savedAddresses: [...state.savedAddresses, { ...addr, id: Math.random().toString(36).substring(2, 9) }]
+      })),
+      updateAddress: (id, addr) => set((state) => ({
+        savedAddresses: state.savedAddresses.map(a => a.id === id ? { ...a, ...addr } : a)
       })),
       removeAddress: (id) => set((state) => ({
         savedAddresses: state.savedAddresses.filter(a => a.id !== id)
