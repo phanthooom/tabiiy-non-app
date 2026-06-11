@@ -68,10 +68,15 @@ export async function createFirebaseOrder(orderData: Partial<Order> & { telegram
 
 export async function updateFirebaseOrderStatus(docId: string, status: string, label: string, order?: any) {
   const ref = doc(db, 'orders', docId)
-  await updateDoc(ref, {
-    status,
-    status_label: label
-  })
+  try {
+    await updateDoc(ref, {
+      status,
+      status_label: label
+    })
+  } catch (err) {
+    console.error("Error updating order status:", err)
+    throw err
+  }
 
   // Send telegram notification if order is passed
   try {

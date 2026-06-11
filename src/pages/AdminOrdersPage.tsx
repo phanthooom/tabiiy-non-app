@@ -269,14 +269,22 @@ function AdminOrderCard({ order, searchQuery, isPickup }: { order: any; searchQu
   const statuses = isPickup ? PICKUP_STATUSES : DELIVERY_STATUSES
 
   const handleStatusChange = async (statusId: string, label: string) => {
-    if (!order._docId) return
+    if (!order._docId) {
+      alert("Xatolik: Buyurtma ID topilmadi")
+      return
+    }
     if (statusId === 'cancelled') {
       const confirmed = window.confirm(
         `Buyurtma #${order.id} ni bekor qilishni tasdiqlaysizmi?\n(bu amalni qaytarib bo'lmaydi)`
       )
       if (!confirmed) return
     }
-    await updateFirebaseOrderStatus(order._docId, statusId, label, order)
+    
+    try {
+      await updateFirebaseOrderStatus(order._docId, statusId, label, order)
+    } catch (err: any) {
+      alert("Xatolik yuz berdi: " + (err.message || "Noma'lum xato"))
+    }
   }
 
   const dateObj = new Date(order.created_at)
