@@ -18,24 +18,24 @@ function SubPageShell({ title, children }: { title: string; children: React.Reac
   return (
     <div style={{ padding: '0 0 40px' }}>
       <div style={{
-        display: 'flex', alignItems: 'center', gap: 12,
-        padding: 'calc(var(--tg-content-safe-area-inset-top, 0px) + 16px) 16px 12px',
-        borderBottom: '1px solid var(--border)',
-        background: 'var(--surface)',
+        display: 'flex', alignItems: 'center', gap: 16,
+        padding: 'calc(var(--tg-content-safe-area-inset-top, 0px) + 16px) 16px 20px',
+        background: 'linear-gradient(180deg, var(--surface) 0%, transparent 100%)',
         position: 'sticky', top: 0, zIndex: 10,
       }}>
         <button
           onClick={() => navigate('/profile')}
           style={{
-            width: 36, height: 36, borderRadius: '50%',
-            background: 'var(--surface-2)', border: '1px solid var(--border)',
+            background: 'none', border: 'none',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            cursor: 'pointer', flexShrink: 0,
+            cursor: 'pointer', flexShrink: 0, padding: 0,
           }}
         >
-          <ArrowLeft size={18} color="var(--text)" strokeWidth={2} />
+          <ArrowLeft size={22} color="var(--text)" strokeWidth={2} />
         </button>
-        <span style={{ fontSize: 17, fontWeight: 700, color: 'var(--text)' }}>{title}</span>
+        <span style={{ fontSize: 20, fontWeight: 700, color: 'var(--text)' }}>
+          {title.length > 18 ? title.slice(0, 18) + '...' : title}
+        </span>
       </div>
       {children}
     </div>
@@ -70,59 +70,60 @@ function PersonalInfoPage({ lang }: { lang: Language }) {
       <div style={{ padding: '28px 16px 24px', display: 'flex', flexDirection: 'column', gap: 20 }}>
 
         {/* Avatar */}
-        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
           <div style={{ position: 'relative', display: 'inline-block' }}>
             <div style={{
-              width: 100, height: 100, borderRadius: 16,
-              overflow: 'hidden', background: 'var(--surface-2)',
-              border: '2px solid var(--border)',
+              width: 104, height: 104, borderRadius: 20,
+              overflow: 'hidden', background: '#fff',
+              border: '3px solid #fff',
+              boxShadow: '0 6px 16px rgba(0,0,0,0.06)',
             }}>
               {avatarSrc
                 ? <img src={avatarSrc} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 44 }}>🧑</div>
+                : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 44, background: 'var(--surface-2)' }}>🧑</div>
               }
             </div>
             <button
               onClick={() => fileRef.current?.click()}
               style={{
-                position: 'absolute', bottom: -4, right: -4,
-                width: 28, height: 28, borderRadius: 8,
-                background: '#1e293b', border: '2px solid #fff',
+                position: 'absolute', bottom: -6, right: -6,
+                width: 34, height: 34, borderRadius: 10,
+                background: '#0f172a', border: '3px solid var(--bg)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                cursor: 'pointer',
+                cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
               }}
             >
-              <Pencil size={13} color="#fff" strokeWidth={2.5} />
+              <Pencil size={15} color="#fff" strokeWidth={2.5} />
             </button>
           </div>
           <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFileChange} />
           <button
             onClick={() => fileRef.current?.click()}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-body)' }}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'var(--font-body)', marginTop: 4 }}
           >
-            <span style={{ fontSize: 14, color: '#e8751a', fontWeight: 600 }}>
+            <span style={{ fontSize: 14, color: '#64748b', fontWeight: 500 }}>
               {lang === 'uz' ? "Rasmni o'zgartirish" : 'Изменить фото'}
             </span>
           </button>
         </div>
 
         {/* Fields */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20, marginTop: 8, marginBottom: 8 }}>
           <FormField
             label={lang === 'uz' ? 'Ism' : 'Имя'}
-            icon={<User size={18} color="#94a3b8" strokeWidth={2} />}
+            icon={<User size={18} color="#475569" strokeWidth={2} />}
             value={displayUser?.full_name ?? ''}
             readOnly
           />
           <FormField
             label={lang === 'uz' ? 'Telefon raqam' : 'Телефон'}
-            icon={<Phone size={18} color="#94a3b8" strokeWidth={2} />}
+            icon={<Phone size={18} color="#475569" strokeWidth={2} />}
             value={displayUser?.phone ?? ''}
             readOnly
           />
           <FormField
             label={lang === 'uz' ? 'Elektron pochta' : 'Эл. почта'}
-            icon={<Mail size={18} color="#94a3b8" strokeWidth={2} />}
+            icon={<Mail size={18} color="#475569" strokeWidth={2} />}
             value={email}
             placeholder={lang === 'uz' ? 'Emailingizni kiriting' : 'Введите email'}
             onChange={setEmail}
@@ -162,11 +163,12 @@ function FormField({ label, icon, value, readOnly, placeholder, onChange }: {
 }) {
   return (
     <div>
-      <p style={{ fontSize: 13, fontWeight: 600, color: '#e8751a', marginBottom: 6 }}>{label}</p>
+      <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>{label}</p>
       <div style={{
-        display: 'flex', alignItems: 'center', gap: 10,
-        background: '#fff', border: '1.5px solid var(--border)',
-        borderRadius: 12, padding: '13px 14px',
+        display: 'flex', alignItems: 'center', gap: 12,
+        background: '#fff', border: '1px solid #cbd5e1',
+        borderRadius: 12, padding: '14px 16px',
+        boxShadow: '0 1px 3px rgba(0,0,0,0.02)',
       }}>
         <span style={{ flexShrink: 0, display: 'flex' }}>{icon}</span>
         <input
@@ -176,8 +178,8 @@ function FormField({ label, icon, value, readOnly, placeholder, onChange }: {
           onChange={e => onChange?.(e.target.value)}
           style={{
             flex: 1, border: 'none', outline: 'none', background: 'transparent',
-            fontSize: 15, fontWeight: readOnly ? 500 : 400,
-            color: readOnly ? 'var(--text)' : 'var(--text)',
+            fontSize: 15, fontWeight: 400,
+            color: 'var(--text)',
             fontFamily: 'var(--font-body)',
           }}
         />
