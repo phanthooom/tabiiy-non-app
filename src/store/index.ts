@@ -45,19 +45,64 @@ export const useCartStore = create<CartState>()((set) => ({
 
 // ── Delivery type store ───────────────────────────────────────────────────
 
+export interface SavedAddress {
+  id: string
+  type: 'home' | 'work' | 'other'
+  title: string
+  address: string
+  details: string
+}
+
 interface DeliveryState {
   deliveryType: DeliveryType | null
   address: string
+  savedAddresses: SavedAddress[]
   setDeliveryType: (type: DeliveryType | null) => void
   setAddress: (address: string) => void
+  addAddress: (addr: Omit<SavedAddress, 'id'>) => void
+  removeAddress: (id: string) => void
 }
 
-export const useDeliveryStore = create<DeliveryState>()((set) => ({
-  deliveryType: null,
-  address: '',
-  setDeliveryType: (deliveryType) => set({ deliveryType }),
-  setAddress: (address) => set({ address }),
-}))
+export const useDeliveryStore = create<DeliveryState>()(
+  persist(
+    (set) => ({
+      deliveryType: null,
+      address: '',
+      savedAddresses: [
+        {
+          id: '1',
+          type: 'home',
+          title: 'Uy',
+          address: 'Yunusobod tumani, 4-mavze, 23-uy, 45-xonadon',
+          details: "Mo'ljal: Mega Planet orqasi",
+        },
+        {
+          id: '2',
+          type: 'work',
+          title: 'Ish',
+          address: "Mirobod tumani, Afrosiyob ko'chasi, 14-uy",
+          details: "Mo'ljal: Oybek metrosi",
+        },
+        {
+          id: '3',
+          type: 'other',
+          title: 'Ota-onamnikida',
+          address: 'Chilonzor tumani, 8-mavze, 12-uy',
+          details: '',
+        }
+      ],
+      setDeliveryType: (deliveryType) => set({ deliveryType }),
+      setAddress: (address) => set({ address }),
+      addAddress: (addr) => set((state) => ({
+        savedAddresses: [...state.savedAddresses, { ...addr, id: Math.random().toString(36).substring(2, 9) }]
+      })),
+      removeAddress: (id) => set((state) => ({
+        savedAddresses: state.savedAddresses.filter(a => a.id !== id)
+      })),
+    }),
+    { name: 'delivery' }
+  )
+)
 
 // ── Language store ────────────────────────────────────────────────────────
 

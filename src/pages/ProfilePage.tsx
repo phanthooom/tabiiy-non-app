@@ -2,7 +2,7 @@ import { useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   User, MapPin, CreditCard, Bell, Globe, LogOut, ChevronRight, Shield, ArrowLeft, Trash2,
-  Phone, Mail, Save, Pencil
+  Phone, Mail, Save, Pencil, Home, Briefcase, Plus
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore, useLangStore, useDeliveryStore, useCartStore } from '@/store'
@@ -190,23 +190,112 @@ function FormField({ label, icon, value, readOnly, placeholder, onChange }: {
 
 function AddressesPage({ lang }: { lang: Language }) {
   const title = lang === 'uz' ? 'Manzillarim' : 'Мои адреса'
+  const { savedAddresses, removeAddress, setAddress } = useDeliveryStore()
+  const navigate = useNavigate()
+
+  const getIcon = (type: string) => {
+    if (type === 'home') return <Home size={20} color="#0f172a" />
+    if (type === 'work') return <Briefcase size={20} color="#0f172a" />
+    return <MapPin size={20} color="#0f172a" />
+  }
+
   return (
     <SubPageShell title={title}>
-      <div style={{ padding: '60px 20px', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
-        <div style={{
-          width: 80, height: 80, borderRadius: 40,
-          background: 'var(--surface-2)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 36, marginBottom: 8,
-        }}>
-          <MapPin size={36} color="var(--primary)" strokeWidth={1.5} />
+      <div style={{ padding: '16px' }}>
+        
+        {/* Add new address button */}
+        <motion.button
+          whileTap={{ scale: 0.98 }}
+          onClick={() => {
+            navigate('/delivery-location', { state: { returnToProfile: true } })
+          }}
+          style={{
+            width: '100%',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
+            padding: '16px',
+            background: '#e8751a',
+            border: 'none',
+            borderRadius: 14,
+            cursor: 'pointer',
+            fontFamily: 'var(--font-body)',
+            marginBottom: 20,
+            boxShadow: '0 4px 12px rgba(232, 117, 26, 0.2)'
+          }}
+        >
+          <span style={{ fontSize: 18, color: '#fff', fontWeight: 600, display: 'flex' }}><Plus size={20} strokeWidth={2.5}/></span>
+          <span style={{ fontSize: 14, fontWeight: 700, color: '#fff', letterSpacing: '0.05em' }}>
+            {lang === 'uz' ? 'YANGI MANZIL QO\'SHISH' : 'ДОБАВИТЬ НОВЫЙ АДРЕС'}
+          </span>
+        </motion.button>
+
+        {/* Address List */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {savedAddresses.map(addr => (
+            <motion.div
+              key={addr.id}
+              onClick={() => {
+                setAddress(addr.address)
+                navigate(-1) // go back with selected address
+              }}
+              whileTap={{ scale: 0.98 }}
+              style={{
+                display: 'flex', gap: 16,
+                padding: '16px',
+                background: '#fff',
+                borderRadius: 16,
+                border: '1px solid #e2e8f0',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.03)',
+                cursor: 'pointer',
+                position: 'relative'
+              }}
+            >
+              {/* Icon */}
+              <div style={{
+                width: 48, height: 48, borderRadius: 14,
+                background: '#f1f5f9',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                flexShrink: 0
+              }}>
+                {getIcon(addr.type)}
+              </div>
+
+              {/* Info */}
+              <div style={{ flex: 1, paddingRight: 40 }}>
+                <p style={{ fontSize: 18, fontWeight: 700, color: '#0f172a', marginBottom: 4 }}>
+                  {addr.title}
+                </p>
+                <p style={{ fontSize: 14, color: '#475569', lineHeight: 1.4, marginBottom: 6 }}>
+                  {addr.address}
+                </p>
+                {addr.details && (
+                  <p style={{ fontSize: 12, color: '#64748b' }}>
+                    {lang === 'uz' ? 'Mo\'ljal: ' : 'Ориентир: '}{addr.details}
+                  </p>
+                )}
+              </div>
+
+              {/* Actions */}
+              <div style={{
+                position: 'absolute', top: 16, right: 16,
+                display: 'flex', gap: 8
+              }}>
+                <button
+                  onClick={(e) => { e.stopPropagation(); /* edit logic */ }}
+                  style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: '#64748b' }}
+                >
+                  <Pencil size={18} />
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); removeAddress(addr.id) }}
+                  style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: '#64748b' }}
+                >
+                  <Trash2 size={18} />
+                </button>
+              </div>
+            </motion.div>
+          ))}
         </div>
-        <p style={{ fontSize: 17, fontWeight: 700, color: 'var(--text)' }}>
-          {lang === 'uz' ? 'Manzillar yo\'q' : 'Нет адресов'}
-        </p>
-        <p style={{ fontSize: 14, color: 'var(--text-3)', maxWidth: 240 }}>
-          {lang === 'uz' ? 'Yetkazib berish uchun manzil qo\'shing' : 'Добавьте адрес для доставки'}
-        </p>
+
       </div>
     </SubPageShell>
   )
