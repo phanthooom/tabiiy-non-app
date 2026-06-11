@@ -66,13 +66,17 @@ export async function createFirebaseOrder(orderData: Partial<Order> & { telegram
   return { id: shortId }
 }
 
-export async function updateFirebaseOrderStatus(docId: string, status: string, label: string, order?: any) {
+export async function updateFirebaseOrderStatus(docId: string, status: string, label: string, order?: any, yandexUrl?: string) {
   const ref = doc(db, 'orders', docId)
   try {
-    await updateDoc(ref, {
+    const updateData: any = {
       status,
       status_label: label
-    })
+    }
+    if (yandexUrl) {
+      updateData.yandex_url = yandexUrl
+    }
+    await updateDoc(ref, updateData)
   } catch (err) {
     console.error("Error updating order status:", err)
     throw err
@@ -84,7 +88,18 @@ export async function updateFirebaseOrderStatus(docId: string, status: string, l
       const telegramId = order.telegram_id || order.user_id || order.customer_id;
       if (telegramId) {
         const BOT_TOKEN = '8957857177:AAFNSzeeQR7NTZHoQ7BbKajJhQyfKrizJSU'
-        const message = `📦 *Buyurtma #${order.id} holati o'zgardi*\n\nYangi holat: *${label}*\nJami: ${order.total_amount?.toLocaleString('ru-RU')} so'm\n\nTabiiy Non bilan qolganingiz uchun rahmat! 🍞`
+        let message = `📦 *Buyurtma #${order.id} holati o'zgardi*\n\nYangi holat: *${label}*\nJami: ${order.total_amount?.toLocaleString('ru-RU')} so'm\n\nTabiiy Non bilan qolganingiz uchun rahmat! 🍞`
+        
+        let reply_markup: any = undefined;
+        
+        if (yandexUrl && yandexUrl.startsWith('http')) {
+          message = `🚚 *Buyurtma #${order.id} yo'lda!*\n\nSizning noningiz yandex orqali yuborildi.\nQuyidagi tugma orqali kuzatib borishingiz mumkin:\n\nJami: ${order.total_amount?.toLocaleString('ru-RU')} so'm`
+          reply_markup = {
+            inline_keyboard: [[
+              { text: '📍 Yandex orqali kuzatish', url: yandexUrl }
+            ]]
+          }
+        }
         
         fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
           method: 'POST',
@@ -93,6 +108,7 @@ export async function updateFirebaseOrderStatus(docId: string, status: string, l
             chat_id: telegramId,
             text: message,
             parse_mode: 'Markdown',
+            reply_markup
           })
         }).catch(err => console.error("Telegram notification fetch error:", err))
       }

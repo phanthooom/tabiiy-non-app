@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { Search, User, MapPin, ChevronDown, Truck, Store } from 'lucide-react'
@@ -35,6 +35,22 @@ const STATUS_BADGE_COLORS: Record<string, { bg: string; color: string }> = {
 export function AdminOrdersPage() {
   const navigate = useNavigate()
   useBackButton(() => navigate('/'))
+
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [password, setPassword] = useState('')
+
+  useEffect(() => {
+    // Check if in Telegram
+    const isTg = window.Telegram?.WebApp?.initDataUnsafe?.user;
+    if (isTg) {
+      setIsAuthenticated(true)
+    } else {
+      const saved = localStorage.getItem('admin_auth')
+      if (saved === 'true') {
+        setIsAuthenticated(true)
+      }
+    }
+  }, [])
 
   const { orders, loading } = useFirebaseOrders(null)
   const [section, setSection] = useState<AdminSection>('delivery')
@@ -91,6 +107,35 @@ export function AdminOrdersPage() {
   const handleSectionChange = (s: AdminSection) => {
     setSection(s)
     setActiveTab('all')
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', height: '100vh', background: '#f8fafc', padding: 20 }}>
+        <Store size={48} color="#e8751a" style={{ marginBottom: 20 }} />
+        <h2 style={{ marginBottom: 20, color: '#0f172a', fontWeight: 800 }}>Admin Panel</h2>
+        <input 
+          type="password" 
+          placeholder="Parolni kiriting..." 
+          value={password}
+          onChange={e => setPassword(e.target.value)}
+          style={{ padding: '14px 16px', borderRadius: 12, border: '1px solid #cbd5e1', marginBottom: 16, width: '100%', maxWidth: 300, fontSize: 16, outline: 'none' }}
+        />
+        <button 
+          onClick={() => {
+            if (password === 'tabiiynon2026') {
+              localStorage.setItem('admin_auth', 'true')
+              setIsAuthenticated(true)
+            } else {
+              alert('Parol xato!')
+            }
+          }}
+          style={{ padding: '14px 16px', borderRadius: 12, background: '#0f172a', color: '#fff', border: 'none', width: '100%', maxWidth: 300, fontWeight: 700, fontSize: 16, cursor: 'pointer' }}
+        >
+          Kirish
+        </button>
+      </div>
+    )
   }
 
   return (
@@ -280,8 +325,15 @@ function AdminOrderCard({ order, searchQuery, isPickup }: { order: any; searchQu
       if (!confirmed) return
     }
     
+    let yandexUrl = ''
+    if (statusId === 'courier_assigned') {
+      const url = window.prompt("Yandex Dostavka linkini kiriting (Mijoz kuzatishi uchun):\nBo'sh qoldirishingiz ham mumkin.")
+      if (url === null) return // User clicked cancel
+      yandexUrl = url.trim()
+    }
+    
     try {
-      await updateFirebaseOrderStatus(order._docId, statusId, label, order)
+      await updateFirebaseOrderStatus(order._docId, statusId, label, order, yandexUrl)
     } catch (err: any) {
       alert("Xatolik yuz berdi: " + (err.message || "Noma'lum xato"))
     }
