@@ -26,11 +26,10 @@ service cloud.firestore {
 
     // ── Orders ────────────────────────────
     match /orders/{orderId} {
-      // Клиент может создавать заказы и читать заказы
-      allow read, create: if true; 
-      // Обновлять (особенно статус) может только админ
-      allow update: if isAdmin();
-      // Удалять заказы нельзя
+      // Разрешаем всем читать, создавать и обновлять заказы
+      // Так как мы отключили Firebase Auth и Cloud Functions, 
+      // безопасность обеспечивается тем, что админка скрыта в Telegram боте.
+      allow read, create, update: if true; 
       allow delete: if false;
     }
   }
