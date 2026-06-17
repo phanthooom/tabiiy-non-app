@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ShoppingCart, X } from 'lucide-react'
 import type { HTMLMotionProps } from 'framer-motion'
+import { useNavigate } from 'react-router-dom'
 import { photoUrl } from '@/app/api'
 import type { Product } from '@/shared/types'
 
@@ -190,6 +191,7 @@ interface ProductCardProps {
 
 export function ProductCard({ product, onSetQty, onQtyChange, cartQty, addLabel, outLabel, sumLabel, addDisabled, language = 'ru' }: ProductCardProps) {
   const [showSheet, setShowSheet] = useState(false)
+  const navigate = useNavigate()
   // Single shared qty — used by BOTH card and sheet (no sync issues)
   const [localQty, setLocalQty] = useState(cartQty)
   // Ref always holds true current value (stale-closure safe for rapid taps)
@@ -544,7 +546,7 @@ export function ProductCard({ product, onSetQty, onQtyChange, cartQty, addLabel,
                     {/* Корзина pill */}
                     <motion.button
                       whileTap={{ scale: 0.97 }}
-                      onClick={() => setShowSheet(false)}
+                      onClick={() => { setShowSheet(false); navigate('/cart') }}
                       style={{
                         flex: 1, height: 52, border: 'none', borderRadius: 14,
                         background: '#e8751a', color: '#fff', fontSize: 15, fontWeight: 700,
