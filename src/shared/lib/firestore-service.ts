@@ -267,6 +267,7 @@ export const firestoreOrders = {
       total_amount:    cart.total,
       items,
       yandex_claim_id: null,
+      yandex_tracking_url: null,
       created_at:      serverTimestamp(),
       updated_at:      serverTimestamp(),
     }

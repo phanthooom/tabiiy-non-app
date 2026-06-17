@@ -75,7 +75,7 @@ export function CheckoutPage() {
     mutationFn: () => {
       if (BYPASS_MODE) {
         return new Promise<Order>((resolve) =>
-          setTimeout(() => resolve({ id: Math.floor(Math.random() * 10000), status: 'accepted', status_label: 'Принят', delivery_type: 'pickup', address: null, total_amount: 0, created_at: new Date().toISOString(), items: [], yandex_claim_id: null }), 800)
+          setTimeout(() => resolve({ id: Math.floor(Math.random() * 10000), status: 'accepted', status_label: 'Принят', delivery_type: 'pickup', address: null, total_amount: 0, created_at: new Date().toISOString(), items: [], yandex_claim_id: null, yandex_tracking_url: null }), 800)
         )
       }
       return withRetry(
