@@ -147,8 +147,8 @@ export function OrdersPage() {
           <div style={{ background: '#1a1a1a', border: '1px solid #333', borderRadius: 14, padding: 28, width: 480, maxWidth: '95vw' }}
             onClick={e => e.stopPropagation()}>
             <h2 style={{ color: '#c8a96e', marginBottom: 16 }}>Заказ #{selected.id}</h2>
-            <p style={{ color: '#aaa', fontSize: 14 }}>👤 {selected.user.full_name} (@{selected.user.username})</p>
-            <p style={{ color: '#aaa', fontSize: 14 }}>📞 {selected.customer_phone}</p>
+            <p style={{ color: '#aaa', fontSize: 14 }}>👤 {(selected as any).user_name || selected.user?.full_name || '—'} {(selected as any).user?.username ? `(@${selected.user.username})` : ''}</p>
+            <p style={{ color: '#aaa', fontSize: 14 }}>📞 {(selected as any).user_phone || selected.customer_phone || '—'}</p>
             <div style={{ color: '#aaa', fontSize: 14, display: 'flex', gap: 4 }}>📍 {selected.address ? <AddressText address={selected.address} language="ru" clickable={true} /> : 'Самовывоз'}</div>
             <div style={{ margin: '14px 0', borderTop: '1px solid #2a2a2a', paddingTop: 14 }}>
               {selected.items.map((item, i) => (
