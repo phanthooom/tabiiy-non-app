@@ -4,13 +4,16 @@ import type { Order, OrderStatus } from '../types/index'
 import { AddressText } from '@/app/components/ui/AddressText'
 import { MapPin, Phone, User } from 'lucide-react'
 
-const STATUS_META: Record<OrderStatus, { label: string; bg: string; color: string }> = {
+const STATUS_META: Record<string, { label: string; bg: string; color: string }> = {
   accepted:         { label: '✅ Принят',          bg: '#dbeafe', color: '#1d4ed8' },
   packing:          { label: '📦 Упаковывается',   bg: '#fef3c7', color: '#d97706' },
   courier_assigned: { label: '🚗 Курьер в пути',   bg: '#ede9fe', color: '#7c3aed' },
+  ready:            { label: '✅ Готов',            bg: '#dcfce7', color: '#16a34a' },
   delivered:        { label: '✅ Доставлен',        bg: '#dcfce7', color: '#16a34a' },
   cancelled:        { label: '❌ Отменён',          bg: '#fee2e2', color: '#dc2626' },
 }
+
+const DEFAULT_META = { label: '• В обработке', bg: '#f3f4f6', color: '#6b7280' }
 
 const FILTER_TABS = [
   { id: '',                label: 'Все' },
@@ -158,7 +161,7 @@ export function OrdersPage() {
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {orders.map(o => {
-            const meta = STATUS_META[o.status]
+            const meta = STATUS_META[o.status] ?? DEFAULT_META
             return (
               <div
                 key={o.id}
@@ -344,7 +347,7 @@ export function OrdersPage() {
               </p>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
                 {(Object.keys(STATUS_META) as OrderStatus[]).map(s => {
-                  const meta   = STATUS_META[s]
+                  const meta   = STATUS_META[s] ?? DEFAULT_META
                   const active = selected.status === s
                   return (
                     <button
