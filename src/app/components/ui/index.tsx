@@ -315,11 +315,16 @@ export function ProductCard({ product, onSetQty, onQtyChange, cartQty, addLabel,
         <div style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
           <div style={{ flex: 1, minWidth: 0 }}>
             <p style={{
-              fontSize: 15, fontWeight: 700, color: '#0f172a', marginBottom: 4,
+              fontSize: 15, fontWeight: 700, color: '#0f172a', marginBottom: 2,
               overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
             }}>
               {product.name}
             </p>
+            {!soldOut && product.quantity > 0 && (
+              <p style={{ fontSize: 11, color: '#22c55e', fontWeight: 600, marginBottom: 3 }}>
+                {lang ? `Mavjud: ${product.quantity} ta` : `В наличии: ${product.quantity} шт`}
+              </p>
+            )}
             <p style={{ fontSize: 16, fontWeight: 800, color: '#0f172a', margin: 0 }}>
               {price} <span style={{ fontSize: 12, fontWeight: 500, color: '#94a3b8' }}>{sumLabel}</span>
             </p>

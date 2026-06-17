@@ -82,6 +82,7 @@ function toOrder(id: string, data: DocumentData): Order {
     created_at:      data.created_at?.toDate?.()?.toISOString() ?? new Date().toISOString(),
     items:           data.items ?? [],
     yandex_claim_id: data.yandex_claim_id ?? null,
+    yandex_tracking_url: data.yandex_tracking_url ?? null,
   }
 }
 

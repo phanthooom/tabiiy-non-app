@@ -127,6 +127,7 @@ export interface Order {
   created_at: string
   items: OrderItem[]
   yandex_claim_id: string | null
+  yandex_tracking_url: string | null
 }
 
 export interface UserProfile {

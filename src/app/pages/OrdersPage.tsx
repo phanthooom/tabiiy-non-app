@@ -723,7 +723,7 @@ export function OrderDetailPage() {
             <div style={{ height: 1, background: '#f1f5f9', marginBottom: 20 }} />
 
             {/* Courier Info */}
-            {(order as any).yandex_url ? (
+            {order.yandex_tracking_url ? (
               <div style={{ marginBottom: 20 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
                   <div style={{ width: 48, height: 48, borderRadius: 12, background: '#fff6ef', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -737,7 +737,7 @@ export function OrderDetailPage() {
                   </div>
                 </div>
                 <a
-                  href={(order as any).yandex_url}
+                  href={order.yandex_tracking_url}
                   target="_blank"
                   rel="noreferrer"
                   style={{

@@ -27,6 +27,8 @@ export function OrdersPage() {
   const [loading, setLoading] = useState(false)
   const [selected, setSelected] = useState<Order | null>(null)
   const [actionLoading, setActionLoading] = useState(false)
+  const [yandexUrl, setYandexUrl] = useState('')
+  const [yandexSaving, setYandexSaving] = useState(false)
 
   useEffect(() => {
     setLoading(true)
@@ -36,10 +38,11 @@ export function OrdersPage() {
         setTotal(res.total)
         setLoading(false)
         
-        // Обновляем выбранный заказ в модалке, если он изменился
         setSelected(prev => {
           if (!prev) return null
-          return res.items.find(o => o.id === prev.id) || prev
+          const updated = res.items.find(o => o.id === prev.id) || prev
+          setYandexUrl((updated as any).yandex_tracking_url || '')
+          return updated
         })
       },
       { status: filterStatus || undefined }
@@ -54,6 +57,18 @@ export function OrdersPage() {
       // load() больше не нужен, данные обновятся через onSnapshot
     } finally {
       setActionLoading(false)
+    }
+  }
+
+  const saveYandexUrl = async () => {
+    if (!selected) return
+    setYandexSaving(true)
+    try {
+      const { doc, updateDoc } = await import('firebase/firestore')
+      const { db } = await import('../../shared/lib/firebase')
+      await updateDoc(doc(db, 'orders', String(selected.id)), { yandex_tracking_url: yandexUrl || null })
+    } finally {
+      setYandexSaving(false)
     }
   }
 
@@ -89,7 +104,7 @@ export function OrdersPage() {
       {loading ? <p style={{ color: '#666' }}>Загрузка...</p> : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {orders.map(o => (
-            <div key={o.id} onClick={() => setSelected(o)}
+            <div key={o.id} onClick={() => { setSelected(o); setYandexUrl((o as any).yandex_tracking_url || '') }}
               style={{
                 background: '#1a1a1a', border: '1px solid #2a2a2a', borderRadius: 10,
                 padding: '14px 18px', cursor: 'pointer', transition: 'border-color 0.2s',
@@ -167,9 +182,32 @@ export function OrdersPage() {
             )}
             {selected.yandex_claim_id && (
               <p style={{ color: '#8b5cf6', fontSize: 13, marginTop: 10 }}>
-                Яндекс claim: {selected.yandex_claim_id} · {selected.yandex_status}
+                Яндекс claim: {selected.yandex_claim_id}
               </p>
             )}
+
+            {/* Yandex tracking URL */}
+            <div style={{ marginTop: 14, borderTop: '1px solid #2a2a2a', paddingTop: 14 }}>
+              <p style={{ color: '#888', fontSize: 12, marginBottom: 8, fontWeight: 600 }}>🔗 Ссылка отслеживания Яндекс</p>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <input
+                  value={yandexUrl}
+                  onChange={e => setYandexUrl(e.target.value)}
+                  placeholder="https://go.yandex/route/..."
+                  style={{ flex: 1, padding: '8px 12px', background: '#111', border: '1px solid #333', borderRadius: 8, color: '#fff', fontSize: 13, outline: 'none' }}
+                />
+                <button onClick={saveYandexUrl} disabled={yandexSaving}
+                  style={{ padding: '8px 14px', background: '#c8a96e', border: 'none', borderRadius: 8, color: '#000', fontWeight: 700, cursor: 'pointer', fontSize: 13 }}>
+                  {yandexSaving ? '...' : 'Сохранить'}
+                </button>
+              </div>
+              {yandexUrl && (
+                <a href={yandexUrl} target="_blank" rel="noreferrer"
+                  style={{ display: 'inline-block', marginTop: 8, color: '#3b82f6', fontSize: 12 }}>
+                  Открыть ссылку ↗
+                </a>
+              )}
+            </div>
           </div>
         </div>
       )}
