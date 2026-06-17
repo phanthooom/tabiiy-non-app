@@ -83,67 +83,54 @@ const DESC_MIKS_RU = `🍞 Микс Нон
 Настоящий витаминный микс — источник здоровья и энергии!`
 
 const BREAD_PRESETS = [
-  {
-    name_uz: "Tabiiy Non",
-    name_ru: "Табиий Нон",
-    image_url: "/images/tabiiy-non.jpg",
-    description_uz: DESC_TABIIY_UZ,
-    description_ru: DESC_TABIIY_RU,
-  },
-  {
-    name_uz: "Miks Non",
-    name_ru: "Микс Нон",
-    image_url: "/images/miks-non.jpg",
-    description_uz: DESC_MIKS_UZ,
-    description_ru: DESC_MIKS_RU,
-  },
+  { name_uz: 'Tabiiy Non', name_ru: 'Табиий Нон', image_url: '/images/tabiiy-non.jpg', description_uz: DESC_TABIIY_UZ, description_ru: DESC_TABIIY_RU },
+  { name_uz: 'Miks Non',   name_ru: 'Микс Нон',   image_url: '/images/miks-non.jpg',   description_uz: DESC_MIKS_UZ,   description_ru: DESC_MIKS_RU },
 ]
 
 const PRODUCTS_SEED = [
-  {
-    name_uz: "Tabiiy Non",
-    name_ru: "Табиий Нон",
-    price: 7000,
-    quantity: 100,
-    is_available: true,
-    is_visible: true,
-    sort_order: 1,
-    image_url: "/images/tabiiy-non.jpg",
-    photo_file_id: null,
-    description_uz: DESC_TABIIY_UZ,
-    description_ru: DESC_TABIIY_RU,
-  },
-  {
-    name_uz: "Miks Non",
-    name_ru: "Микс Нон",
-    price: 10000,
-    quantity: 100,
-    is_available: true,
-    is_visible: true,
-    sort_order: 2,
-    image_url: "/images/miks-non.jpg",
-    photo_file_id: null,
-    description_uz: DESC_MIKS_UZ,
-    description_ru: DESC_MIKS_RU,
-  },
+  { name_uz: 'Tabiiy Non', name_ru: 'Табиий Нон', price: 7000,  quantity: 100, is_available: true, is_visible: true, sort_order: 1, image_url: '/images/tabiiy-non.jpg', photo_file_id: null, description_uz: DESC_TABIIY_UZ, description_ru: DESC_TABIIY_RU },
+  { name_uz: 'Miks Non',   name_ru: 'Микс Нон',   price: 10000, quantity: 100, is_available: true, is_visible: true, sort_order: 2, image_url: '/images/miks-non.jpg',   photo_file_id: null, description_uz: DESC_MIKS_UZ,   description_ru: DESC_MIKS_RU },
 ]
 
 const empty = { name_uz: '', name_ru: '', price: 0, quantity: 0, is_visible: true, sort_order: 0, image_url: null }
 
+// ── Styles ────────────────────────────────────────────────────────────────
+
+const inp: React.CSSProperties = {
+  width: '100%', padding: '10px 14px',
+  background: '#141414', border: '1px solid #2e2e2e',
+  borderRadius: 10, color: '#f0ece4', fontSize: 14,
+  boxSizing: 'border-box', outline: 'none', transition: 'border-color .15s',
+}
+
+const label: React.CSSProperties = {
+  display: 'block', color: '#6b7280', fontSize: 11,
+  fontWeight: 700, letterSpacing: '0.07em',
+  textTransform: 'uppercase', marginBottom: 6,
+}
+
+const section: React.CSSProperties = {
+  background: '#141414', border: '1px solid #242424',
+  borderRadius: 12, padding: '16px 18px', marginBottom: 12,
+}
+
+// ── Component ──────────────────────────────────────────────────────────────
+
 export function ProductsPage() {
-  const [products, setProducts] = useState<Product[]>([])
-  const [editing, setEditing] = useState<Partial<Product> | null>(null)
-  const [isNew, setIsNew] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [seedLoading, setSeedLoading] = useState(false)
-  const [error, setError] = useState('')
-  const [nameSearch, setNameSearch] = useState('')
-  const [descriptionUz, setDescriptionUz] = useState('')
-  const [descriptionRu, setDescriptionRu] = useState('')
-  const [previewImage, setPreviewImage] = useState<string | null>(null)
-  const [showPresetSuggestions, setShowPresetSuggestions] = useState(false)
-  const [stockMap, setStockMap] = useState<Record<string, number>>({})
-  const [stockSaving, setStockSaving] = useState<Record<string, boolean>>({})
+  const [products, setProducts]               = useState<Product[]>([])
+  const [editing, setEditing]                 = useState<Partial<Product> | null>(null)
+  const [isNew, setIsNew]                     = useState(false)
+  const [loading, setLoading]                 = useState(false)
+  const [seedLoading, setSeedLoading]         = useState(false)
+  const [error, setError]                     = useState('')
+  const [nameSearch, setNameSearch]           = useState('')
+  const [descriptionUz, setDescriptionUz]     = useState('')
+  const [descriptionRu, setDescriptionRu]     = useState('')
+  const [previewImage, setPreviewImage]       = useState<string | null>(null)
+  const [showPresets, setShowPresets]         = useState(false)
+  const [stockMap, setStockMap]               = useState<Record<string, number>>({})
+  const [stockSaving, setStockSaving]         = useState<Record<string, boolean>>({})
+  const [descTab, setDescTab]                 = useState<'ru' | 'uz'>('ru')
 
   const load = async () => {
     const res = await productsApi.list()
@@ -163,46 +150,29 @@ export function ProductsPage() {
     setStockSaving(s => ({ ...s, [id]: true }))
     try {
       await productsApi.update(p.id, { quantity: qty } as any)
-      await load()
+      setProducts(prev => prev.map(x => String(x.id) === id ? { ...x, quantity: qty } as any : x))
     } finally {
       setStockSaving(s => ({ ...s, [id]: false }))
     }
   }
 
   const resetForm = () => {
-    setNameSearch('')
-    setDescriptionUz('')
-    setDescriptionRu('')
-    setPreviewImage(null)
-    setShowPresetSuggestions(false)
-    setError('')
+    setNameSearch(''); setDescriptionUz(''); setDescriptionRu('')
+    setPreviewImage(null); setShowPresets(false); setError('')
   }
 
   const save = async () => {
     if (!editing) return
-    setLoading(true)
-    setError('')
+    setLoading(true); setError('')
     try {
       if (isNew) {
-        await productsApi.create({
-          ...editing,
-          image_url: editing.image_url ?? null,
-          description_uz: descriptionUz || undefined,
-          description_ru: descriptionRu || undefined,
-        })
+        await productsApi.create({ ...editing, image_url: editing.image_url ?? null, description_uz: descriptionUz || undefined, description_ru: descriptionRu || undefined })
       } else {
-        await productsApi.update(editing.id!, {
-          ...editing,
-          description_uz: descriptionUz || (editing as any).description_uz,
-          description_ru: descriptionRu || (editing as any).description_ru,
-        })
+        await productsApi.update(editing.id!, { ...editing, description_uz: descriptionUz || (editing as any).description_uz, description_ru: descriptionRu || (editing as any).description_ru })
       }
       await load()
       setEditing(null)
-      if (isNew) {
-        resetForm()
-        setIsNew(false)
-      }
+      if (isNew) { resetForm(); setIsNew(false) }
     } catch (e: any) {
       setError(e?.message ?? 'Ошибка сохранения')
     } finally {
@@ -211,6 +181,7 @@ export function ProductsPage() {
   }
 
   const del = async (id: number | string) => {
+    if (!confirm('Удалить товар?')) return
     await productsApi.delete(id)
     await load()
   }
@@ -221,16 +192,12 @@ export function ProductsPage() {
   }
 
   const seedProducts = async () => {
-    if (!confirm('Удалить все товары и заполнить заново (Tabiiy Non + Miks Non)?')) return
+    if (!confirm('Удалить все товары и заполнить заново?')) return
     setSeedLoading(true)
     try {
       const existing = await productsApi.list()
-      for (const p of existing) {
-        await productsApi.delete(p.id)
-      }
-      for (const p of PRODUCTS_SEED) {
-        await productsApi.create(p)
-      }
+      for (const p of existing) await productsApi.delete(p.id)
+      for (const p of PRODUCTS_SEED) await productsApi.create(p)
       await load()
     } catch (e: any) {
       alert('Ошибка: ' + (e?.message ?? e))
@@ -240,44 +207,61 @@ export function ProductsPage() {
   }
 
   return (
-    <div>
-      {/* ── Quick stock panel ── */}
-      <div style={{ background: '#1a1a1a', border: '1px solid #2a2a2a', borderRadius: 12, padding: 20, marginBottom: 24 }}>
-        <h3 style={{ color: '#c8a96e', fontWeight: 700, marginBottom: 16, fontSize: 16, margin: '0 0 16px' }}>
-          📦 Запас на сегодня
-        </h3>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+    <div style={{ maxWidth: 900, margin: '0 auto' }}>
+
+      {/* ── Stock panel ── */}
+      <div style={{ background: '#111', border: '1px solid #1e2a1e', borderRadius: 14, padding: '20px 22px', marginBottom: 28 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18 }}>
+          <span style={{ fontSize: 20 }}>📦</span>
+          <h3 style={{ margin: 0, color: '#c8a96e', fontWeight: 800, fontSize: 17 }}>Запас на сегодня</h3>
+          <span style={{ marginLeft: 'auto', fontSize: 12, color: '#4b5563' }}>обновляется мгновенно</span>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {products.map(p => {
-            const id = String(p.id)
+            const id  = String(p.id)
             const qty = stockMap[id] ?? 0
+            const saving = stockSaving[id]
             return (
-              <div key={id} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                <span style={{ flex: 1, color: '#f5f0e8', fontWeight: 600, fontSize: 14 }}>{(p as any).name_ru || (p as any).name}</span>
+              <div key={id} style={{
+                display: 'flex', alignItems: 'center', gap: 14,
+                background: '#1a1a1a', borderRadius: 12, padding: '12px 16px',
+                border: `1px solid ${qty > 0 ? '#1a3a1a' : '#3a1a1a'}`,
+                transition: 'border-color .2s',
+              }}>
+                {(p as any).image_url && (
+                  <img src={(p as any).image_url} alt="" style={{ width: 48, height: 48, borderRadius: 10, objectFit: 'cover', flexShrink: 0 }} />
+                )}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{ margin: 0, color: '#f0ece4', fontWeight: 700, fontSize: 15 }}>{(p as any).name_ru}</p>
+                  <p style={{ margin: '2px 0 0', color: '#6b7280', fontSize: 12 }}>{(p as any).name_uz}</p>
+                </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <button
                     onClick={() => { const n = Math.max(0, qty - 1); setStockMap(m => ({ ...m, [id]: n })); saveStock(p, n) }}
-                    style={{ width: 34, height: 34, background: '#2a2a2a', border: 'none', borderRadius: 8, color: '#fff', fontSize: 20, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    style={{ width: 38, height: 38, background: '#242424', border: '1px solid #333', borderRadius: 10, color: '#fff', fontSize: 22, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1 }}
                   >−</button>
                   <input
-                    type="number"
-                    min={0}
-                    value={qty}
+                    type="number" min={0} value={qty}
                     onChange={e => setStockMap(m => ({ ...m, [id]: Math.max(0, Number(e.target.value)) }))}
                     onBlur={e => saveStock(p, Math.max(0, Number(e.target.value)))}
-                    style={{ width: 64, textAlign: 'center', background: '#111', border: '1px solid #333', borderRadius: 8, color: '#fff', padding: '6px 8px', fontSize: 15, fontWeight: 700 }}
+                    style={{ width: 68, textAlign: 'center', background: '#0d0d0d', border: '1px solid #333', borderRadius: 10, color: '#f0ece4', padding: '8px 4px', fontSize: 18, fontWeight: 800, outline: 'none' }}
                   />
                   <button
                     onClick={() => { const n = qty + 1; setStockMap(m => ({ ...m, [id]: n })); saveStock(p, n) }}
-                    style={{ width: 34, height: 34, background: '#c8a96e', border: 'none', borderRadius: 8, color: '#000', fontSize: 20, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    style={{ width: 38, height: 38, background: '#c8a96e', border: 'none', borderRadius: 10, color: '#000', fontSize: 22, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1 }}
                   >+</button>
-                  <span style={{
-                    minWidth: 60, textAlign: 'center',
-                    padding: '4px 10px', borderRadius: 12, fontSize: 12, fontWeight: 700,
-                    background: qty > 0 ? '#22c55e22' : '#ef444422',
-                    color: qty > 0 ? '#22c55e' : '#ef4444',
-                  }}>
-                    {stockSaving[id] ? '...' : qty > 0 ? 'Есть' : 'Нет'}
-                  </span>
+                </div>
+                <div style={{ minWidth: 72, textAlign: 'center' }}>
+                  {saving
+                    ? <span style={{ color: '#6b7280', fontSize: 13 }}>сохр...</span>
+                    : <span style={{
+                        display: 'inline-block', padding: '5px 12px', borderRadius: 20, fontSize: 12, fontWeight: 700,
+                        background: qty > 0 ? '#14532d' : '#450a0a',
+                        color: qty > 0 ? '#4ade80' : '#f87171',
+                      }}>
+                        {qty > 0 ? `${qty} шт` : 'Нет'}
+                      </span>
+                  }
                 </div>
               </div>
             )
@@ -285,172 +269,271 @@ export function ProductsPage() {
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: 12, marginBottom: 20, flexWrap: 'wrap' }}>
+      {/* ── Header actions ── */}
+      <div style={{ display: 'flex', gap: 10, marginBottom: 20, alignItems: 'center' }}>
+        <h2 style={{ margin: 0, flex: 1, color: '#f0ece4', fontWeight: 800, fontSize: 18 }}>Товары</h2>
         <button onClick={() => { resetForm(); setEditing(empty); setIsNew(true) }}
-          style={{ padding: '8px 18px', background: '#c8a96e', border: 'none', borderRadius: 8, color: '#000', fontWeight: 700, cursor: 'pointer' }}>
-          + Добавить товар
+          style={{ padding: '9px 20px', background: '#c8a96e', border: 'none', borderRadius: 10, color: '#000', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
+          + Добавить
         </button>
         <button onClick={seedProducts} disabled={seedLoading}
-          style={{ padding: '8px 18px', background: '#ef4444', border: 'none', borderRadius: 8, color: '#fff', fontWeight: 700, cursor: seedLoading ? 'not-allowed' : 'pointer', opacity: seedLoading ? 0.6 : 1 }}>
-          {seedLoading ? 'Обновляется...' : '🔄 Сбросить товары'}
+          style={{ padding: '9px 16px', background: '#1f1f1f', border: '1px solid #2e2e2e', borderRadius: 10, color: '#9ca3af', fontWeight: 600, fontSize: 13, cursor: seedLoading ? 'not-allowed' : 'pointer', opacity: seedLoading ? 0.5 : 1 }}>
+          {seedLoading ? '...' : '🔄 Сбросить'}
         </button>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 14 }}>
-        {products.map(p => (
-          <div key={p.id} style={{ background: '#1a1a1a', border: '1px solid #2a2a2a', borderRadius: 10, padding: 18 }}>
-            {(p as any).image_url && (
-              <img src={(p as any).image_url} alt="" style={{ width: '100%', height: 140, objectFit: 'cover', borderRadius: 8, marginBottom: 12 }} />
-            )}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <div>
-                <p style={{ color: '#f5f0e8', fontWeight: 600, marginBottom: 4 }}>{p.name_ru}</p>
-                <p style={{ color: '#888', fontSize: 13 }}>{p.name_uz}</p>
+      {/* ── Product cards ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 16 }}>
+        {products.map(p => {
+          const qty = (p as any).quantity ?? 0
+          return (
+            <div key={p.id} style={{
+              background: '#141414', border: '1px solid #242424',
+              borderRadius: 14, overflow: 'hidden',
+              display: 'flex', flexDirection: 'column',
+            }}>
+              <div style={{ position: 'relative' }}>
+                {(p as any).image_url
+                  ? <img src={(p as any).image_url} alt="" style={{ width: '100%', height: 150, objectFit: 'cover', display: 'block' }} />
+                  : <div style={{ width: '100%', height: 150, background: '#1f1f1f', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 40 }}>🍞</div>
+                }
+                <div style={{ position: 'absolute', top: 10, right: 10, display: 'flex', gap: 6 }}>
+                  <span style={{
+                    padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 700,
+                    background: p.is_visible ? 'rgba(20,83,45,0.9)' : 'rgba(69,10,10,0.9)',
+                    color: p.is_visible ? '#4ade80' : '#f87171',
+                    backdropFilter: 'blur(4px)',
+                  }}>
+                    {p.is_visible ? 'Виден' : 'Скрыт'}
+                  </span>
+                  <span style={{
+                    padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 700,
+                    background: qty > 0 ? 'rgba(20,83,45,0.9)' : 'rgba(69,10,10,0.9)',
+                    color: qty > 0 ? '#4ade80' : '#f87171',
+                    backdropFilter: 'blur(4px)',
+                  }}>
+                    {qty > 0 ? `${qty} шт` : 'Нет'}
+                  </span>
+                </div>
               </div>
-              <span style={{
-                padding: '3px 10px', borderRadius: 20, fontSize: 12,
-                background: p.is_visible ? '#22c55e22' : '#ef444422',
-                color: p.is_visible ? '#22c55e' : '#ef4444',
-              }}>
-                {p.is_visible ? 'Виден' : 'Скрыт'}
-              </span>
+              <div style={{ padding: '14px 16px', flex: 1 }}>
+                <p style={{ margin: '0 0 2px', color: '#f0ece4', fontWeight: 700, fontSize: 15 }}>{(p as any).name_ru}</p>
+                <p style={{ margin: '0 0 10px', color: '#6b7280', fontSize: 12 }}>{(p as any).name_uz}</p>
+                <p style={{ margin: 0, color: '#c8a96e', fontWeight: 800, fontSize: 16 }}>
+                  {p.price.toLocaleString()} <span style={{ fontSize: 12, fontWeight: 500, color: '#6b7280' }}>сум</span>
+                </p>
+              </div>
+              <div style={{ padding: '0 12px 14px', display: 'flex', gap: 8 }}>
+                <button onClick={() => {
+                  setEditing({ ...p })
+                  setDescriptionUz((p as any).description_uz || '')
+                  setDescriptionRu((p as any).description_ru || '')
+                  setPreviewImage((p as any).image_url || null)
+                  setNameSearch((p as any).name_ru || '')
+                  setIsNew(false)
+                }} style={actionBtn('#3b82f6')}>✏️ Изменить</button>
+                <button onClick={() => toggle(p)} style={actionBtn('#f59e0b')}>
+                  {p.is_visible ? '🙈 Скрыть' : '👁 Показать'}
+                </button>
+                <button onClick={() => del(p.id)} style={actionBtn('#ef4444')}>🗑</button>
+              </div>
             </div>
-            <div style={{ display: 'flex', gap: 16, marginTop: 12, color: '#aaa', fontSize: 14 }}>
-              <span>💰 {p.price.toLocaleString()} сум</span>
-              <span>📦 {p.quantity} шт</span>
-            </div>
-            <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
-              <button onClick={() => {
-                setEditing({ ...p })
-                setDescriptionUz((p as any).description_uz || '')
-                setDescriptionRu((p as any).description_ru || '')
-                setPreviewImage((p as any).image_url || null)
-                setIsNew(false)
-              }} style={actBtn('#3b82f6')}>Изменить</button>
-              <button onClick={() => toggle(p)} style={actBtn('#f59e0b')}>{p.is_visible ? 'Скрыть' : 'Показать'}</button>
-              <button onClick={() => del(p.id)} style={actBtn('#ef4444')}>Удалить</button>
-            </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
 
+      {/* ── Edit / Create modal ── */}
       {editing && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 200, background: 'var(--surface)', overflowY: 'auto', padding: 24 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-            <h2 style={{ fontWeight: 700, fontSize: 20, margin: 0 }}>{isNew ? 'Добавить товар' : 'Изменить товар'}</h2>
-            <button
-              onClick={() => { setEditing(null); setIsNew(false); resetForm() }}
-              style={{ background: 'none', border: 'none', fontSize: 24, cursor: 'pointer', color: '#666' }}
-            >✕</button>
-          </div>
-
-          <div style={{ marginBottom: 18 }}>
-            <label style={{ display: 'block', color: '#666', fontSize: 12, marginBottom: 8 }}>Название</label>
-            <input
-              value={nameSearch}
-              onChange={e => { setNameSearch(e.target.value); setShowPresetSuggestions(true) }}
-              style={inputSt}
-            />
-            {nameSearch.length > 0 && showPresetSuggestions && (
-              <div style={{ border: '1px solid #333', borderRadius: 8, overflow: 'hidden', marginTop: 8, background: '#111' }}>
-                {BREAD_PRESETS.filter(preset =>
-                  preset.name_ru.toLowerCase().includes(nameSearch.toLowerCase()) ||
-                  preset.name_uz.toLowerCase().includes(nameSearch.toLowerCase())
-                ).map(preset => (
-                  <div
-                    key={preset.name_ru}
-                    onClick={() => {
-                      setNameSearch(preset.name_ru)
-                      setEditing({ ...editing, name_ru: preset.name_ru, name_uz: preset.name_uz, image_url: preset.image_url })
-                      setDescriptionRu(preset.description_ru)
-                      setDescriptionUz(preset.description_uz)
-                      setPreviewImage(preset.image_url)
-                      setShowPresetSuggestions(false)
-                    }}
-                    style={{ display: 'flex', gap: 12, padding: 10, cursor: 'pointer', alignItems: 'center', color: '#fff' }}
-                    onMouseDown={e => e.preventDefault()}
-                  >
-                    <img src={preset.image_url} alt={preset.name_ru} style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 6 }} />
-                    <span>{preset.name_ru} / {preset.name_uz}</span>
-                  </div>
-                ))}
+        <div style={{ position: 'fixed', inset: 0, zIndex: 300, display: 'flex' }}>
+          {/* Backdrop */}
+          <div
+            onClick={() => { setEditing(null); setIsNew(false); resetForm() }}
+            style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(3px)' }}
+          />
+          {/* Panel */}
+          <div style={{
+            position: 'relative', zIndex: 1,
+            marginLeft: 'auto', width: '100%', maxWidth: 520,
+            background: '#0f0f0f', overflowY: 'auto',
+            display: 'flex', flexDirection: 'column',
+            boxShadow: '-8px 0 40px rgba(0,0,0,0.5)',
+          }}>
+            {/* Panel header */}
+            <div style={{
+              position: 'sticky', top: 0, zIndex: 10,
+              background: '#0f0f0f', borderBottom: '1px solid #1e1e1e',
+              padding: '18px 22px', display: 'flex', alignItems: 'center', gap: 14,
+            }}>
+              {previewImage && (
+                <img src={previewImage} style={{ width: 44, height: 44, borderRadius: 10, objectFit: 'cover', flexShrink: 0 }} />
+              )}
+              <div style={{ flex: 1 }}>
+                <h2 style={{ margin: 0, color: '#f0ece4', fontWeight: 800, fontSize: 18 }}>
+                  {isNew ? 'Добавить товар' : 'Изменить товар'}
+                </h2>
+                {!isNew && <p style={{ margin: '2px 0 0', color: '#6b7280', fontSize: 12 }}>{(editing as any).name_ru}</p>}
               </div>
-            )}
+              <button
+                onClick={() => { setEditing(null); setIsNew(false); resetForm() }}
+                style={{ width: 34, height: 34, background: '#1e1e1e', border: 'none', borderRadius: 8, color: '#9ca3af', cursor: 'pointer', fontSize: 18, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              >✕</button>
+            </div>
+
+            {/* Panel body */}
+            <div style={{ padding: '20px 22px', flex: 1 }}>
+
+              {/* Preset search */}
+              <div style={section}>
+                <span style={label}>🔍 Быстрый выбор</span>
+                <input
+                  placeholder="Начните вводить название..."
+                  value={nameSearch}
+                  onChange={e => { setNameSearch(e.target.value); setShowPresets(true) }}
+                  style={inp}
+                />
+                {nameSearch.length > 0 && showPresets && (
+                  <div style={{ border: '1px solid #2e2e2e', borderRadius: 10, overflow: 'hidden', marginTop: 8 }}>
+                    {BREAD_PRESETS.filter(pr =>
+                      pr.name_ru.toLowerCase().includes(nameSearch.toLowerCase()) ||
+                      pr.name_uz.toLowerCase().includes(nameSearch.toLowerCase())
+                    ).map(pr => (
+                      <div
+                        key={pr.name_ru}
+                        onMouseDown={e => e.preventDefault()}
+                        onClick={() => {
+                          setNameSearch(pr.name_ru)
+                          setEditing({ ...editing, name_ru: pr.name_ru, name_uz: pr.name_uz, image_url: pr.image_url })
+                          setDescriptionRu(pr.description_ru)
+                          setDescriptionUz(pr.description_uz)
+                          setPreviewImage(pr.image_url)
+                          setShowPresets(false)
+                        }}
+                        style={{ display: 'flex', gap: 12, padding: '10px 14px', cursor: 'pointer', alignItems: 'center', background: '#141414', borderBottom: '1px solid #1e1e1e' }}
+                      >
+                        <img src={pr.image_url} alt="" style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 8 }} />
+                        <div>
+                          <p style={{ margin: 0, color: '#f0ece4', fontWeight: 600, fontSize: 14 }}>{pr.name_ru}</p>
+                          <p style={{ margin: '2px 0 0', color: '#6b7280', fontSize: 12 }}>{pr.name_uz}</p>
+                        </div>
+                        <span style={{ marginLeft: 'auto', color: '#c8a96e', fontSize: 12, fontWeight: 700 }}>Заполнить →</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Names */}
+              <div style={section}>
+                <span style={label}>📝 Название</span>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                  <div>
+                    <p style={{ margin: '0 0 6px', color: '#4b5563', fontSize: 11, fontWeight: 600 }}>RU</p>
+                    <input value={(editing as any).name_ru || ''} onChange={e => setEditing({ ...editing, name_ru: e.target.value })} style={inp} placeholder="Название RU" />
+                  </div>
+                  <div>
+                    <p style={{ margin: '0 0 6px', color: '#4b5563', fontSize: 11, fontWeight: 600 }}>UZ</p>
+                    <input value={(editing as any).name_uz || ''} onChange={e => setEditing({ ...editing, name_uz: e.target.value })} style={inp} placeholder="Nomi UZ" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Price + Quantity */}
+              <div style={section}>
+                <span style={label}>💰 Цена и количество</span>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                  <div>
+                    <p style={{ margin: '0 0 6px', color: '#4b5563', fontSize: 11, fontWeight: 600 }}>Цена (сум)</p>
+                    <input type="number"
+                      value={((editing as any).price ?? 0) === 0 ? '' : (editing as any).price}
+                      placeholder="0"
+                      onChange={e => setEditing({ ...editing, price: e.target.value === '' ? 0 : Number(e.target.value) })}
+                      onFocus={e => e.target.select()}
+                      style={inp}
+                    />
+                  </div>
+                  <div>
+                    <p style={{ margin: '0 0 6px', color: '#4b5563', fontSize: 11, fontWeight: 600 }}>Кол-во (шт)</p>
+                    <input type="number"
+                      value={((editing as any).quantity ?? 0) === 0 ? '' : (editing as any).quantity}
+                      placeholder="0"
+                      onChange={e => setEditing({ ...editing, quantity: e.target.value === '' ? 0 : Number(e.target.value) })}
+                      onFocus={e => e.target.select()}
+                      style={inp}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Image */}
+              <div style={section}>
+                <span style={label}>🖼 Картинка</span>
+                {previewImage && (
+                  <img src={previewImage} style={{ width: '100%', height: 160, objectFit: 'cover', borderRadius: 10, marginBottom: 10, display: 'block' }} />
+                )}
+                <input
+                  placeholder="/images/tabiiy-non.jpg"
+                  value={(editing as any).image_url || ''}
+                  onChange={e => { setEditing({ ...editing, image_url: e.target.value }); setPreviewImage(e.target.value || null) }}
+                  style={inp}
+                />
+                <div style={{ marginTop: 8 }}>
+                  <p style={{ margin: '0 0 4px', color: '#4b5563', fontSize: 11, fontWeight: 600 }}>Telegram File ID (необязательно)</p>
+                  <input value={(editing as any).photo_file_id || ''} onChange={e => setEditing({ ...editing, photo_file_id: e.target.value })} style={inp} placeholder="AgACAgI..." />
+                </div>
+              </div>
+
+              {/* Descriptions with tabs */}
+              <div style={section}>
+                <span style={label}>📄 Описание</span>
+                <div style={{ display: 'flex', gap: 2, marginBottom: 12, background: '#0d0d0d', borderRadius: 8, padding: 3 }}>
+                  {(['ru', 'uz'] as const).map(lang => (
+                    <button key={lang} onClick={() => setDescTab(lang)} style={{
+                      flex: 1, padding: '7px', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 700, fontSize: 13,
+                      background: descTab === lang ? '#c8a96e' : 'transparent',
+                      color: descTab === lang ? '#000' : '#6b7280',
+                      transition: 'all .15s',
+                    }}>
+                      {lang.toUpperCase()}
+                    </button>
+                  ))}
+                </div>
+                {descTab === 'ru'
+                  ? <textarea value={descriptionRu} onChange={e => setDescriptionRu(e.target.value)} style={{ ...inp, minHeight: 180, resize: 'vertical' }} placeholder="Описание на русском..." />
+                  : <textarea value={descriptionUz} onChange={e => setDescriptionUz(e.target.value)} style={{ ...inp, minHeight: 180, resize: 'vertical' }} placeholder="Ta'rif o'zbek tilida..." />
+                }
+              </div>
+
+              {error && (
+                <div style={{ background: '#450a0a', border: '1px solid #7f1d1d', borderRadius: 10, padding: '10px 14px', marginBottom: 12 }}>
+                  <p style={{ margin: 0, color: '#fca5a5', fontSize: 13 }}>⚠️ {error}</p>
+                </div>
+              )}
+            </div>
+
+            {/* Sticky footer */}
+            <div style={{ position: 'sticky', bottom: 0, background: '#0f0f0f', borderTop: '1px solid #1e1e1e', padding: '14px 22px', display: 'flex', gap: 10 }}>
+              <button onClick={save} disabled={loading} style={{
+                flex: 1, padding: '13px', background: loading ? '#6b5a3e' : '#c8a96e',
+                border: 'none', borderRadius: 10, color: '#000', fontWeight: 800,
+                fontSize: 14, cursor: loading ? 'not-allowed' : 'pointer', transition: 'background .15s',
+              }}>
+                {loading ? 'Сохраняем...' : isNew ? '✓ Создать товар' : '✓ Сохранить'}
+              </button>
+              <button onClick={() => { setEditing(null); setIsNew(false); resetForm() }}
+                style={{ padding: '13px 18px', background: '#1e1e1e', border: 'none', borderRadius: 10, color: '#9ca3af', cursor: 'pointer', fontWeight: 600 }}>
+                Отмена
+              </button>
+            </div>
           </div>
-
-          {previewImage && (
-            <img src={previewImage} style={{ width: 120, height: 120, objectFit: 'cover', borderRadius: 8, marginBottom: 16 }} />
-          )}
-
-          <div style={{ marginBottom: 12 }}>
-            <label style={{ color: '#666', fontSize: 12, display: 'block', marginBottom: 4 }}>Название (UZ)</label>
-            <input value={(editing as any).name_uz || ''} onChange={e => setEditing({ ...editing, name_uz: e.target.value })} style={inputSt} />
-          </div>
-
-          <div style={{ marginBottom: 12 }}>
-            <label style={{ color: '#666', fontSize: 12, display: 'block', marginBottom: 4 }}>Название (RU)</label>
-            <input value={(editing as any).name_ru || ''} onChange={e => setEditing({ ...editing, name_ru: e.target.value })} style={inputSt} />
-          </div>
-
-          <div style={{ marginBottom: 12 }}>
-            <label style={{ color: '#666', fontSize: 12, display: 'block', marginBottom: 4 }}>Цена (сум)</label>
-            <input type="number" value={((editing as any).price ?? 0) === 0 ? '' : (editing as any).price} placeholder="0"
-              onChange={e => setEditing({ ...editing, price: e.target.value === '' ? 0 : Number(e.target.value) })}
-              onFocus={e => e.target.select()} style={inputSt} />
-          </div>
-
-          <div style={{ marginBottom: 12 }}>
-            <label style={{ color: '#666', fontSize: 12, display: 'block', marginBottom: 4 }}>Количество</label>
-            <input type="number" value={((editing as any).quantity ?? 0) === 0 ? '' : (editing as any).quantity} placeholder="0"
-              onChange={e => setEditing({ ...editing, quantity: e.target.value === '' ? 0 : Number(e.target.value) })}
-              onFocus={e => e.target.select()} style={inputSt} />
-          </div>
-
-          <div style={{ marginBottom: 12 }}>
-            <label style={{ color: '#666', fontSize: 12, display: 'block', marginBottom: 4 }}>URL картинки</label>
-            <input value={(editing as any).image_url || ''} onChange={e => { setEditing({ ...editing, image_url: e.target.value }); setPreviewImage(e.target.value || null) }} style={inputSt} />
-          </div>
-
-          <div style={{ marginBottom: 12 }}>
-            <label style={{ color: '#666', fontSize: 12, display: 'block', marginBottom: 4 }}>Telegram File ID (необязательно)</label>
-            <input value={(editing as any).photo_file_id || ''} onChange={e => setEditing({ ...editing, photo_file_id: e.target.value })} style={inputSt} />
-          </div>
-
-          <div style={{ marginBottom: 12 }}>
-            <label style={{ color: '#666', fontSize: 12, display: 'block', marginBottom: 4 }}>Описание (UZ)</label>
-            <textarea value={descriptionUz} onChange={e => setDescriptionUz(e.target.value)} style={{ ...inputSt, minHeight: 160, resize: 'vertical' }} />
-          </div>
-
-          <div style={{ marginBottom: 20 }}>
-            <label style={{ color: '#666', fontSize: 12, display: 'block', marginBottom: 4 }}>Описание (RU)</label>
-            <textarea value={descriptionRu} onChange={e => setDescriptionRu(e.target.value)} style={{ ...inputSt, minHeight: 160, resize: 'vertical' }} />
-          </div>
-
-          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-            <button onClick={save} disabled={loading}
-              style={{ flex: 1, padding: 12, background: '#c8a96e', border: 'none', borderRadius: 8, color: '#000', fontWeight: 700, cursor: 'pointer' }}>
-              {loading ? 'Сохранение...' : 'Сохранить'}
-            </button>
-            <button onClick={() => { setEditing(null); setIsNew(false); resetForm() }}
-              style={{ padding: '12px 16px', background: '#2a2a2a', border: 'none', borderRadius: 8, color: '#aaa', cursor: 'pointer' }}>
-              Отмена
-            </button>
-          </div>
-
-          {error && <p style={{ color: '#ef4444', fontSize: 13, marginTop: 16 }}>{error}</p>}
         </div>
       )}
     </div>
   )
 }
 
-const actBtn = (color: string): React.CSSProperties => ({
-  padding: '5px 12px', background: color + '22', border: 'none',
-  borderRadius: 6, color, fontSize: 12, cursor: 'pointer',
+const actionBtn = (color: string): React.CSSProperties => ({
+  flex: 1, padding: '7px 10px',
+  background: color + '18', border: `1px solid ${color}33`,
+  borderRadius: 8, color, fontSize: 12, fontWeight: 600,
+  cursor: 'pointer', textAlign: 'center',
 })
-
-const inputSt: React.CSSProperties = {
-  width: '100%', padding: '8px 12px', background: '#111',
-  border: '1px solid #333', borderRadius: 8, color: '#fff',
-  fontSize: 14, boxSizing: 'border-box',
-}
