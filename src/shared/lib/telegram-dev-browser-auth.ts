@@ -3,9 +3,9 @@
  * Used exclusively in DEV JWT mode (`VITE_DEV_ACCESS_TOKEN` present).
  * Never replaces production Mini App flow (`isTelegramAuthMode()`).
  */
-import { cartApi, usersApi } from '@/api'
-import { getDevAccessToken } from '@/lib/auth-mode'
-import type { Cart, UserProfile } from '@/types'
+import { cartApi, usersApi } from '@/app/api'
+import { getDevAccessToken } from '@/shared/lib/auth-mode'
+import type { Cart, UserProfile } from '@/shared/types'
 
 export type DevBrowserAuthFailure = 'missing_credentials' | 'invalid_token'
 

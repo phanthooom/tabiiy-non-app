@@ -1,4 +1,4 @@
-import type { Cart, Order, Product, UserProfile } from '@/types'
+import type { Cart, Order, Product, UserProfile } from '@/shared/types'
 
 export const BYPASS_MODE = false
 

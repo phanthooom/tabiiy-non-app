@@ -1,4 +1,4 @@
-import type { TelegramUser, TelegramWebApp } from '@/types'
+import type { TelegramUser, TelegramWebApp } from '@/shared/types'
 
 /** Mock user for local browser development only (no Telegram client). */
 export const DEV_BROWSER_MOCK_USER: TelegramUser = {

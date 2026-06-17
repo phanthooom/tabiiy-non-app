@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { YMaps, Map as YandexMap } from '@pbe/react-yandex-maps'
 import { MapPin, ArrowLeft, LocateFixed, Loader2, Plus, Minus } from 'lucide-react'
-import { useLangStore } from '@/store'
+import { useLangStore } from '@/app/store'
 
 interface AddressMapModalProps {
   isOpen: boolean

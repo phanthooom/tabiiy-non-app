@@ -5,10 +5,10 @@ import {
   Phone, Mail, Save, Pencil, Home, Briefcase, Plus, Map
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { useAuthStore, useLangStore, useDeliveryStore, useCartStore, SavedAddress } from '@/store'
-import { BYPASS_MODE, mockUser } from '@/lib/mock-data'
-import { AddressMapModal } from '@/components/ui/AddressMapModal'
-import type { Language } from '@/types'
+import { useAuthStore, useLangStore, useDeliveryStore, useCartStore, SavedAddress } from '@/app/store'
+import { BYPASS_MODE, mockUser } from '@/shared/lib/mock-data'
+import { AddressMapModal } from '@/app/components/ui/AddressMapModal'
+import type { Language } from '@/shared/types'
 
 interface ProfilePageProps {
   sub?: 'personal-info' | 'addresses' | 'payments' | 'notifications'

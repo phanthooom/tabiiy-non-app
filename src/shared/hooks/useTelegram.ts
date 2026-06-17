@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
-import type { TelegramUser, TelegramWebApp } from '@/types'
-import { getTelegramWebApp } from '@/lib/telegram'
+import type { TelegramUser, TelegramWebApp } from '@/shared/types'
+import { getTelegramWebApp } from '@/shared/lib/telegram'
 
 export function useTelegram(): {
   tg: TelegramWebApp | null

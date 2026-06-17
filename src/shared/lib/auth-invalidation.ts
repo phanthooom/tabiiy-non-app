@@ -1,5 +1,5 @@
-import { queryClient } from '@/lib/query-client'
-import { useAuthStore, useCartStore } from '@/store'
+import { queryClient } from '@/shared/lib/query-client'
+import { useAuthStore, useCartStore } from '@/app/store'
 
 type AuthInvalidationListener = () => void
 

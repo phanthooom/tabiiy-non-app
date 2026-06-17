@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { collection, onSnapshot, query, orderBy, addDoc, updateDoc, doc, serverTimestamp } from 'firebase/firestore'
-import { db } from '@/lib/firebase'
-import type { Order } from '@/types'
+import { db } from '@/shared/lib/firebase'
+import type { Order } from '@/shared/types'
 
 // Convert Firestore document to Order type
 function docToOrder(docSnap: any): Order {

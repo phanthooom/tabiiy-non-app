@@ -4,15 +4,15 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { CheckCircle, Clock, MapPin, Phone, Store } from 'lucide-react'
 import { YMaps, Map as YandexMap } from '@pbe/react-yandex-maps'
 
-import { Button, Spinner } from '@/components/ui'
-import { AddressText } from '@/components/ui/AddressText'
-import { BYPASS_MODE, mockOrders } from '@/lib/mock-data'
-import { ordersApi } from '@/api'
+import { Button, Spinner } from '@/app/components/ui'
+import { AddressText } from '@/app/components/ui/AddressText'
+import { BYPASS_MODE, mockOrders } from '@/shared/lib/mock-data'
+import { ordersApi } from '@/app/api'
 
-import { useLangStore } from '@/store'
-import { useT } from '@/utils/i18n'
-import { useBackButton } from '@/hooks/useTelegram'
-import type { Order } from '@/types'
+import { useLangStore } from '@/app/store'
+import { useT } from '@/shared/utils/i18n'
+import { useBackButton } from '@/shared/hooks/useTelegram'
+import type { Order } from '@/shared/types'
 
 export function OrderSuccessPage() {
   const { id } = useParams<{ id: string }>()

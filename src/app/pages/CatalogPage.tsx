@@ -1,13 +1,13 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ProductCard, Button, Spinner } from '@/components/ui'
-import { queryKeys, STALE_TIME } from '@/lib/query-keys'
-import { productsApi, cartApi, apiErrorMessage } from '@/api'
-import { useCartStore, useLangStore } from '@/store'
-import { useT } from '@/utils/i18n'
-import { useTelegram } from '@/hooks/useTelegram'
-import { BYPASS_MODE, mockProducts } from '@/lib/mock-data'
-import type { Product, Cart } from '@/types'
+import { ProductCard, Button, Spinner } from '@/app/components/ui'
+import { queryKeys, STALE_TIME } from '@/shared/lib/query-keys'
+import { productsApi, cartApi, apiErrorMessage } from '@/app/api'
+import { useCartStore, useLangStore } from '@/app/store'
+import { useT } from '@/shared/utils/i18n'
+import { useTelegram } from '@/shared/hooks/useTelegram'
+import { BYPASS_MODE, mockProducts } from '@/shared/lib/mock-data'
+import type { Product, Cart } from '@/shared/types'
 
 export function CatalogPage() {
   const { language } = useLangStore()

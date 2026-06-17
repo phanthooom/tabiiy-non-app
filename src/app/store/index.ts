@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { Cart, DeliveryType, Language, UserProfile } from '@/types'
+import type { Cart, DeliveryType, Language, UserProfile } from '@/shared/types'
 
 // ── Auth store ────────────────────────────────────────────────────────────
 

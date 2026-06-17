@@ -1,7 +1,7 @@
 import { useRef } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { useDeliveryStore } from '@/store'
-import { AddressMapModal } from '@/components/ui/AddressMapModal'
+import { useDeliveryStore } from '@/app/store'
+import { AddressMapModal } from '@/app/components/ui/AddressMapModal'
 
 export function DeliveryLocationPage() {
   const navigate = useNavigate()

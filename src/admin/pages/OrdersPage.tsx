@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { ordersApi } from '../api/index'
 import type { Order, OrderStatus } from '../types/index'
-import { AddressText } from '@/components/ui/AddressText'
+import { AddressText } from '@/app/components/ui/AddressText'
 
 const STATUS_LABELS: Record<OrderStatus, string> = {
   accepted: '✅ Принят',

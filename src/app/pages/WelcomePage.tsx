@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
-import { useDeliveryStore } from '@/store'
-import type { DeliveryType } from '@/types'
+import { useDeliveryStore } from '@/app/store'
+import type { DeliveryType } from '@/shared/types'
 import { Bike, Store, Croissant } from 'lucide-react'
 
 export function WelcomePage() {

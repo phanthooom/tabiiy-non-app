@@ -5,7 +5,7 @@ import { OrdersPage } from './pages/OrdersPage'
 import { ProductsPage } from './pages/ProductsPage'
 import { UsersPage } from './pages/UsersPage'
 
-import { useBackButton } from '../hooks/useTelegram'
+import { useBackButton } from '../shared/hooks/useTelegram'
 import { useNavigate } from 'react-router-dom'
 
 type Tab = 'orders' | 'products' | 'users'

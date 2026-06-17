@@ -5,8 +5,8 @@
  * чтобы можно было переключить импорты без изменения страниц.
  */
 
-import { firestoreCart, firestoreOrders, firestoreProducts, firestoreUsers } from '@/lib/firestore-service'
-import type { Cart, DeliveryType, Language, Order, PaginatedOrders, Product, UserProfile } from '@/types'
+import { firestoreCart, firestoreOrders, firestoreProducts, firestoreUsers } from '@/shared/lib/firestore-service'
+import type { Cart, DeliveryType, Language, Order, PaginatedOrders, Product, UserProfile } from '@/shared/types'
 
 // Telegram id текущего пользователя (должен быть установлен после авторизации)
 let _currentTelegramId: number | null = null

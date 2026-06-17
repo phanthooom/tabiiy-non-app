@@ -3,23 +3,23 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-route
 import { QueryClientProvider } from '@tanstack/react-query'
 import { AnimatePresence } from 'framer-motion'
 
-import { AuthProvider } from '@/components/AuthProvider'
-import { ErrorBoundary } from '@/components/ErrorBoundary'
-import { BottomNav } from '@/components/layout/BottomNav'
-import { TopAppBar } from '@/components/layout/TopAppBar'
-import { SplashScreen } from '@/components/SplashScreen'
-import { queryClient } from '@/lib/query-client'
+import { AuthProvider } from '@/shared/components/AuthProvider'
+import { ErrorBoundary } from '@/shared/components/ErrorBoundary'
+import { BottomNav } from '@/app/components/layout/BottomNav'
+import { TopAppBar } from '@/app/components/layout/TopAppBar'
+import { SplashScreen } from '@/shared/components/SplashScreen'
+import { queryClient } from '@/shared/lib/query-client'
 
 
-import { CatalogPage } from '@/pages/CatalogPage'
-import { CartPage } from '@/pages/CartPage'
-import { CheckoutPage } from '@/pages/CheckoutPage'
-import { OrdersPage, OrderDetailPage, OrderSuccessPage } from '@/pages/OrdersPage'
-import { AdminOrdersPage } from '@/pages/AdminOrdersPage'
-import { ProfilePage } from '@/pages/ProfilePage'
-import { WelcomePage } from '@/pages/WelcomePage'
-import { DeliveryLocationPage } from '@/pages/DeliveryLocationPage'
-import { useDeliveryStore } from '@/store'
+import { CatalogPage } from '@/app/pages/CatalogPage'
+import { CartPage } from '@/app/pages/CartPage'
+import { CheckoutPage } from '@/app/pages/CheckoutPage'
+import { OrdersPage, OrderDetailPage, OrderSuccessPage } from '@/app/pages/OrdersPage'
+import { AdminOrdersPage } from '@/admin/pages/AdminOrdersPage'
+import { ProfilePage } from '@/app/pages/ProfilePage'
+import { WelcomePage } from '@/app/pages/WelcomePage'
+import { DeliveryLocationPage } from '@/app/pages/DeliveryLocationPage'
+import { useDeliveryStore } from '@/app/store'
 
 const AdminApp = lazy(() => import('./admin/AdminApp'))
 

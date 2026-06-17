@@ -1,8 +1,8 @@
 import { Home, ShoppingCart, ClipboardList, User } from 'lucide-react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { useCartStore, useLangStore } from '@/store'
-import { useT } from '@/utils/i18n'
-import { useTelegram } from '@/hooks/useTelegram'
+import { useCartStore, useLangStore } from '@/app/store'
+import { useT } from '@/shared/utils/i18n'
+import { useTelegram } from '@/shared/hooks/useTelegram'
 
 const ADMIN_IDS = [1213781907, 5008138452]
 

@@ -1,17 +1,17 @@
 import { useEffect, useState } from 'react'
-import { cartApi } from '@/api'
-import { setCurrentUser } from '@/api/firestore-api'
-import { firestoreUsers } from '@/lib/firestore-service'
-import { registerAuthInvalidationListener } from '@/lib/auth-invalidation'
-import { isDevJwtAuthMode } from '@/lib/auth-mode'
+import { cartApi } from '@/app/api'
+import { setCurrentUser } from '@/app/api/firestore-api'
+import { firestoreUsers } from '@/shared/lib/firestore-service'
+import { registerAuthInvalidationListener } from '@/shared/lib/auth-invalidation'
+import { isDevJwtAuthMode } from '@/shared/lib/auth-mode'
 import {
   getTelegramWebApp,
   hasTelegramInitData,
   isInsideTelegram,
   waitForTelegramInitData,
-} from '@/lib/telegram'
-import { useAuthStore, useCartStore, useLangStore } from '@/store'
-import { Spinner } from '@/components/ui'
+} from '@/shared/lib/telegram'
+import { useAuthStore, useCartStore, useLangStore } from '@/app/store'
+import { Spinner } from '@/app/components/ui'
 import { Croissant } from 'lucide-react'
 
 interface Props {
@@ -59,7 +59,7 @@ export function AuthProvider({ children }: Props) {
 
         // Mode A: DEV JWT
         if (isDevJwtAuthMode()) {
-          const { authenticateDevBrowser } = await import('@/lib/telegram-dev-browser-auth')
+          const { authenticateDevBrowser } = await import('@/shared/lib/telegram-dev-browser-auth')
           const dev = await authenticateDevBrowser(null)
           if (!dev.ok) {
             setErrorContext('dev-browser')

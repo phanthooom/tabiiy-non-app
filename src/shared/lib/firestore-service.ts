@@ -25,8 +25,8 @@ import {
   type DocumentData,
   type QueryConstraint,
 } from 'firebase/firestore'
-import { db } from '@/lib/firebase'
-import type { Cart, CartItem, DeliveryType, Language, Order, OrderItem, Product, UserProfile } from '@/types'
+import { db } from '@/shared/lib/firebase'
+import type { Cart, CartItem, DeliveryType, Language, Order, OrderItem, Product, UserProfile } from '@/shared/types'
 
 
 // ── Helpers ───────────────────────────────────────────────────────────────
