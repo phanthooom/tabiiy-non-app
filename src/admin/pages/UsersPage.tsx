@@ -5,7 +5,7 @@ import type { User } from '../types/index'
 export function UsersPage() {
   const [users, setUsers] = useState<User[]>([])
   const [total, setTotal] = useState(0)
-  const [page, setPage] = useState(1)
+  const [page, setPage]   = useState(1)
 
   const load = async () => {
     const res = await usersApi.list({ page, size: 20 })
@@ -23,33 +23,136 @@ export function UsersPage() {
 
   return (
     <div>
-      <p style={{ color: '#666', marginBottom: 20, fontSize: 14 }}>Всего: {total}</p>
+      {/* Stats card */}
+      <div style={{
+        background: '#ffffff',
+        border: '1px solid #e5e7eb',
+        borderRadius: 16,
+        padding: '16px 20px',
+        marginBottom: 16,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+      }}>
+        <div>
+          <p style={{ margin: 0, fontSize: 11, color: '#9ca3af', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+            Пользователей
+          </p>
+          <p style={{ margin: '4px 0 0', fontSize: 30, fontWeight: 800, color: '#111827', lineHeight: 1 }}>
+            {total}
+          </p>
+        </div>
+        <div style={{
+          width: 48, height: 48,
+          background: '#eff6ff',
+          borderRadius: 14,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: 22,
+        }}>
+          👥
+        </div>
+      </div>
+
+      {/* User list */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {users.map(u => (
-          <div key={u.id} style={{ background: '#1a1a1a', border: '1px solid #2a2a2a', borderRadius: 10, padding: '12px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div>
-              <p style={{ color: '#f5f0e8', fontWeight: 600, marginBottom: 2 }}>{u.full_name}</p>
-              <p style={{ color: '#666', fontSize: 13 }}>@{u.username || '—'} · {u.phone || 'нет телефона'} · {u.language.toUpperCase()}</p>
-              <p style={{ color: '#444', fontSize: 12 }}>{new Date(u.created_at).toLocaleDateString('ru')}</p>
+          <div
+            key={u.id}
+            style={{
+              background: '#ffffff',
+              border: '1px solid #e5e7eb',
+              borderRadius: 14,
+              padding: '14px 16px',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              gap: 12,
+              boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
+              <div style={{
+                width: 40, height: 40,
+                background: '#f3f4f6',
+                borderRadius: 12,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontWeight: 700, fontSize: 16, color: '#6b7280', flexShrink: 0,
+              }}>
+                {(u.full_name?.[0] || u.username?.[0] || '?').toUpperCase()}
+              </div>
+              <div style={{ minWidth: 0 }}>
+                <p style={{ margin: 0, fontWeight: 700, fontSize: 14, color: '#111827' }}>
+                  {u.full_name}
+                </p>
+                <p style={{ margin: '2px 0 0', color: '#9ca3af', fontSize: 12, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  @{u.username || '—'} · {u.phone || 'нет телефона'} · {u.language.toUpperCase()}
+                </p>
+              </div>
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <span style={{ padding: '3px 10px', borderRadius: 20, fontSize: 12, background: u.is_active ? '#22c55e22' : '#ef444422', color: u.is_active ? '#22c55e' : '#ef4444' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+              <span style={{
+                padding: '4px 10px', borderRadius: 20, fontSize: 11, fontWeight: 700,
+                background: u.is_active ? '#dcfce7' : '#fee2e2',
+                color: u.is_active ? '#16a34a' : '#dc2626',
+              }}>
                 {u.is_active ? 'Активен' : 'Заблокирован'}
               </span>
               {u.is_active && (
-                <button onClick={() => deactivate(u.id)} style={{ padding: '4px 10px', background: '#ef444422', border: 'none', borderRadius: 6, color: '#ef4444', fontSize: 12, cursor: 'pointer' }}>
+                <button
+                  onClick={() => deactivate(u.id)}
+                  style={{
+                    padding: '5px 12px',
+                    background: '#ffffff',
+                    border: '1px solid #fca5a5',
+                    borderRadius: 8,
+                    color: '#dc2626', fontSize: 12, fontWeight: 600,
+                    cursor: 'pointer', fontFamily: 'inherit',
+                  }}
+                >
                   Блок
                 </button>
               )}
             </div>
           </div>
         ))}
+
+        {users.length === 0 && (
+          <div style={{ textAlign: 'center', padding: '48px 0' }}>
+            <p style={{ margin: 0, color: '#9ca3af', fontSize: 15 }}>Нет пользователей</p>
+          </div>
+        )}
       </div>
-      <div style={{ display: 'flex', gap: 8, marginTop: 20 }}>
-        <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} style={{ padding: '6px 14px', background: '#2a2a2a', border: 'none', borderRadius: 8, color: '#aaa', cursor: 'pointer' }}>←</button>
-        <span style={{ color: '#666', padding: '6px 12px' }}>{page}</span>
-        <button onClick={() => setPage(p => p + 1)} disabled={users.length < 20} style={{ padding: '6px 14px', background: '#2a2a2a', border: 'none', borderRadius: 8, color: '#aaa', cursor: 'pointer' }}>→</button>
+
+      {/* Pagination */}
+      <div style={{ display: 'flex', gap: 8, marginTop: 20, justifyContent: 'center' }}>
+        <button
+          onClick={() => setPage(p => Math.max(1, p - 1))}
+          disabled={page === 1}
+          style={pgBtn(page === 1)}
+        >
+          ←
+        </button>
+        <span style={{ padding: '8px 14px', color: '#6b7280', fontWeight: 600, fontSize: 14 }}>{page}</span>
+        <button
+          onClick={() => setPage(p => p + 1)}
+          disabled={users.length < 20}
+          style={pgBtn(users.length < 20)}
+        >
+          →
+        </button>
       </div>
     </div>
   )
 }
+
+const pgBtn = (disabled: boolean): React.CSSProperties => ({
+  padding: '8px 18px',
+  background: '#ffffff',
+  border: '1px solid #e5e7eb',
+  borderRadius: 10,
+  color: disabled ? '#9ca3af' : '#111827',
+  fontWeight: 600, fontSize: 14,
+  cursor: disabled ? 'default' : 'pointer',
+  fontFamily: 'inherit',
+})

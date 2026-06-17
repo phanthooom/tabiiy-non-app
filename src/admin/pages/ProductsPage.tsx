@@ -94,43 +94,40 @@ const PRODUCTS_SEED = [
 
 const empty = { name_uz: '', name_ru: '', price: 0, quantity: 0, is_visible: true, sort_order: 0, image_url: null }
 
-// ── Styles ────────────────────────────────────────────────────────────────
-
 const inp: React.CSSProperties = {
   width: '100%', padding: '10px 14px',
-  background: '#141414', border: '1px solid #2e2e2e',
-  borderRadius: 10, color: '#f0ece4', fontSize: 14,
+  background: '#f9fafb', border: '1px solid #e5e7eb',
+  borderRadius: 10, color: '#111827', fontSize: 14,
   boxSizing: 'border-box', outline: 'none', transition: 'border-color .15s',
+  fontFamily: 'inherit',
 }
 
-const label: React.CSSProperties = {
-  display: 'block', color: '#6b7280', fontSize: 11,
+const fieldLabel: React.CSSProperties = {
+  display: 'block', color: '#9ca3af', fontSize: 11,
   fontWeight: 700, letterSpacing: '0.07em',
   textTransform: 'uppercase', marginBottom: 6,
 }
 
-const section: React.CSSProperties = {
-  background: '#141414', border: '1px solid #242424',
+const sectionBox: React.CSSProperties = {
+  background: '#f9fafb', border: '1px solid #e5e7eb',
   borderRadius: 12, padding: '16px 18px', marginBottom: 12,
 }
 
-// ── Component ──────────────────────────────────────────────────────────────
-
 export function ProductsPage() {
-  const [products, setProducts]               = useState<Product[]>([])
-  const [editing, setEditing]                 = useState<Partial<Product> | null>(null)
-  const [isNew, setIsNew]                     = useState(false)
-  const [loading, setLoading]                 = useState(false)
-  const [seedLoading, setSeedLoading]         = useState(false)
-  const [error, setError]                     = useState('')
-  const [nameSearch, setNameSearch]           = useState('')
-  const [descriptionUz, setDescriptionUz]     = useState('')
-  const [descriptionRu, setDescriptionRu]     = useState('')
-  const [previewImage, setPreviewImage]       = useState<string | null>(null)
-  const [showPresets, setShowPresets]         = useState(false)
-  const [stockMap, setStockMap]               = useState<Record<string, number>>({})
-  const [stockSaving, setStockSaving]         = useState<Record<string, boolean>>({})
-  const [descTab, setDescTab]                 = useState<'ru' | 'uz'>('ru')
+  const [products, setProducts]           = useState<Product[]>([])
+  const [editing, setEditing]             = useState<Partial<Product> | null>(null)
+  const [isNew, setIsNew]                 = useState(false)
+  const [loading, setLoading]             = useState(false)
+  const [seedLoading, setSeedLoading]     = useState(false)
+  const [error, setError]                 = useState('')
+  const [nameSearch, setNameSearch]       = useState('')
+  const [descriptionUz, setDescriptionUz] = useState('')
+  const [descriptionRu, setDescriptionRu] = useState('')
+  const [previewImage, setPreviewImage]   = useState<string | null>(null)
+  const [showPresets, setShowPresets]     = useState(false)
+  const [stockMap, setStockMap]           = useState<Record<string, number>>({})
+  const [stockSaving, setStockSaving]     = useState<Record<string, boolean>>({})
+  const [descTab, setDescTab]             = useState<'ru' | 'uz'>('ru')
 
   const load = async () => {
     const res = await productsApi.list()
@@ -209,55 +206,88 @@ export function ProductsPage() {
   return (
     <div style={{ maxWidth: 900, margin: '0 auto' }}>
 
-      {/* ── Stock panel ── */}
-      <div style={{ background: '#111', border: '1px solid #1e2a1e', borderRadius: 14, padding: '20px 22px', marginBottom: 28 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 18 }}>
-          <span style={{ fontSize: 20 }}>📦</span>
-          <h3 style={{ margin: 0, color: '#c8a96e', fontWeight: 800, fontSize: 17 }}>Запас на сегодня</h3>
-          <span style={{ marginLeft: 'auto', fontSize: 12, color: '#4b5563' }}>обновляется мгновенно</span>
+      {/* Stock panel */}
+      <div style={{
+        background: '#ffffff',
+        border: '1px solid #e5e7eb',
+        borderRadius: 16,
+        padding: '20px',
+        marginBottom: 24,
+        boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+          <div style={{
+            width: 36, height: 36, background: '#fef9ec',
+            borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18,
+          }}>📦</div>
+          <h3 style={{ margin: 0, color: '#111827', fontWeight: 800, fontSize: 16 }}>Запас на сегодня</h3>
+          <span style={{ marginLeft: 'auto', fontSize: 11, color: '#9ca3af', fontWeight: 600 }}>
+            обновляется мгновенно
+          </span>
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {products.map(p => {
-            const id  = String(p.id)
-            const qty = stockMap[id] ?? 0
+            const id     = String(p.id)
+            const qty    = stockMap[id] ?? 0
             const saving = stockSaving[id]
             return (
               <div key={id} style={{
                 display: 'flex', alignItems: 'center', gap: 14,
-                background: '#1a1a1a', borderRadius: 12, padding: '12px 16px',
-                border: `1px solid ${qty > 0 ? '#1a3a1a' : '#3a1a1a'}`,
-                transition: 'border-color .2s',
+                background: '#f9fafb', borderRadius: 12, padding: '12px 14px',
+                border: `1px solid ${qty > 0 ? '#bbf7d0' : '#fecaca'}`,
               }}>
                 {(p as any).image_url && (
-                  <img src={(p as any).image_url} alt="" style={{ width: 48, height: 48, borderRadius: 10, objectFit: 'cover', flexShrink: 0 }} />
+                  <img
+                    src={(p as any).image_url}
+                    alt=""
+                    style={{ width: 46, height: 46, borderRadius: 10, objectFit: 'cover', flexShrink: 0 }}
+                  />
                 )}
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ margin: 0, color: '#f0ece4', fontWeight: 700, fontSize: 15 }}>{(p as any).name_ru}</p>
-                  <p style={{ margin: '2px 0 0', color: '#6b7280', fontSize: 12 }}>{(p as any).name_uz}</p>
+                  <p style={{ margin: 0, color: '#111827', fontWeight: 700, fontSize: 14 }}>{(p as any).name_ru}</p>
+                  <p style={{ margin: '2px 0 0', color: '#9ca3af', fontSize: 12 }}>{(p as any).name_uz}</p>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <button
                     onClick={() => { const n = Math.max(0, qty - 1); setStockMap(m => ({ ...m, [id]: n })); saveStock(p, n) }}
-                    style={{ width: 38, height: 38, background: '#242424', border: '1px solid #333', borderRadius: 10, color: '#fff', fontSize: 22, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1 }}
+                    style={{
+                      width: 36, height: 36, background: '#ffffff',
+                      border: '1px solid #e5e7eb', borderRadius: 10,
+                      color: '#374151', fontSize: 20, cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1,
+                    }}
                   >−</button>
                   <input
                     type="number" min={0} value={qty}
                     onChange={e => setStockMap(m => ({ ...m, [id]: Math.max(0, Number(e.target.value)) }))}
                     onBlur={e => saveStock(p, Math.max(0, Number(e.target.value)))}
-                    style={{ width: 68, textAlign: 'center', background: '#0d0d0d', border: '1px solid #333', borderRadius: 10, color: '#f0ece4', padding: '8px 4px', fontSize: 18, fontWeight: 800, outline: 'none' }}
+                    style={{
+                      width: 64, textAlign: 'center',
+                      background: '#ffffff', border: '1px solid #e5e7eb',
+                      borderRadius: 10, color: '#111827',
+                      padding: '7px 4px', fontSize: 17, fontWeight: 800, outline: 'none',
+                      fontFamily: 'inherit',
+                    }}
                   />
                   <button
                     onClick={() => { const n = qty + 1; setStockMap(m => ({ ...m, [id]: n })); saveStock(p, n) }}
-                    style={{ width: 38, height: 38, background: '#c8a96e', border: 'none', borderRadius: 10, color: '#000', fontSize: 22, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1 }}
+                    style={{
+                      width: 36, height: 36, background: '#c8a96e',
+                      border: 'none', borderRadius: 10,
+                      color: '#111827', fontSize: 20, cursor: 'pointer',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1,
+                    }}
                   >+</button>
                 </div>
-                <div style={{ minWidth: 72, textAlign: 'center' }}>
+                <div style={{ minWidth: 64, textAlign: 'center' }}>
                   {saving
-                    ? <span style={{ color: '#6b7280', fontSize: 13 }}>сохр...</span>
+                    ? <span style={{ color: '#9ca3af', fontSize: 12 }}>сохр...</span>
                     : <span style={{
-                        display: 'inline-block', padding: '5px 12px', borderRadius: 20, fontSize: 12, fontWeight: 700,
-                        background: qty > 0 ? '#14532d' : '#450a0a',
-                        color: qty > 0 ? '#4ade80' : '#f87171',
+                        display: 'inline-block', padding: '4px 10px', borderRadius: 20,
+                        fontSize: 11, fontWeight: 700,
+                        background: qty > 0 ? '#dcfce7' : '#fee2e2',
+                        color: qty > 0 ? '#16a34a' : '#dc2626',
                       }}>
                         {qty > 0 ? `${qty} шт` : 'Нет'}
                       </span>
@@ -269,69 +299,89 @@ export function ProductsPage() {
         </div>
       </div>
 
-      {/* ── Header actions ── */}
-      <div style={{ display: 'flex', gap: 10, marginBottom: 20, alignItems: 'center' }}>
-        <h2 style={{ margin: 0, flex: 1, color: '#f0ece4', fontWeight: 800, fontSize: 18 }}>Товары</h2>
-        <button onClick={() => { resetForm(); setEditing(empty); setIsNew(true) }}
-          style={{ padding: '9px 20px', background: '#c8a96e', border: 'none', borderRadius: 10, color: '#000', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
+      {/* Header actions */}
+      <div style={{ display: 'flex', gap: 10, marginBottom: 16, alignItems: 'center' }}>
+        <h2 style={{ margin: 0, flex: 1, color: '#111827', fontWeight: 800, fontSize: 18 }}>Товары</h2>
+        <button
+          onClick={() => { resetForm(); setEditing(empty); setIsNew(true) }}
+          style={{
+            padding: '9px 20px', background: '#c8a96e',
+            border: 'none', borderRadius: 10, color: '#111827',
+            fontWeight: 700, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit',
+          }}
+        >
           + Добавить
         </button>
-        <button onClick={seedProducts} disabled={seedLoading}
-          style={{ padding: '9px 16px', background: '#1f1f1f', border: '1px solid #2e2e2e', borderRadius: 10, color: '#9ca3af', fontWeight: 600, fontSize: 13, cursor: seedLoading ? 'not-allowed' : 'pointer', opacity: seedLoading ? 0.5 : 1 }}>
+        <button
+          onClick={seedProducts}
+          disabled={seedLoading}
+          style={{
+            padding: '9px 16px', background: '#f9fafb',
+            border: '1px solid #e5e7eb', borderRadius: 10,
+            color: '#6b7280', fontWeight: 600, fontSize: 13,
+            cursor: seedLoading ? 'not-allowed' : 'pointer',
+            opacity: seedLoading ? 0.5 : 1, fontFamily: 'inherit',
+          }}
+        >
           {seedLoading ? '...' : '🔄 Сбросить'}
         </button>
       </div>
 
-      {/* ── Product cards ── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 16 }}>
+      {/* Product grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 14 }}>
         {products.map(p => {
           const qty = (p as any).quantity ?? 0
           return (
             <div key={p.id} style={{
-              background: '#141414', border: '1px solid #242424',
-              borderRadius: 14, overflow: 'hidden',
+              background: '#ffffff',
+              border: '1px solid #e5e7eb',
+              borderRadius: 16, overflow: 'hidden',
               display: 'flex', flexDirection: 'column',
+              boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
             }}>
               <div style={{ position: 'relative' }}>
                 {(p as any).image_url
-                  ? <img src={(p as any).image_url} alt="" style={{ width: '100%', height: 150, objectFit: 'cover', display: 'block' }} />
-                  : <div style={{ width: '100%', height: 150, background: '#1f1f1f', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 40 }}>🍞</div>
+                  ? <img src={(p as any).image_url} alt="" style={{ width: '100%', height: 140, objectFit: 'cover', display: 'block' }} />
+                  : <div style={{ width: '100%', height: 140, background: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 40 }}>🍞</div>
                 }
-                <div style={{ position: 'absolute', top: 10, right: 10, display: 'flex', gap: 6 }}>
+                <div style={{ position: 'absolute', top: 8, right: 8, display: 'flex', gap: 5 }}>
                   <span style={{
-                    padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 700,
-                    background: p.is_visible ? 'rgba(20,83,45,0.9)' : 'rgba(69,10,10,0.9)',
-                    color: p.is_visible ? '#4ade80' : '#f87171',
-                    backdropFilter: 'blur(4px)',
+                    padding: '3px 9px', borderRadius: 20, fontSize: 10, fontWeight: 700,
+                    background: p.is_visible ? 'rgba(220,252,231,0.95)' : 'rgba(254,226,226,0.95)',
+                    color: p.is_visible ? '#16a34a' : '#dc2626',
                   }}>
                     {p.is_visible ? 'Виден' : 'Скрыт'}
                   </span>
                   <span style={{
-                    padding: '3px 10px', borderRadius: 20, fontSize: 11, fontWeight: 700,
-                    background: qty > 0 ? 'rgba(20,83,45,0.9)' : 'rgba(69,10,10,0.9)',
-                    color: qty > 0 ? '#4ade80' : '#f87171',
-                    backdropFilter: 'blur(4px)',
+                    padding: '3px 9px', borderRadius: 20, fontSize: 10, fontWeight: 700,
+                    background: qty > 0 ? 'rgba(220,252,231,0.95)' : 'rgba(254,226,226,0.95)',
+                    color: qty > 0 ? '#16a34a' : '#dc2626',
                   }}>
                     {qty > 0 ? `${qty} шт` : 'Нет'}
                   </span>
                 </div>
               </div>
-              <div style={{ padding: '14px 16px', flex: 1 }}>
-                <p style={{ margin: '0 0 2px', color: '#f0ece4', fontWeight: 700, fontSize: 15 }}>{(p as any).name_ru}</p>
-                <p style={{ margin: '0 0 10px', color: '#6b7280', fontSize: 12 }}>{(p as any).name_uz}</p>
-                <p style={{ margin: 0, color: '#c8a96e', fontWeight: 800, fontSize: 16 }}>
-                  {p.price.toLocaleString()} <span style={{ fontSize: 12, fontWeight: 500, color: '#6b7280' }}>сум</span>
+              <div style={{ padding: '12px 14px', flex: 1 }}>
+                <p style={{ margin: '0 0 2px', color: '#111827', fontWeight: 700, fontSize: 14 }}>{(p as any).name_ru}</p>
+                <p style={{ margin: '0 0 8px', color: '#9ca3af', fontSize: 12 }}>{(p as any).name_uz}</p>
+                <p style={{ margin: 0, color: '#c8a96e', fontWeight: 800, fontSize: 15 }}>
+                  {p.price.toLocaleString()} <span style={{ fontSize: 11, fontWeight: 500, color: '#9ca3af' }}>сум</span>
                 </p>
               </div>
-              <div style={{ padding: '0 12px 14px', display: 'flex', gap: 8 }}>
-                <button onClick={() => {
-                  setEditing({ ...p })
-                  setDescriptionUz((p as any).description_uz || '')
-                  setDescriptionRu((p as any).description_ru || '')
-                  setPreviewImage((p as any).image_url || null)
-                  setNameSearch((p as any).name_ru || '')
-                  setIsNew(false)
-                }} style={actionBtn('#3b82f6')}>✏️ Изменить</button>
+              <div style={{ padding: '0 10px 12px', display: 'flex', gap: 6 }}>
+                <button
+                  onClick={() => {
+                    setEditing({ ...p })
+                    setDescriptionUz((p as any).description_uz || '')
+                    setDescriptionRu((p as any).description_ru || '')
+                    setPreviewImage((p as any).image_url || null)
+                    setNameSearch((p as any).name_ru || '')
+                    setIsNew(false)
+                  }}
+                  style={actionBtn('#3b82f6')}
+                >
+                  ✏️ Изменить
+                </button>
                 <button onClick={() => toggle(p)} style={actionBtn('#f59e0b')}>
                   {p.is_visible ? '🙈 Скрыть' : '👁 Показать'}
                 </button>
@@ -342,49 +392,54 @@ export function ProductsPage() {
         })}
       </div>
 
-      {/* ── Edit / Create modal ── */}
+      {/* Edit / Create drawer */}
       {editing && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 300, display: 'flex' }}>
-          {/* Backdrop */}
           <div
             onClick={() => { setEditing(null); setIsNew(false); resetForm() }}
-            style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(3px)' }}
+            style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(3px)' }}
           />
-          {/* Panel */}
           <div style={{
             position: 'relative', zIndex: 1,
             marginLeft: 'auto', width: '100%', maxWidth: 520,
-            background: '#0f0f0f', overflowY: 'auto',
+            background: '#ffffff', overflowY: 'auto',
             display: 'flex', flexDirection: 'column',
-            boxShadow: '-8px 0 40px rgba(0,0,0,0.5)',
+            boxShadow: '-8px 0 40px rgba(0,0,0,0.12)',
           }}>
-            {/* Panel header */}
+            {/* Drawer header */}
             <div style={{
               position: 'sticky', top: 0, zIndex: 10,
-              background: '#0f0f0f', borderBottom: '1px solid #1e1e1e',
-              padding: '18px 22px', display: 'flex', alignItems: 'center', gap: 14,
+              background: '#ffffff', borderBottom: '1px solid #e5e7eb',
+              padding: '18px 20px', display: 'flex', alignItems: 'center', gap: 12,
             }}>
               {previewImage && (
-                <img src={previewImage} style={{ width: 44, height: 44, borderRadius: 10, objectFit: 'cover', flexShrink: 0 }} />
+                <img src={previewImage} style={{ width: 42, height: 42, borderRadius: 10, objectFit: 'cover', flexShrink: 0 }} />
               )}
               <div style={{ flex: 1 }}>
-                <h2 style={{ margin: 0, color: '#f0ece4', fontWeight: 800, fontSize: 18 }}>
+                <h2 style={{ margin: 0, color: '#111827', fontWeight: 800, fontSize: 17 }}>
                   {isNew ? 'Добавить товар' : 'Изменить товар'}
                 </h2>
-                {!isNew && <p style={{ margin: '2px 0 0', color: '#6b7280', fontSize: 12 }}>{(editing as any).name_ru}</p>}
+                {!isNew && (
+                  <p style={{ margin: '2px 0 0', color: '#9ca3af', fontSize: 12 }}>{(editing as any).name_ru}</p>
+                )}
               </div>
               <button
                 onClick={() => { setEditing(null); setIsNew(false); resetForm() }}
-                style={{ width: 34, height: 34, background: '#1e1e1e', border: 'none', borderRadius: 8, color: '#9ca3af', cursor: 'pointer', fontSize: 18, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                style={{
+                  width: 32, height: 32, background: '#f3f4f6',
+                  border: 'none', borderRadius: 8, color: '#6b7280',
+                  cursor: 'pointer', fontSize: 16,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}
               >✕</button>
             </div>
 
-            {/* Panel body */}
-            <div style={{ padding: '20px 22px', flex: 1 }}>
+            {/* Drawer body */}
+            <div style={{ padding: '20px', flex: 1 }}>
 
               {/* Preset search */}
-              <div style={section}>
-                <span style={label}>🔍 Быстрый выбор</span>
+              <div style={sectionBox}>
+                <span style={fieldLabel}>🔍 Быстрый выбор</span>
                 <input
                   placeholder="Начните вводить название..."
                   value={nameSearch}
@@ -392,7 +447,7 @@ export function ProductsPage() {
                   style={inp}
                 />
                 {nameSearch.length > 0 && showPresets && (
-                  <div style={{ border: '1px solid #2e2e2e', borderRadius: 10, overflow: 'hidden', marginTop: 8 }}>
+                  <div style={{ border: '1px solid #e5e7eb', borderRadius: 10, overflow: 'hidden', marginTop: 8 }}>
                     {BREAD_PRESETS.filter(pr =>
                       pr.name_ru.toLowerCase().includes(nameSearch.toLowerCase()) ||
                       pr.name_uz.toLowerCase().includes(nameSearch.toLowerCase())
@@ -408,12 +463,16 @@ export function ProductsPage() {
                           setPreviewImage(pr.image_url)
                           setShowPresets(false)
                         }}
-                        style={{ display: 'flex', gap: 12, padding: '10px 14px', cursor: 'pointer', alignItems: 'center', background: '#141414', borderBottom: '1px solid #1e1e1e' }}
+                        style={{
+                          display: 'flex', gap: 12, padding: '10px 14px',
+                          cursor: 'pointer', alignItems: 'center',
+                          background: '#f9fafb', borderBottom: '1px solid #f3f4f6',
+                        }}
                       >
-                        <img src={pr.image_url} alt="" style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 8 }} />
+                        <img src={pr.image_url} alt="" style={{ width: 38, height: 38, objectFit: 'cover', borderRadius: 8 }} />
                         <div>
-                          <p style={{ margin: 0, color: '#f0ece4', fontWeight: 600, fontSize: 14 }}>{pr.name_ru}</p>
-                          <p style={{ margin: '2px 0 0', color: '#6b7280', fontSize: 12 }}>{pr.name_uz}</p>
+                          <p style={{ margin: 0, color: '#111827', fontWeight: 600, fontSize: 13 }}>{pr.name_ru}</p>
+                          <p style={{ margin: '2px 0 0', color: '#9ca3af', fontSize: 11 }}>{pr.name_uz}</p>
                         </div>
                         <span style={{ marginLeft: 'auto', color: '#c8a96e', fontSize: 12, fontWeight: 700 }}>Заполнить →</span>
                       </div>
@@ -423,27 +482,36 @@ export function ProductsPage() {
               </div>
 
               {/* Names */}
-              <div style={section}>
-                <span style={label}>📝 Название</span>
+              <div style={sectionBox}>
+                <span style={fieldLabel}>📝 Название</span>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                   <div>
-                    <p style={{ margin: '0 0 6px', color: '#4b5563', fontSize: 11, fontWeight: 600 }}>RU</p>
-                    <input value={(editing as any).name_ru || ''} onChange={e => setEditing({ ...editing, name_ru: e.target.value })} style={inp} placeholder="Название RU" />
+                    <p style={{ margin: '0 0 6px', color: '#9ca3af', fontSize: 11, fontWeight: 600 }}>RU</p>
+                    <input
+                      value={(editing as any).name_ru || ''}
+                      onChange={e => setEditing({ ...editing, name_ru: e.target.value })}
+                      style={inp} placeholder="Название RU"
+                    />
                   </div>
                   <div>
-                    <p style={{ margin: '0 0 6px', color: '#4b5563', fontSize: 11, fontWeight: 600 }}>UZ</p>
-                    <input value={(editing as any).name_uz || ''} onChange={e => setEditing({ ...editing, name_uz: e.target.value })} style={inp} placeholder="Nomi UZ" />
+                    <p style={{ margin: '0 0 6px', color: '#9ca3af', fontSize: 11, fontWeight: 600 }}>UZ</p>
+                    <input
+                      value={(editing as any).name_uz || ''}
+                      onChange={e => setEditing({ ...editing, name_uz: e.target.value })}
+                      style={inp} placeholder="Nomi UZ"
+                    />
                   </div>
                 </div>
               </div>
 
               {/* Price + Quantity */}
-              <div style={section}>
-                <span style={label}>💰 Цена и количество</span>
+              <div style={sectionBox}>
+                <span style={fieldLabel}>💰 Цена и количество</span>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
                   <div>
-                    <p style={{ margin: '0 0 6px', color: '#4b5563', fontSize: 11, fontWeight: 600 }}>Цена (сум)</p>
-                    <input type="number"
+                    <p style={{ margin: '0 0 6px', color: '#9ca3af', fontSize: 11, fontWeight: 600 }}>Цена (сум)</p>
+                    <input
+                      type="number"
                       value={((editing as any).price ?? 0) === 0 ? '' : (editing as any).price}
                       placeholder="0"
                       onChange={e => setEditing({ ...editing, price: e.target.value === '' ? 0 : Number(e.target.value) })}
@@ -452,8 +520,9 @@ export function ProductsPage() {
                     />
                   </div>
                   <div>
-                    <p style={{ margin: '0 0 6px', color: '#4b5563', fontSize: 11, fontWeight: 600 }}>Кол-во сейчас (шт)</p>
-                    <input type="number"
+                    <p style={{ margin: '0 0 6px', color: '#9ca3af', fontSize: 11, fontWeight: 600 }}>Кол-во сейчас (шт)</p>
+                    <input
+                      type="number"
                       value={((editing as any).quantity ?? 0) === 0 ? '' : (editing as any).quantity}
                       placeholder="0"
                       onChange={e => setEditing({ ...editing, quantity: e.target.value === '' ? 0 : Number(e.target.value) })}
@@ -463,22 +532,25 @@ export function ProductsPage() {
                   </div>
                 </div>
                 <div>
-                  <p style={{ margin: '0 0 6px', color: '#4b5563', fontSize: 11, fontWeight: 600 }}>Остаток по умолч. (авто-сброс каждый день)</p>
-                  <input type="number"
+                  <p style={{ margin: '0 0 6px', color: '#9ca3af', fontSize: 11, fontWeight: 600 }}>
+                    Остаток по умолч. (авто-сброс каждый день)
+                  </p>
+                  <input
+                    type="number"
                     value={((editing as any).default_quantity ?? 0) === 0 ? '' : (editing as any).default_quantity}
                     placeholder="Напр. 50 — каждое утро будет автоматически выставляться"
                     onChange={e => setEditing({ ...editing, default_quantity: e.target.value === '' ? 0 : Number(e.target.value) } as any)}
                     onFocus={e => e.target.select()}
-                    style={{ ...inp, borderColor: '#3d3022' }}
+                    style={{ ...inp, borderColor: '#fcd34d' }}
                   />
                 </div>
               </div>
 
               {/* Image */}
-              <div style={section}>
-                <span style={label}>🖼 Картинка</span>
+              <div style={sectionBox}>
+                <span style={fieldLabel}>🖼 Картинка</span>
                 {previewImage && (
-                  <img src={previewImage} style={{ width: '100%', height: 160, objectFit: 'cover', borderRadius: 10, marginBottom: 10, display: 'block' }} />
+                  <img src={previewImage} style={{ width: '100%', height: 150, objectFit: 'cover', borderRadius: 10, marginBottom: 10, display: 'block' }} />
                 )}
                 <input
                   placeholder="/images/tabiiy-non.jpg"
@@ -487,50 +559,93 @@ export function ProductsPage() {
                   style={inp}
                 />
                 <div style={{ marginTop: 8 }}>
-                  <p style={{ margin: '0 0 4px', color: '#4b5563', fontSize: 11, fontWeight: 600 }}>Telegram File ID (необязательно)</p>
-                  <input value={(editing as any).photo_file_id || ''} onChange={e => setEditing({ ...editing, photo_file_id: e.target.value })} style={inp} placeholder="AgACAgI..." />
+                  <p style={{ margin: '0 0 4px', color: '#9ca3af', fontSize: 11, fontWeight: 600 }}>
+                    Telegram File ID (необязательно)
+                  </p>
+                  <input
+                    value={(editing as any).photo_file_id || ''}
+                    onChange={e => setEditing({ ...editing, photo_file_id: e.target.value })}
+                    style={inp} placeholder="AgACAgI..."
+                  />
                 </div>
               </div>
 
-              {/* Descriptions with tabs */}
-              <div style={section}>
-                <span style={label}>📄 Описание</span>
-                <div style={{ display: 'flex', gap: 2, marginBottom: 12, background: '#0d0d0d', borderRadius: 8, padding: 3 }}>
+              {/* Descriptions */}
+              <div style={sectionBox}>
+                <span style={fieldLabel}>📄 Описание</span>
+                <div style={{ display: 'flex', gap: 2, marginBottom: 12, background: '#f3f4f6', borderRadius: 8, padding: 3 }}>
                   {(['ru', 'uz'] as const).map(lang => (
-                    <button key={lang} onClick={() => setDescTab(lang)} style={{
-                      flex: 1, padding: '7px', border: 'none', borderRadius: 6, cursor: 'pointer', fontWeight: 700, fontSize: 13,
-                      background: descTab === lang ? '#c8a96e' : 'transparent',
-                      color: descTab === lang ? '#000' : '#6b7280',
-                      transition: 'all .15s',
-                    }}>
+                    <button
+                      key={lang}
+                      onClick={() => setDescTab(lang)}
+                      style={{
+                        flex: 1, padding: '7px', border: 'none', borderRadius: 6,
+                        cursor: 'pointer', fontWeight: 700, fontSize: 13,
+                        background: descTab === lang ? '#c8a96e' : 'transparent',
+                        color: descTab === lang ? '#111827' : '#9ca3af',
+                        transition: 'all .15s', fontFamily: 'inherit',
+                      }}
+                    >
                       {lang.toUpperCase()}
                     </button>
                   ))}
                 </div>
                 {descTab === 'ru'
-                  ? <textarea value={descriptionRu} onChange={e => setDescriptionRu(e.target.value)} style={{ ...inp, minHeight: 180, resize: 'vertical' }} placeholder="Описание на русском..." />
-                  : <textarea value={descriptionUz} onChange={e => setDescriptionUz(e.target.value)} style={{ ...inp, minHeight: 180, resize: 'vertical' }} placeholder="Ta'rif o'zbek tilida..." />
+                  ? <textarea
+                      value={descriptionRu}
+                      onChange={e => setDescriptionRu(e.target.value)}
+                      style={{ ...inp, minHeight: 180, resize: 'vertical' }}
+                      placeholder="Описание на русском..."
+                    />
+                  : <textarea
+                      value={descriptionUz}
+                      onChange={e => setDescriptionUz(e.target.value)}
+                      style={{ ...inp, minHeight: 180, resize: 'vertical' }}
+                      placeholder="Ta'rif o'zbek tilida..."
+                    />
                 }
               </div>
 
               {error && (
-                <div style={{ background: '#450a0a', border: '1px solid #7f1d1d', borderRadius: 10, padding: '10px 14px', marginBottom: 12 }}>
-                  <p style={{ margin: 0, color: '#fca5a5', fontSize: 13 }}>⚠️ {error}</p>
+                <div style={{
+                  background: '#fef2f2', border: '1px solid #fecaca',
+                  borderRadius: 10, padding: '10px 14px', marginBottom: 12,
+                }}>
+                  <p style={{ margin: 0, color: '#dc2626', fontSize: 13 }}>⚠️ {error}</p>
                 </div>
               )}
             </div>
 
-            {/* Sticky footer */}
-            <div style={{ position: 'sticky', bottom: 0, background: '#0f0f0f', borderTop: '1px solid #1e1e1e', padding: '14px 22px', display: 'flex', gap: 10 }}>
-              <button onClick={save} disabled={loading} style={{
-                flex: 1, padding: '13px', background: loading ? '#6b5a3e' : '#c8a96e',
-                border: 'none', borderRadius: 10, color: '#000', fontWeight: 800,
-                fontSize: 14, cursor: loading ? 'not-allowed' : 'pointer', transition: 'background .15s',
-              }}>
+            {/* Drawer footer */}
+            <div style={{
+              position: 'sticky', bottom: 0,
+              background: '#ffffff', borderTop: '1px solid #e5e7eb',
+              padding: '14px 20px', display: 'flex', gap: 10,
+            }}>
+              <button
+                onClick={save}
+                disabled={loading}
+                style={{
+                  flex: 1, padding: '13px',
+                  background: loading ? '#f3f4f6' : '#c8a96e',
+                  border: 'none', borderRadius: 10,
+                  color: loading ? '#9ca3af' : '#111827',
+                  fontWeight: 800, fontSize: 14,
+                  cursor: loading ? 'not-allowed' : 'pointer',
+                  transition: 'background .15s', fontFamily: 'inherit',
+                }}
+              >
                 {loading ? 'Сохраняем...' : isNew ? '✓ Создать товар' : '✓ Сохранить'}
               </button>
-              <button onClick={() => { setEditing(null); setIsNew(false); resetForm() }}
-                style={{ padding: '13px 18px', background: '#1e1e1e', border: 'none', borderRadius: 10, color: '#9ca3af', cursor: 'pointer', fontWeight: 600 }}>
+              <button
+                onClick={() => { setEditing(null); setIsNew(false); resetForm() }}
+                style={{
+                  padding: '13px 18px', background: '#f9fafb',
+                  border: '1px solid #e5e7eb', borderRadius: 10,
+                  color: '#6b7280', cursor: 'pointer',
+                  fontWeight: 600, fontFamily: 'inherit',
+                }}
+              >
                 Отмена
               </button>
             </div>
@@ -542,8 +657,8 @@ export function ProductsPage() {
 }
 
 const actionBtn = (color: string): React.CSSProperties => ({
-  flex: 1, padding: '7px 10px',
-  background: color + '18', border: `1px solid ${color}33`,
-  borderRadius: 8, color, fontSize: 12, fontWeight: 600,
-  cursor: 'pointer', textAlign: 'center',
+  flex: 1, padding: '7px 8px',
+  background: color + '12', border: `1px solid ${color}30`,
+  borderRadius: 8, color, fontSize: 11, fontWeight: 600,
+  cursor: 'pointer', textAlign: 'center', fontFamily: 'inherit',
 })

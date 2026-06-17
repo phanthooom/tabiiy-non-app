@@ -5,8 +5,8 @@ import { useAuthStore } from '../store/auth'
 export function LoginPage() {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
+  const [error, setError]       = useState('')
+  const [loading, setLoading]   = useState(false)
   const setToken = useAuthStore(s => s.setToken)
 
   const submit = async () => {
@@ -20,7 +20,7 @@ export function LoginPage() {
       }
       setToken(res.access_token)
     } catch (e: any) {
-      const detail = e?.response?.data?.detail
+      const detail      = e?.response?.data?.detail
       const envelopeMsg = e?.response?.data?.error?.message
       setError(
         (typeof detail === 'string' ? detail : null) ??
@@ -34,10 +34,30 @@ export function LoginPage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f172a' }}>
-      <div style={{ background: '#1e293b', padding: 40, borderRadius: 16, width: 360, maxWidth: '90vw', border: '1px solid #334155' }}>
-        <h1 style={{ color: '#f1f5f9', fontSize: 22, marginBottom: 8, fontWeight: 700 }}>🍞 Tabiiy Non</h1>
-        <p style={{ color: '#64748b', marginBottom: 28, fontSize: 14 }}>Панель управления</p>
+    <div style={{
+      minHeight: '100vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      background: '#f9fafb',
+      padding: 20,
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+    }}>
+      <div style={{
+        background: '#ffffff',
+        padding: '40px 32px',
+        borderRadius: 20,
+        width: '100%',
+        maxWidth: 380,
+        border: '1px solid #e5e7eb',
+        boxShadow: '0 4px 24px rgba(0,0,0,0.06)',
+      }}>
+        <div style={{ textAlign: 'center', marginBottom: 32 }}>
+          <div style={{ fontSize: 48, lineHeight: 1, marginBottom: 16 }}>🍞</div>
+          <h1 style={{ margin: 0, color: '#111827', fontSize: 22, fontWeight: 800 }}>Tabiiy Non</h1>
+          <p style={{ margin: '6px 0 0', color: '#9ca3af', fontSize: 14 }}>Панель управления</p>
+        </div>
+
         <input
           placeholder="Логин"
           value={username}
@@ -52,8 +72,30 @@ export function LoginPage() {
           onKeyDown={e => e.key === 'Enter' && submit()}
           style={inputStyle}
         />
-        {error && <p style={{ color: '#ef4444', fontSize: 13, marginBottom: 12 }}>{error}</p>}
-        <button onClick={submit} disabled={loading} style={btnStyle}>
+
+        {error && (
+          <div style={{
+            background: '#fef2f2', border: '1px solid #fecaca',
+            borderRadius: 10, padding: '10px 14px', marginBottom: 16,
+          }}>
+            <p style={{ margin: 0, color: '#dc2626', fontSize: 13 }}>{error}</p>
+          </div>
+        )}
+
+        <button
+          onClick={submit}
+          disabled={loading}
+          style={{
+            width: '100%', padding: '13px',
+            background: loading ? '#e5e7eb' : '#c8a96e',
+            border: 'none', borderRadius: 12,
+            color: loading ? '#9ca3af' : '#111827',
+            fontWeight: 800, fontSize: 15,
+            cursor: loading ? 'not-allowed' : 'pointer',
+            fontFamily: 'inherit',
+            transition: 'background 0.15s',
+          }}
+        >
           {loading ? 'Вход...' : 'Войти'}
         </button>
       </div>
@@ -62,12 +104,8 @@ export function LoginPage() {
 }
 
 const inputStyle: React.CSSProperties = {
-  width: '100%', padding: '10px 14px', marginBottom: 12,
-  background: '#0f172a', border: '1px solid #334155', borderRadius: 10,
-  color: '#fff', fontSize: 14, boxSizing: 'border-box',
-}
-const btnStyle: React.CSSProperties = {
-  width: '100%', padding: '12px', background: '#38bdf8',
-  border: 'none', borderRadius: 10, color: '#0f172a',
-  fontWeight: 700, fontSize: 15, cursor: 'pointer',
+  width: '100%', padding: '12px 14px', marginBottom: 12,
+  background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: 12,
+  color: '#111827', fontSize: 14, boxSizing: 'border-box',
+  outline: 'none', fontFamily: 'inherit',
 }

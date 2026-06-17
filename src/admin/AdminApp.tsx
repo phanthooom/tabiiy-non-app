@@ -5,21 +5,35 @@ import { OrdersPage } from './pages/OrdersPage'
 import { ProductsPage } from './pages/ProductsPage'
 import { UsersPage } from './pages/UsersPage'
 import { SettingsPage } from './pages/SettingsPage'
-
 import { useBackButton } from '../shared/hooks/useTelegram'
 import { useNavigate } from 'react-router-dom'
 import { collection, doc, getDoc, getDocs, setDoc, updateDoc } from 'firebase/firestore'
 import { db } from '../shared/lib/firebase'
+import { ClipboardList, Package, Users, Settings } from 'lucide-react'
 
 type Tab = 'orders' | 'products' | 'users' | 'settings'
 
 function todayDate(): string {
-  const d = new Date(Date.now() + 5 * 60 * 60 * 1000) // Tashkent UTC+5
+  const d = new Date(Date.now() + 5 * 60 * 60 * 1000)
   return d.toISOString().slice(0, 10)
 }
 
+const TABS: { key: Tab; label: string; Icon: React.ElementType }[] = [
+  { key: 'orders',   label: 'Заказы',    Icon: ClipboardList },
+  { key: 'products', label: 'Товары',    Icon: Package },
+  { key: 'users',    label: 'Клиенты',   Icon: Users },
+  { key: 'settings', label: 'Настройки', Icon: Settings },
+]
+
+const TAB_LABELS: Record<Tab, string> = {
+  orders:   'Заказы',
+  products: 'Товары',
+  users:    'Клиенты',
+  settings: 'Настройки',
+}
+
 export default function AdminApp() {
-  const token = useAuthStore(s => s.token)
+  const token  = useAuthStore(s => s.token)
   const logout = useAuthStore(s => s.logout)
   const [tab, setTab] = useState<Tab>('orders')
   const navigate = useNavigate()
@@ -46,7 +60,6 @@ export default function AdminApp() {
         })
         await Promise.all(updates)
         await setDoc(settingsRef, { ...data, last_stock_reset: today }, { merge: true })
-        console.log('[Admin] Stock reset to defaults for', today)
       } catch (e) {
         console.warn('[Admin] Stock reset failed', e)
       }
@@ -57,62 +70,106 @@ export default function AdminApp() {
   if (!token) return <LoginPage />
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f1f5f9' }}>
+    <div style={{
+      minHeight: '100vh',
+      background: '#f9fafb',
+      color: '#111827',
+      display: 'flex',
+      flexDirection: 'column',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+    }}>
       {/* Header */}
       <div style={{
-        background: '#1e293b',
-        borderBottom: '1px solid #334155',
-        padding: '50px 20px 10px', // Увеличенный жесткий отступ для iOS
+        background: '#ffffff',
+        borderBottom: '1px solid #e5e7eb',
+        padding: 'max(env(safe-area-inset-top, 0px), 44px) 20px 14px',
         display: 'flex',
         alignItems: 'center',
-        gap: 8,
+        gap: 12,
         position: 'sticky',
         top: 0,
         zIndex: 50,
       }}>
-        <span style={{
-          fontWeight: 700, fontSize: 16, color: '#f1f5f9', marginRight: 'auto'
-        }}>🍞 Админ панель</span>
-        <button onClick={logout} style={{
-          padding: '6px 14px', background: '#334155',
-          border: 'none', borderRadius: 8, color: '#94a3b8',
-          fontSize: 13, cursor: 'pointer',
-        }}>Выйти</button>
-      </div>
-
-      {/* Tabs */}
-      <div style={{
-        display: 'flex',
-        background: '#1e293b',
-        borderBottom: '1px solid #334155',
-        padding: '0 20px',
-      }}>
-        {([
-          { key: 'orders', label: '📋 Заказы' },
-          { key: 'products', label: '🛍 Товары' },
-          { key: 'users', label: '👥 Пользователи' },
-          { key: 'settings', label: '⚙️ Настройки' },
-        ] as { key: Tab; label: string }[]).map(t => (
-          <button key={t.key} onClick={() => setTab(t.key)} style={{
-            padding: '14px 16px',
-            background: 'none',
+        <span style={{ fontSize: 24, lineHeight: 1 }}>🍞</span>
+        <div style={{ flex: 1 }}>
+          <p style={{ margin: 0, fontWeight: 800, fontSize: 16, color: '#111827', lineHeight: 1.2 }}>
+            Tabiiy Non
+          </p>
+          <p style={{ margin: 0, fontSize: 12, color: '#9ca3af', fontWeight: 500 }}>
+            {TAB_LABELS[tab]}
+          </p>
+        </div>
+        <button
+          onClick={logout}
+          style={{
+            padding: '7px 16px',
+            background: '#f3f4f6',
             border: 'none',
+            borderRadius: 20,
+            color: '#6b7280',
+            fontSize: 13,
+            fontWeight: 600,
             cursor: 'pointer',
-            color: tab === t.key ? '#38bdf8' : '#64748b',
-            fontSize: 14,
-            fontWeight: tab === t.key ? 700 : 400,
-            borderBottom: tab === t.key ? '2px solid #38bdf8' : '2px solid transparent',
-            whiteSpace: 'nowrap',
-          }}>{t.label}</button>
-        ))}
+            fontFamily: 'inherit',
+          }}
+        >
+          Выйти
+        </button>
       </div>
 
       {/* Content */}
-      <div style={{ padding: 20, maxWidth: 1200, margin: '0 auto' }}>
-        {tab === 'orders' && <OrdersPage />}
+      <div style={{
+        flex: 1,
+        padding: '20px 16px 90px',
+        maxWidth: 900,
+        margin: '0 auto',
+        width: '100%',
+        boxSizing: 'border-box',
+      }}>
+        {tab === 'orders'   && <OrdersPage />}
         {tab === 'products' && <ProductsPage />}
-        {tab === 'users' && <UsersPage />}
+        {tab === 'users'    && <UsersPage />}
         {tab === 'settings' && <SettingsPage />}
+      </div>
+
+      {/* Bottom Nav */}
+      <div style={{
+        position: 'fixed',
+        bottom: 0, left: 0, right: 0,
+        background: '#ffffff',
+        borderTop: '1px solid #e5e7eb',
+        display: 'flex',
+        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+        zIndex: 50,
+        boxShadow: '0 -2px 12px rgba(0,0,0,0.06)',
+      }}>
+        {TABS.map(({ key, label, Icon }) => {
+          const active = tab === key
+          return (
+            <button
+              key={key}
+              onClick={() => setTab(key)}
+              style={{
+                flex: 1,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 3,
+                padding: '10px 4px 12px',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                color: active ? '#c8a96e' : '#9ca3af',
+                transition: 'color 0.15s',
+              }}
+            >
+              <Icon size={22} strokeWidth={active ? 2.5 : 1.8} />
+              <span style={{ fontSize: 10, fontWeight: active ? 700 : 500, lineHeight: 1 }}>
+                {label}
+              </span>
+            </button>
+          )
+        })}
       </div>
     </div>
   )

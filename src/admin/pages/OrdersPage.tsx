@@ -2,32 +2,34 @@ import { useEffect, useState } from 'react'
 import { ordersApi } from '../api/index'
 import type { Order, OrderStatus } from '../types/index'
 import { AddressText } from '@/app/components/ui/AddressText'
+import { MapPin, Phone, User } from 'lucide-react'
 
-const STATUS_LABELS: Record<OrderStatus, string> = {
-  accepted: '✅ Принят',
-  packing: '📦 Упаковывается',
-  courier_assigned: '🚗 Курьер в пути',
-  delivered: '✅ Доставлен',
-  cancelled: '❌ Отменён',
+const STATUS_META: Record<OrderStatus, { label: string; bg: string; color: string }> = {
+  accepted:         { label: '✅ Принят',          bg: '#dbeafe', color: '#1d4ed8' },
+  packing:          { label: '📦 Упаковывается',   bg: '#fef3c7', color: '#d97706' },
+  courier_assigned: { label: '🚗 Курьер в пути',   bg: '#ede9fe', color: '#7c3aed' },
+  delivered:        { label: '✅ Доставлен',        bg: '#dcfce7', color: '#16a34a' },
+  cancelled:        { label: '❌ Отменён',          bg: '#fee2e2', color: '#dc2626' },
 }
 
-const STATUS_COLORS: Record<OrderStatus, string> = {
-  accepted: '#3b82f6',
-  packing: '#f59e0b',
-  courier_assigned: '#8b5cf6',
-  delivered: '#22c55e',
-  cancelled: '#ef4444',
-}
+const FILTER_TABS = [
+  { id: '',                label: 'Все' },
+  { id: 'accepted',        label: 'Принят' },
+  { id: 'packing',         label: 'Упаковка' },
+  { id: 'courier_assigned', label: 'В пути' },
+  { id: 'delivered',       label: 'Доставлен' },
+  { id: 'cancelled',       label: 'Отменён' },
+]
 
 export function OrdersPage() {
-  const [orders, setOrders] = useState<Order[]>([])
-  const [total, setTotal] = useState(0)
-  const [page, setPage] = useState(1)
+  const [orders, setOrders]             = useState<Order[]>([])
+  const [total, setTotal]               = useState(0)
+  const [page, setPage]                 = useState(1)
   const [filterStatus, setFilterStatus] = useState<string>('')
-  const [loading, setLoading] = useState(false)
-  const [selected, setSelected] = useState<Order | null>(null)
+  const [loading, setLoading]           = useState(false)
+  const [selected, setSelected]         = useState<Order | null>(null)
   const [actionLoading, setActionLoading] = useState(false)
-  const [yandexUrl, setYandexUrl] = useState('')
+  const [yandexUrl, setYandexUrl]       = useState('')
   const [yandexSaving, setYandexSaving] = useState(false)
 
   useEffect(() => {
@@ -37,7 +39,6 @@ export function OrdersPage() {
         setOrders(res.items)
         setTotal(res.total)
         setLoading(false)
-        
         setSelected(prev => {
           if (!prev) return null
           const updated = res.items.find(o => o.id === prev.id) || prev
@@ -54,7 +55,6 @@ export function OrdersPage() {
     setActionLoading(true)
     try {
       await ordersApi.updateStatus(order, status)
-      // load() больше не нужен, данные обновятся через onSnapshot
     } finally {
       setActionLoading(false)
     }
@@ -86,125 +86,351 @@ export function OrdersPage() {
 
   return (
     <div>
-      <div style={{ display: 'flex', gap: 12, marginBottom: 20, flexWrap: 'wrap' }}>
-        {['', 'accepted', 'packing', 'courier_assigned', 'delivered', 'cancelled'].map(s => (
-          <button key={s} onClick={() => { setFilterStatus(s); setPage(1) }}
-            style={{
-              padding: '6px 14px', borderRadius: 20, border: 'none', cursor: 'pointer',
-              background: filterStatus === s ? '#c8a96e' : '#2a2a2a',
-              color: filterStatus === s ? '#000' : '#aaa', fontSize: 13,
-            }}>
-            {s ? STATUS_LABELS[s as OrderStatus] : 'Все'}
-          </button>
-        ))}
+      {/* Stats card */}
+      <div style={{
+        background: '#ffffff',
+        border: '1px solid #e5e7eb',
+        borderRadius: 16,
+        padding: '16px 20px',
+        marginBottom: 16,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
+      }}>
+        <div>
+          <p style={{ margin: 0, fontSize: 11, color: '#9ca3af', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+            Всего заказов
+          </p>
+          <p style={{ margin: '4px 0 0', fontSize: 30, fontWeight: 800, color: '#111827', lineHeight: 1 }}>
+            {total}
+          </p>
+        </div>
+        <div style={{
+          width: 48, height: 48,
+          background: '#fef9ec',
+          borderRadius: 14,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: 22,
+        }}>
+          📋
+        </div>
       </div>
 
-      <p style={{ color: '#666', marginBottom: 12, fontSize: 14 }}>Всего: {total}</p>
-
-      {loading ? <p style={{ color: '#666' }}>Загрузка...</p> : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {orders.map(o => (
-            <div key={o.id} onClick={() => { setSelected(o); setYandexUrl((o as any).yandex_tracking_url || '') }}
+      {/* Filter tabs */}
+      <div style={{
+        display: 'flex', gap: 8, overflowX: 'auto',
+        paddingBottom: 4, marginBottom: 16,
+        scrollbarWidth: 'none',
+      }}>
+        {FILTER_TABS.map(t => {
+          const active = filterStatus === t.id
+          const isCancelled = t.id === 'cancelled'
+          return (
+            <button
+              key={t.id}
+              onClick={() => { setFilterStatus(t.id); setPage(1) }}
               style={{
-                background: '#1a1a1a', border: '1px solid #2a2a2a', borderRadius: 10,
-                padding: '14px 18px', cursor: 'pointer', transition: 'border-color 0.2s',
+                padding: '7px 14px',
+                borderRadius: 20,
+                border: active ? 'none' : isCancelled ? '1px solid #fca5a5' : '1px solid #e5e7eb',
+                background: active
+                  ? (isCancelled ? '#dc2626' : '#111827')
+                  : (isCancelled ? '#fef2f2' : '#ffffff'),
+                color: active
+                  ? '#ffffff'
+                  : (isCancelled ? '#dc2626' : '#6b7280'),
+                fontSize: 13, fontWeight: 600,
+                whiteSpace: 'nowrap', flexShrink: 0,
+                cursor: 'pointer',
+                fontFamily: 'inherit',
               }}
-              onMouseEnter={e => (e.currentTarget.style.borderColor = '#c8a96e')}
-              onMouseLeave={e => (e.currentTarget.style.borderColor = '#2a2a2a')}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div>
-                  <span style={{ color: '#c8a96e', fontWeight: 700 }}>#{o.id}</span>
-                  <span style={{ color: '#666', fontSize: 13, marginLeft: 10 }}>
-                    {o.customer_name} · {o.customer_phone}
+              {t.label}
+            </button>
+          )
+        })}
+      </div>
+
+      {/* Orders list */}
+      {loading ? (
+        <p style={{ textAlign: 'center', color: '#9ca3af', padding: '40px 0' }}>Загрузка...</p>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {orders.map(o => {
+            const meta = STATUS_META[o.status]
+            return (
+              <div
+                key={o.id}
+                onClick={() => { setSelected(o); setYandexUrl((o as any).yandex_tracking_url || '') }}
+                style={{
+                  background: o.status === 'cancelled' ? '#fff9f9' : '#ffffff',
+                  border: o.status === 'cancelled' ? '1px solid #fecaca' : '1px solid #e5e7eb',
+                  borderRadius: 14,
+                  padding: '14px 16px',
+                  cursor: 'pointer',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+                  opacity: o.status === 'cancelled' ? 0.8 : 1,
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+                  <div>
+                    <span style={{ fontWeight: 700, color: '#c8a96e', fontSize: 14 }}>#{o.id}</span>
+                    <span style={{ color: '#9ca3af', fontSize: 12, marginLeft: 8 }}>{o.customer_name}</span>
+                  </div>
+                  <span style={{
+                    padding: '4px 10px',
+                    borderRadius: 20, fontSize: 11, fontWeight: 700,
+                    background: meta.bg, color: meta.color,
+                    flexShrink: 0, marginLeft: 8,
+                  }}>
+                    {meta.label}
                   </span>
                 </div>
-                <span style={{
-                  background: STATUS_COLORS[o.status] + '22',
-                  color: STATUS_COLORS[o.status],
-                  padding: '4px 10px', borderRadius: 20, fontSize: 12,
-                }}>
-                  {STATUS_LABELS[o.status]}
-                </span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, color: '#6b7280', fontSize: 13 }}>
+                  <MapPin size={13} style={{ flexShrink: 0 }} />
+                  <span style={{ flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {o.address
+                      ? <AddressText address={o.address} language="ru" clickable={false} />
+                      : 'Самовывоз'
+                    }
+                  </span>
+                  <span style={{ fontWeight: 700, color: '#111827', flexShrink: 0, marginLeft: 8 }}>
+                    {o.total_amount.toLocaleString()} сум
+                  </span>
+                </div>
               </div>
-              <div style={{ color: '#888', fontSize: 13, marginTop: 6, display: 'flex', alignItems: 'center', gap: 4 }}>
-                📍 {o.address ? <AddressText address={o.address} language="ru" clickable={true} /> : 'Самовывоз'} · {o.items.length} поз. · {o.total_amount.toLocaleString()} сум
-              </div>
+            )
+          })}
+          {orders.length === 0 && (
+            <div style={{ textAlign: 'center', padding: '48px 0' }}>
+              <p style={{ margin: 0, color: '#9ca3af', fontSize: 15 }}>Нет заказов</p>
             </div>
-          ))}
+          )}
         </div>
       )}
 
-      <div style={{ display: 'flex', gap: 8, marginTop: 20 }}>
-        <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1} style={pgBtn}>←</button>
-        <span style={{ color: '#666', padding: '6px 12px' }}>{page}</span>
-        <button onClick={() => setPage(p => p + 1)} disabled={orders.length < 20} style={pgBtn}>→</button>
+      {/* Pagination */}
+      <div style={{ display: 'flex', gap: 8, marginTop: 20, justifyContent: 'center' }}>
+        <button
+          onClick={() => setPage(p => Math.max(1, p - 1))}
+          disabled={page === 1}
+          style={pgBtn(page === 1)}
+        >
+          ←
+        </button>
+        <span style={{ padding: '8px 14px', color: '#6b7280', fontWeight: 600, fontSize: 14 }}>{page}</span>
+        <button
+          onClick={() => setPage(p => p + 1)}
+          disabled={orders.length < 20}
+          style={pgBtn(orders.length < 20)}
+        >
+          →
+        </button>
       </div>
 
+      {/* Detail bottom sheet */}
       {selected && (
-        <div style={{ position: 'fixed', inset: 0, background: '#000a', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100 }}
-          onClick={() => setSelected(null)}>
-          <div style={{ background: '#1a1a1a', border: '1px solid #333', borderRadius: 14, padding: 28, width: 480, maxWidth: '95vw' }}
-            onClick={e => e.stopPropagation()}>
-            <h2 style={{ color: '#c8a96e', marginBottom: 16 }}>Заказ #{selected.id}</h2>
-            <p style={{ color: '#aaa', fontSize: 14 }}>👤 {(selected as any).user_name || selected.user?.full_name || '—'} {(selected as any).user?.username ? `(@${selected.user.username})` : ''}</p>
-            <p style={{ color: '#aaa', fontSize: 14 }}>📞 {(selected as any).user_phone || selected.customer_phone || '—'}</p>
-            <div style={{ color: '#aaa', fontSize: 14, display: 'flex', gap: 4 }}>📍 {selected.address ? <AddressText address={selected.address} language="ru" clickable={true} /> : 'Самовывоз'}</div>
-            <div style={{ margin: '14px 0', borderTop: '1px solid #2a2a2a', paddingTop: 14 }}>
-              {selected.items.map((item, i) => (
-                <div key={i} style={{ display: 'flex', justifyContent: 'space-between', color: '#ccc', fontSize: 14, marginBottom: 6 }}>
-                  <span>{item.product_name} × {item.quantity}</span>
-                  <span>{item.subtotal.toLocaleString()} сум</span>
-                </div>
-              ))}
-              <div style={{ display: 'flex', justifyContent: 'space-between', color: '#c8a96e', fontWeight: 700, marginTop: 10 }}>
-                <span>Итого</span>
-                <span>{selected.total_amount.toLocaleString()} сум</span>
-              </div>
+        <div
+          style={{
+            position: 'fixed', inset: 0,
+            background: 'rgba(0,0,0,0.45)',
+            backdropFilter: 'blur(4px)',
+            display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+            zIndex: 100,
+          }}
+          onClick={() => setSelected(null)}
+        >
+          <div
+            style={{
+              background: '#ffffff',
+              borderRadius: '20px 20px 0 0',
+              width: '100%', maxWidth: 560,
+              maxHeight: '85vh', overflowY: 'auto',
+              paddingBottom: 'env(safe-area-inset-bottom, 20px)',
+            }}
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Handle */}
+            <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 0 0' }}>
+              <div style={{ width: 40, height: 4, background: '#e5e7eb', borderRadius: 2 }} />
             </div>
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              {(['accepted', 'packing', 'courier_assigned', 'delivered', 'cancelled'] as OrderStatus[]).map(s => (
-                <button key={s} onClick={() => changeStatus(selected, s)} disabled={actionLoading || selected.status === s}
-                  style={{
-                    padding: '6px 12px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 12,
-                    background: selected.status === s ? STATUS_COLORS[s] : '#2a2a2a',
-                    color: selected.status === s ? '#fff' : '#aaa',
-                  }}>
-                  {STATUS_LABELS[s]}
-                </button>
-              ))}
-            </div>
-            {selected.delivery_type === 'delivery' && !selected.yandex_claim_id && (
-              <button onClick={() => callDelivery(selected)} disabled={actionLoading}
-                style={{ marginTop: 12, width: '100%', padding: 10, background: '#8b5cf6', border: 'none', borderRadius: 8, color: '#fff', cursor: 'pointer', fontWeight: 600 }}>
-                🚗 Вызвать Яндекс курьера
-              </button>
-            )}
-            {selected.yandex_claim_id && (
-              <p style={{ color: '#8b5cf6', fontSize: 13, marginTop: 10 }}>
-                Яндекс claim: {selected.yandex_claim_id}
-              </p>
-            )}
 
-            {/* Yandex tracking URL */}
-            <div style={{ marginTop: 14, borderTop: '1px solid #2a2a2a', paddingTop: 14 }}>
-              <p style={{ color: '#888', fontSize: 12, marginBottom: 8, fontWeight: 600 }}>🔗 Ссылка отслеживания Яндекс</p>
+            <div style={{ padding: '16px 20px 24px' }}>
+              {/* Sheet header */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                <h2 style={{ margin: 0, fontWeight: 800, fontSize: 20, color: '#111827' }}>
+                  Заказ <span style={{ color: '#c8a96e' }}>#{selected.id}</span>
+                </h2>
+                <button
+                  onClick={() => setSelected(null)}
+                  style={{
+                    width: 32, height: 32, background: '#f3f4f6',
+                    border: 'none', borderRadius: 8, color: '#6b7280',
+                    cursor: 'pointer', fontSize: 16,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Customer info */}
+              <div style={{
+                background: '#f9fafb', borderRadius: 14, padding: '14px 16px', marginBottom: 16,
+                border: '1px solid #f3f4f6',
+              }}>
+                <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 10 }}>
+                  <User size={15} color="#9ca3af" style={{ flexShrink: 0 }} />
+                  <span style={{ fontWeight: 700, color: '#111827', fontSize: 14 }}>
+                    {(selected as any).user_name || selected.user?.full_name || '—'}
+                  </span>
+                  {(selected as any).user?.username && (
+                    <span style={{ color: '#9ca3af', fontSize: 13 }}>@{selected.user?.username}</span>
+                  )}
+                </div>
+                <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 10 }}>
+                  <Phone size={15} color="#9ca3af" style={{ flexShrink: 0 }} />
+                  <span style={{ color: '#6b7280', fontSize: 14 }}>
+                    {(selected as any).user_phone || selected.customer_phone || '—'}
+                  </span>
+                </div>
+                <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                  <MapPin size={15} color="#9ca3af" style={{ marginTop: 2, flexShrink: 0 }} />
+                  <span style={{ color: '#6b7280', fontSize: 14 }}>
+                    {selected.address
+                      ? <AddressText address={selected.address} language="ru" clickable={true} />
+                      : 'Самовывоз'
+                    }
+                  </span>
+                </div>
+              </div>
+
+              {/* Items */}
+              <div style={{ marginBottom: 16 }}>
+                {selected.items.map((item, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      display: 'flex', justifyContent: 'space-between',
+                      padding: '10px 0',
+                      borderBottom: i < selected.items.length - 1 ? '1px solid #f3f4f6' : 'none',
+                    }}
+                  >
+                    <span style={{ color: '#374151', fontSize: 14 }}>{item.product_name} × {item.quantity}</span>
+                    <span style={{ fontWeight: 700, color: '#111827', fontSize: 14 }}>
+                      {item.subtotal.toLocaleString()} сум
+                    </span>
+                  </div>
+                ))}
+                <div style={{
+                  display: 'flex', justifyContent: 'space-between',
+                  paddingTop: 12, marginTop: 4,
+                  borderTop: '2px solid #e5e7eb',
+                }}>
+                  <span style={{ fontWeight: 700, fontSize: 15, color: '#111827' }}>Итого</span>
+                  <span style={{ fontWeight: 800, fontSize: 17, color: '#c8a96e' }}>
+                    {selected.total_amount.toLocaleString()} сум
+                  </span>
+                </div>
+              </div>
+
+              {/* Status buttons */}
+              <p style={{
+                fontSize: 11, fontWeight: 700, color: '#9ca3af',
+                textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10,
+              }}>
+                Изменить статус
+              </p>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
+                {(Object.keys(STATUS_META) as OrderStatus[]).map(s => {
+                  const meta   = STATUS_META[s]
+                  const active = selected.status === s
+                  return (
+                    <button
+                      key={s}
+                      onClick={() => changeStatus(selected, s)}
+                      disabled={actionLoading || active}
+                      style={{
+                        padding: '8px 14px',
+                        borderRadius: 10,
+                        border: active ? 'none' : '1px solid #e5e7eb',
+                        background: active ? '#111827' : '#ffffff',
+                        color: active ? '#ffffff' : '#374151',
+                        fontSize: 13, fontWeight: 600,
+                        cursor: active ? 'default' : 'pointer',
+                        fontFamily: 'inherit',
+                        opacity: actionLoading && !active ? 0.6 : 1,
+                      }}
+                    >
+                      {meta.label}
+                    </button>
+                  )
+                })}
+              </div>
+
+              {/* Yandex delivery button */}
+              {selected.delivery_type === 'delivery' && !selected.yandex_claim_id && (
+                <button
+                  onClick={() => callDelivery(selected)}
+                  disabled={actionLoading}
+                  style={{
+                    width: '100%', padding: '12px',
+                    background: '#7c3aed', border: 'none', borderRadius: 12,
+                    color: '#ffffff', cursor: 'pointer',
+                    fontWeight: 700, fontSize: 14, marginBottom: 16,
+                    fontFamily: 'inherit',
+                  }}
+                >
+                  🚗 Вызвать Яндекс курьера
+                </button>
+              )}
+              {selected.yandex_claim_id && (
+                <p style={{ color: '#7c3aed', fontSize: 13, marginBottom: 16 }}>
+                  Яндекс claim: {selected.yandex_claim_id}
+                </p>
+              )}
+
+              {/* Yandex tracking URL */}
+              <p style={{
+                fontSize: 11, fontWeight: 700, color: '#9ca3af',
+                textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8,
+              }}>
+                Ссылка отслеживания
+              </p>
               <div style={{ display: 'flex', gap: 8 }}>
                 <input
                   value={yandexUrl}
                   onChange={e => setYandexUrl(e.target.value)}
                   placeholder="https://go.yandex/route/..."
-                  style={{ flex: 1, padding: '8px 12px', background: '#111', border: '1px solid #333', borderRadius: 8, color: '#fff', fontSize: 13, outline: 'none' }}
+                  style={{
+                    flex: 1, padding: '10px 14px',
+                    background: '#f9fafb', border: '1px solid #e5e7eb',
+                    borderRadius: 10, color: '#111827', fontSize: 13,
+                    outline: 'none', fontFamily: 'inherit',
+                  }}
                 />
-                <button onClick={saveYandexUrl} disabled={yandexSaving}
-                  style={{ padding: '8px 14px', background: '#c8a96e', border: 'none', borderRadius: 8, color: '#000', fontWeight: 700, cursor: 'pointer', fontSize: 13 }}>
+                <button
+                  onClick={saveYandexUrl}
+                  disabled={yandexSaving}
+                  style={{
+                    padding: '10px 16px', background: '#c8a96e',
+                    border: 'none', borderRadius: 10,
+                    color: '#111827', fontWeight: 700,
+                    cursor: 'pointer', fontSize: 13, fontFamily: 'inherit',
+                  }}
+                >
                   {yandexSaving ? '...' : 'Сохранить'}
                 </button>
               </div>
               {yandexUrl && (
-                <a href={yandexUrl} target="_blank" rel="noreferrer"
-                  style={{ display: 'inline-block', marginTop: 8, color: '#3b82f6', fontSize: 12 }}>
-                  Открыть ссылку ↗
+                <a
+                  href={yandexUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{ display: 'inline-block', marginTop: 8, color: '#3b82f6', fontSize: 12 }}
+                >
+                  Открыть ↗
                 </a>
               )}
             </div>
@@ -215,7 +441,13 @@ export function OrdersPage() {
   )
 }
 
-const pgBtn: React.CSSProperties = {
-  padding: '6px 14px', background: '#2a2a2a', border: 'none',
-  borderRadius: 8, color: '#aaa', cursor: 'pointer',
-}
+const pgBtn = (disabled: boolean): React.CSSProperties => ({
+  padding: '8px 18px',
+  background: '#ffffff',
+  border: '1px solid #e5e7eb',
+  borderRadius: 10,
+  color: disabled ? '#9ca3af' : '#111827',
+  fontWeight: 600, fontSize: 14,
+  cursor: disabled ? 'default' : 'pointer',
+  fontFamily: 'inherit',
+})
