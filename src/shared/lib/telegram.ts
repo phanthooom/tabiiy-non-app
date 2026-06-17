@@ -6,7 +6,7 @@ export const DEV_BROWSER_MOCK_USER: TelegramUser = {
   first_name: 'Dev',
   last_name: 'Browser',
   username: 'dev_browser',
-  language_code: 'ru',
+  language_code: 'uz',
 }
 
 const noop = (): void => {}
