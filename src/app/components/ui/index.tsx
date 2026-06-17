@@ -198,7 +198,8 @@ export function ProductCard({ product, onSetQty, onQtyChange, cartQty, addLabel,
 
   const price = product.price.toLocaleString('ru-RU')
   const lang = language === 'uz'
-  const available = product.is_available && !addDisabled
+  const soldOut = product.quantity === 0
+  const available = product.is_available && !soldOut && !addDisabled
 
   // When server confirms, sync ref + state
   useEffect(() => {
@@ -281,7 +282,22 @@ export function ProductCard({ product, onSetQty, onQtyChange, cartQty, addLabel,
           }}
         >
           {imgNode}
-          {localQty > 0 && (
+          {soldOut && (
+            <div style={{
+              position: 'absolute', inset: 0,
+              background: 'rgba(0,0,0,0.52)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <span style={{
+                background: 'rgba(0,0,0,0.75)', color: '#fff',
+                padding: '7px 18px', borderRadius: 20,
+                fontSize: 14, fontWeight: 700, letterSpacing: '0.01em',
+              }}>
+                {lang ? 'Mavjud emas' : 'Нет в наличии'}
+              </span>
+            </div>
+          )}
+          {!soldOut && localQty > 0 && (
             <div style={{
               position: 'absolute', top: 10, right: 10,
               background: '#e8751a', color: '#fff',

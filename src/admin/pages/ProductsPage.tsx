@@ -142,6 +142,8 @@ export function ProductsPage() {
   const [descriptionRu, setDescriptionRu] = useState('')
   const [previewImage, setPreviewImage] = useState<string | null>(null)
   const [showPresetSuggestions, setShowPresetSuggestions] = useState(false)
+  const [stockMap, setStockMap] = useState<Record<string, number>>({})
+  const [stockSaving, setStockSaving] = useState<Record<string, boolean>>({})
 
   const load = async () => {
     const res = await productsApi.list()
@@ -149,6 +151,23 @@ export function ProductsPage() {
   }
 
   useEffect(() => { load() }, [])
+
+  useEffect(() => {
+    const map: Record<string, number> = {}
+    products.forEach(p => { map[String(p.id)] = (p as any).quantity ?? 0 })
+    setStockMap(map)
+  }, [products])
+
+  const saveStock = async (p: Product, qty: number) => {
+    const id = String(p.id)
+    setStockSaving(s => ({ ...s, [id]: true }))
+    try {
+      await productsApi.update(p.id, { quantity: qty } as any)
+      await load()
+    } finally {
+      setStockSaving(s => ({ ...s, [id]: false }))
+    }
+  }
 
   const resetForm = () => {
     setNameSearch('')
@@ -222,6 +241,50 @@ export function ProductsPage() {
 
   return (
     <div>
+      {/* ── Quick stock panel ── */}
+      <div style={{ background: '#1a1a1a', border: '1px solid #2a2a2a', borderRadius: 12, padding: 20, marginBottom: 24 }}>
+        <h3 style={{ color: '#c8a96e', fontWeight: 700, marginBottom: 16, fontSize: 16, margin: '0 0 16px' }}>
+          📦 Запас на сегодня
+        </h3>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+          {products.map(p => {
+            const id = String(p.id)
+            const qty = stockMap[id] ?? 0
+            return (
+              <div key={id} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <span style={{ flex: 1, color: '#f5f0e8', fontWeight: 600, fontSize: 14 }}>{(p as any).name_ru || (p as any).name}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <button
+                    onClick={() => { const n = Math.max(0, qty - 1); setStockMap(m => ({ ...m, [id]: n })); saveStock(p, n) }}
+                    style={{ width: 34, height: 34, background: '#2a2a2a', border: 'none', borderRadius: 8, color: '#fff', fontSize: 20, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  >−</button>
+                  <input
+                    type="number"
+                    min={0}
+                    value={qty}
+                    onChange={e => setStockMap(m => ({ ...m, [id]: Math.max(0, Number(e.target.value)) }))}
+                    onBlur={e => saveStock(p, Math.max(0, Number(e.target.value)))}
+                    style={{ width: 64, textAlign: 'center', background: '#111', border: '1px solid #333', borderRadius: 8, color: '#fff', padding: '6px 8px', fontSize: 15, fontWeight: 700 }}
+                  />
+                  <button
+                    onClick={() => { const n = qty + 1; setStockMap(m => ({ ...m, [id]: n })); saveStock(p, n) }}
+                    style={{ width: 34, height: 34, background: '#c8a96e', border: 'none', borderRadius: 8, color: '#000', fontSize: 20, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                  >+</button>
+                  <span style={{
+                    minWidth: 60, textAlign: 'center',
+                    padding: '4px 10px', borderRadius: 12, fontSize: 12, fontWeight: 700,
+                    background: qty > 0 ? '#22c55e22' : '#ef444422',
+                    color: qty > 0 ? '#22c55e' : '#ef4444',
+                  }}>
+                    {stockSaving[id] ? '...' : qty > 0 ? 'Есть' : 'Нет'}
+                  </span>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
       <div style={{ display: 'flex', gap: 12, marginBottom: 20, flexWrap: 'wrap' }}>
         <button onClick={() => { resetForm(); setEditing(empty); setIsNew(true) }}
           style={{ padding: '8px 18px', background: '#c8a96e', border: 'none', borderRadius: 8, color: '#000', fontWeight: 700, cursor: 'pointer' }}>
