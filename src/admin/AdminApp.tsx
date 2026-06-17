@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { onAuthStateChanged } from 'firebase/auth'
 import { useAuthStore } from './store/auth'
 import { LoginPage } from './pages/LoginPage'
 import { OrdersPage } from './pages/OrdersPage'
@@ -8,7 +9,7 @@ import { SettingsPage } from './pages/SettingsPage'
 import { useBackButton } from '../shared/hooks/useTelegram'
 import { useNavigate } from 'react-router-dom'
 import { collection, doc, getDoc, getDocs, setDoc, updateDoc } from 'firebase/firestore'
-import { db } from '../shared/lib/firebase'
+import { db, auth } from '../shared/lib/firebase'
 import { ClipboardList, Package, Users, Settings, Wheat } from 'lucide-react'
 
 type Tab = 'orders' | 'products' | 'users' | 'settings'
@@ -33,12 +34,28 @@ const TAB_LABELS: Record<Tab, string> = {
 }
 
 export default function AdminApp() {
-  const token  = useAuthStore(s => s.token)
-  const logout = useAuthStore(s => s.logout)
-  const [tab, setTab] = useState<Tab>('orders')
+  const token    = useAuthStore(s => s.token)
+  const setToken = useAuthStore(s => s.setToken)
+  const logout   = useAuthStore(s => s.logout)
+  const [tab, setTab]           = useState<Tab>('orders')
+  const [authReady, setAuthReady] = useState(false)
   const navigate = useNavigate()
 
   useBackButton(() => navigate('/'), true)
+
+  // Sync Firebase auth state → token (handles refresh + page reload)
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, async user => {
+      if (user) {
+        const t = await user.getIdToken()
+        setToken(t)
+      } else {
+        logout()
+      }
+      setAuthReady(true)
+    })
+    return () => unsub()
+  }, [])
 
   useEffect(() => {
     if (!token) return
@@ -67,6 +84,7 @@ export default function AdminApp() {
     resetStockIfNeeded()
   }, [token])
 
+  if (!authReady) return null
   if (!token) return <LoginPage />
 
   return (

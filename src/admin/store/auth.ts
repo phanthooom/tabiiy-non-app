@@ -1,4 +1,6 @@
 import { create } from 'zustand'
+import { signOut } from 'firebase/auth'
+import { auth } from '../../shared/lib/firebase'
 import { ADMIN_TOKEN_KEY, clearAdminToken, getStoredAdminToken } from '../lib/token'
 
 interface AuthStore {
@@ -16,6 +18,7 @@ export const useAuthStore = create<AuthStore>(set => ({
     set({ token: trimmed })
   },
   logout: () => {
+    signOut(auth).catch(() => {})
     clearAdminToken()
     set({ token: null })
   },
