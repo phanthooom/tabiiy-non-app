@@ -1,25 +1,27 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { usersApi } from '../api/index'
 import type { User } from '../types/index'
 import { Users } from 'lucide-react'
+
+const PAGE_SIZE = 50
 
 export function UsersPage() {
   const [users, setUsers] = useState<User[]>([])
   const [total, setTotal] = useState(0)
   const [page, setPage]   = useState(1)
 
-  const load = async () => {
-    const res = await usersApi.list({ page, size: 20 })
+  const load = useCallback(async () => {
+    const res = await usersApi.list({ page, size: PAGE_SIZE })
     setUsers(res.items)
     setTotal(res.total)
-  }
+  }, [page])
 
-  useEffect(() => { load() }, [page])
+  useEffect(() => { load() }, [load])
 
   const deactivate = async (id: number) => {
     if (!confirm('Деактивировать пользователя?')) return
+    setUsers(prev => prev.map(u => u.id === id ? { ...u, is_active: false } : u))
     await usersApi.deactivate(id)
-    await load()
   }
 
   return (
@@ -133,11 +135,13 @@ export function UsersPage() {
         >
           ←
         </button>
-        <span style={{ padding: '8px 14px', color: '#6b7280', fontWeight: 600, fontSize: 14 }}>{page}</span>
+        <span style={{ padding: '8px 14px', color: '#6b7280', fontWeight: 600, fontSize: 14 }}>
+          {page} / {Math.max(1, Math.ceil(total / PAGE_SIZE))}
+        </span>
         <button
           onClick={() => setPage(p => p + 1)}
-          disabled={users.length < 20}
-          style={pgBtn(users.length < 20)}
+          disabled={users.length < PAGE_SIZE}
+          style={pgBtn(users.length < PAGE_SIZE)}
         >
           →
         </button>

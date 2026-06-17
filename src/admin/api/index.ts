@@ -1,4 +1,4 @@
-import { collection, doc, getDocs, updateDoc, query, orderBy, limit, deleteDoc, addDoc, onSnapshot } from 'firebase/firestore'
+import { collection, doc, getDocs, updateDoc, query, orderBy, limit, deleteDoc, addDoc, onSnapshot, where } from 'firebase/firestore'
 import { signInWithEmailAndPassword } from 'firebase/auth'
 import { db, auth } from '../../shared/lib/firebase'
 import type { Order, Product, User, PaginatedList, CallDeliveryResult } from '../types/index'
@@ -95,12 +95,16 @@ export const productsApi = {
 }
 
 export const usersApi = {
-  list: async (_params?: { page?: number; size?: number }): Promise<PaginatedList<User>> => {
-    const snap = await getDocs(collection(db, 'users'))
-    const items = snap.docs.map(d => ({ ...d.data(), id: d.id } as any as User))
-    return { items, total: items.length }
+  list: async (params?: { page?: number; size?: number }): Promise<PaginatedList<User>> => {
+    const snap = await getDocs(query(collection(db, 'users'), orderBy('created_at', 'desc')))
+    const all = snap.docs.map(d => ({ ...d.data(), id: d.id } as any as User))
+    const page = params?.page ?? 1
+    const size = params?.size ?? 50
+    const start = (page - 1) * size
+    return { items: all.slice(start, start + size), total: all.length }
   },
   deactivate: async (id: number | string): Promise<User> => {
-    return { id } as any as User
+    await updateDoc(doc(db, 'users', String(id)), { is_active: false })
+    return { id, is_active: false } as any as User
   },
 }
