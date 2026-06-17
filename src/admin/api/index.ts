@@ -96,7 +96,7 @@ export const productsApi = {
 
 export const usersApi = {
   list: async (params?: { page?: number; size?: number }): Promise<PaginatedList<User>> => {
-    const snap = await getDocs(query(collection(db, 'users'), orderBy('created_at', 'desc')))
+    const snap = await getDocs(collection(db, 'users'))
     const all = snap.docs.map(d => ({ ...d.data(), id: d.id } as any as User))
     const page = params?.page ?? 1
     const size = params?.size ?? 50
