@@ -8,6 +8,7 @@ import { queryKeys, STALE_TIME } from '@/shared/lib/query-keys'
 import { useCartStore, useLangStore } from '@/app/store'
 import { useT } from '@/shared/utils/i18n'
 import { useTelegram } from '@/shared/hooks/useTelegram'
+import { useWorkingHours } from '@/shared/hooks/useWorkingHours'
 import { BYPASS_MODE } from '@/shared/lib/mock-data'
 import type { Cart } from '@/shared/types'
 
@@ -18,6 +19,7 @@ export function CartPage() {
   const navigate = useNavigate()
   const { tg } = useTelegram()
   const queryClient = useQueryClient()
+  const { isOpen, workStart, workEnd } = useWorkingHours()
 
   const { isLoading, isError, isFetching, refetch } = useQuery({
     queryKey: queryKeys.cart(),
@@ -284,13 +286,24 @@ export function CartPage() {
           </span>
         </div>
 
+        {!isOpen && (
+          <div style={{
+            background: '#1e1b18', borderRadius: 10, padding: '10px 14px',
+            marginBottom: 12, textAlign: 'center', border: '1px solid #3d3022',
+          }}>
+            <p style={{ fontSize: 13, color: '#9ca3af', margin: 0 }}>
+              🌙 {language === 'uz'
+                ? `Ish vaqti: ${workStart}:00 – ${workEnd}:00`
+                : `Работаем: ${workStart}:00 – ${workEnd}:00`}
+            </p>
+          </div>
+        )}
         <motion.button
-          whileTap={{ scale: 0.96 }}
-          onClick={() => navigate('/checkout')}
+          whileTap={isOpen ? { scale: 0.96 } : {}}
+          onClick={() => isOpen && navigate('/checkout')}
           style={{
-   
             width: '100%',
-            background: '#e8751a',
+            background: isOpen ? '#e8751a' : '#4b5563',
             color: '#fff',
             border: 'none',
             borderRadius: 8,
@@ -298,10 +311,13 @@ export function CartPage() {
             fontWeight: 700,
             fontSize: 14,
             fontFamily: 'var(--font-body)',
-            cursor: 'pointer',
+            cursor: isOpen ? 'pointer' : 'not-allowed',
+            opacity: isOpen ? 1 : 0.7,
           }}
         >
-          {language === 'uz' ? 'Buyurtma berish' : 'Proceed to Checkout'}
+          {isOpen
+            ? (language === 'uz' ? 'Buyurtma berish' : 'Proceed to Checkout')
+            : (language === 'uz' ? 'Hozircha yopiq' : 'Сейчас закрыто')}
         </motion.button>
       </motion.div>
     </div>

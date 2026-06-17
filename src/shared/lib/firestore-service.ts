@@ -274,8 +274,26 @@ export const firestoreOrders = {
 
     const ref = await addDoc(col.orders(), orderData)
 
-    // Очищаем корзину после оформления
     await firestoreCart.clear(telegramId)
+
+    // Push notification to customer
+    try {
+      const BOT_TOKEN = import.meta.env.VITE_BOT_TOKEN
+      if (BOT_TOKEN) {
+        const lang = userProfile?.language || 'uz'
+        const deliveryLabel = params.delivery_type === 'pickup'
+          ? (lang === 'uz' ? "O'z olish" : 'Самовывоз')
+          : (lang === 'uz' ? 'Yetkazib berish' : 'Доставка')
+        const msg = lang === 'uz'
+          ? `✅ Buyurtmangiz qabul qilindi!\n\n🆔 #${ref.id}\n📦 ${deliveryLabel}\n💰 ${cart.total.toLocaleString('ru-RU')} so'm\n\nTez orada tayyorlanadi! 🍞`
+          : `✅ Ваш заказ принят!\n\n🆔 #${ref.id}\n📦 ${deliveryLabel}\n💰 ${cart.total.toLocaleString('ru-RU')} сум\n\nСкоро будет готов! 🍞`
+        await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ chat_id: telegramId, text: msg }),
+        })
+      }
+    } catch {}
 
     return {
       ...orderData,

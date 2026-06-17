@@ -440,7 +440,7 @@ export function ProductsPage() {
               {/* Price + Quantity */}
               <div style={section}>
                 <span style={label}>💰 Цена и количество</span>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
                   <div>
                     <p style={{ margin: '0 0 6px', color: '#4b5563', fontSize: 11, fontWeight: 600 }}>Цена (сум)</p>
                     <input type="number"
@@ -452,7 +452,7 @@ export function ProductsPage() {
                     />
                   </div>
                   <div>
-                    <p style={{ margin: '0 0 6px', color: '#4b5563', fontSize: 11, fontWeight: 600 }}>Кол-во (шт)</p>
+                    <p style={{ margin: '0 0 6px', color: '#4b5563', fontSize: 11, fontWeight: 600 }}>Кол-во сейчас (шт)</p>
                     <input type="number"
                       value={((editing as any).quantity ?? 0) === 0 ? '' : (editing as any).quantity}
                       placeholder="0"
@@ -461,6 +461,16 @@ export function ProductsPage() {
                       style={inp}
                     />
                   </div>
+                </div>
+                <div>
+                  <p style={{ margin: '0 0 6px', color: '#4b5563', fontSize: 11, fontWeight: 600 }}>Остаток по умолч. (авто-сброс каждый день)</p>
+                  <input type="number"
+                    value={((editing as any).default_quantity ?? 0) === 0 ? '' : (editing as any).default_quantity}
+                    placeholder="Напр. 50 — каждое утро будет автоматически выставляться"
+                    onChange={e => setEditing({ ...editing, default_quantity: e.target.value === '' ? 0 : Number(e.target.value) } as any)}
+                    onFocus={e => e.target.select()}
+                    style={{ ...inp, borderColor: '#3d3022' }}
+                  />
                 </div>
               </div>
 

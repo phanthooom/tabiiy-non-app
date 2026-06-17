@@ -6,6 +6,7 @@ import { productsApi, cartApi, apiErrorMessage } from '@/app/api'
 import { useCartStore, useLangStore } from '@/app/store'
 import { useT } from '@/shared/utils/i18n'
 import { useTelegram } from '@/shared/hooks/useTelegram'
+import { useWorkingHours } from '@/shared/hooks/useWorkingHours'
 import { BYPASS_MODE, mockProducts } from '@/shared/lib/mock-data'
 import type { Product, Cart } from '@/shared/types'
 
@@ -15,6 +16,7 @@ export function CatalogPage() {
   const t = useT(language)
   const { tg } = useTelegram()
   const queryClient = useQueryClient()
+  const { isOpen, workStart, workEnd, loaded } = useWorkingHours()
 
   const { data: products, isLoading, isError, isFetching, refetch } = useQuery({
     queryKey: queryKeys.products(),
@@ -181,6 +183,31 @@ export function CatalogPage() {
   return (
     <div style={{ padding: '20px 12px 120px', background: '#f1f8f8', minHeight: '100dvh' }}>
 
+      {/* Closed banner */}
+      {loaded && !isOpen && (
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          style={{
+            background: '#1e1b18', borderRadius: 14, padding: '14px 18px',
+            marginBottom: 16, display: 'flex', alignItems: 'center', gap: 12,
+            border: '1px solid #3d3022',
+          }}
+        >
+          <span style={{ fontSize: 28 }}>🌙</span>
+          <div>
+            <p style={{ fontWeight: 800, fontSize: 14, color: '#f0ece4', marginBottom: 2 }}>
+              {language === 'uz' ? 'Hozircha yopiq' : 'Сейчас закрыто'}
+            </p>
+            <p style={{ fontSize: 12, color: '#9ca3af' }}>
+              {language === 'uz'
+                ? `Ish vaqti: ${workStart}:00 – ${workEnd}:00`
+                : `Работаем: ${workStart}:00 – ${workEnd}:00`}
+            </p>
+          </div>
+        </motion.div>
+      )}
+
       {/* Header */}
       <div style={{ marginBottom: 20, padding: '0 4px' }}>
         <h1 style={{ fontSize: 26, fontWeight: 800, color: '#1a1a1a', letterSpacing: '-0.03em', marginBottom: 4 }}>
@@ -211,7 +238,7 @@ export function CatalogPage() {
                 addLabel={t('addToCart')}
                 outLabel={t('outOfStock')}
                 sumLabel={t('sum')}
-                addDisabled={addMutation.isPending}
+                addDisabled={addMutation.isPending || !isOpen}
                 language={language}
               />
             </motion.div>
