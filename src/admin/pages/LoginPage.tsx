@@ -1,14 +1,16 @@
 import { useState } from 'react'
 import { signInWithPopup, GoogleAuthProvider, sendPasswordResetEmail } from 'firebase/auth'
-import { auth } from '../../shared/lib/firebase'
+import { doc, getDoc } from 'firebase/firestore'
+import { auth, db } from '../../shared/lib/firebase'
 import { authApi } from '../api/index'
 import { useAuthStore } from '../store/auth'
 import { Wheat } from 'lucide-react'
 
-// Список Gmail-ов которым разрешён вход через Google
-const ALLOWED_GOOGLE_EMAILS = [
-  'azamxojayevsanjar1@gmail.com',
-]
+async function fetchAllowedEmails(): Promise<string[]> {
+  const snap = await getDoc(doc(db, 'settings', 'main'))
+  if (!snap.exists()) return []
+  return snap.data().admin_emails ?? []
+}
 
 type Mode = 'login' | 'reset'
 
@@ -42,9 +44,10 @@ export function LoginPage() {
   const handleGoogleLogin = async () => {
     setLoading(true); setError(''); setInfo('')
     try {
-      const result = await signInWithPopup(auth, new GoogleAuthProvider())
+      const result    = await signInWithPopup(auth, new GoogleAuthProvider())
       const userEmail = result.user.email ?? ''
-      if (!ALLOWED_GOOGLE_EMAILS.includes(userEmail)) {
+      const allowed   = await fetchAllowedEmails()
+      if (!allowed.includes(userEmail.toLowerCase())) {
         await auth.signOut()
         setError(`Доступ запрещён для ${userEmail}`)
         return

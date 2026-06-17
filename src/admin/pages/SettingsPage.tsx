@@ -1,14 +1,17 @@
 import { useEffect, useState } from 'react'
 import { doc, getDoc, setDoc } from 'firebase/firestore'
 import { db } from '../../shared/lib/firebase'
-import { Clock, RotateCcw } from 'lucide-react'
+import { Clock, RotateCcw, ShieldCheck, Trash2, Plus } from 'lucide-react'
 
 export function SettingsPage() {
-  const [workStart, setWorkStart] = useState(8)
-  const [workEnd, setWorkEnd]     = useState(22)
-  const [saving, setSaving]       = useState(false)
-  const [saved, setSaved]         = useState(false)
-  const [lastReset, setLastReset] = useState<string | null>(null)
+  const [workStart, setWorkStart]   = useState(8)
+  const [workEnd, setWorkEnd]       = useState(22)
+  const [saving, setSaving]         = useState(false)
+  const [saved, setSaved]           = useState(false)
+  const [lastReset, setLastReset]   = useState<string | null>(null)
+  const [adminEmails, setAdminEmails] = useState<string[]>([])
+  const [newEmail, setNewEmail]     = useState('')
+  const [adminSaving, setAdminSaving] = useState(false)
 
   useEffect(() => {
     getDoc(doc(db, 'settings', 'main')).then(snap => {
@@ -17,6 +20,7 @@ export function SettingsPage() {
         setWorkStart(d.work_start_hour ?? 8)
         setWorkEnd(d.work_end_hour ?? 22)
         setLastReset(d.last_stock_reset ?? null)
+        setAdminEmails(d.admin_emails ?? [])
       }
     })
   }, [])
@@ -37,6 +41,29 @@ export function SettingsPage() {
     await setDoc(doc(db, 'settings', 'main'), { last_stock_reset: '' }, { merge: true })
     setLastReset('')
     alert('Отметка сброшена. Откройте вкладку Товары — остатки обновятся.')
+  }
+
+  const saveAdminEmails = async (emails: string[]) => {
+    setAdminSaving(true)
+    try {
+      await setDoc(doc(db, 'settings', 'main'), { admin_emails: emails }, { merge: true })
+      setAdminEmails(emails)
+    } finally {
+      setAdminSaving(false)
+    }
+  }
+
+  const addEmail = async () => {
+    const e = newEmail.trim().toLowerCase()
+    if (!e || !e.includes('@')) return
+    if (adminEmails.includes(e)) { setNewEmail(''); return }
+    await saveAdminEmails([...adminEmails, e])
+    setNewEmail('')
+  }
+
+  const removeEmail = async (email: string) => {
+    if (!confirm(`Убрать доступ для ${email}?`)) return
+    await saveAdminEmails(adminEmails.filter(e => e !== email))
   }
 
   return (
@@ -82,12 +109,73 @@ export function SettingsPage() {
             color: saved ? '#16a34a' : '#111827',
             fontWeight: 800, fontSize: 14,
             cursor: saving ? 'not-allowed' : 'pointer',
-            fontFamily: 'inherit',
-            transition: 'background 0.2s',
+            fontFamily: 'inherit', transition: 'background 0.2s',
           }}
         >
           {saved ? '✓ Сохранено' : saving ? 'Сохраняем...' : 'Сохранить'}
         </button>
+      </div>
+
+      {/* Admin access */}
+      <div style={card}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+          <div style={iconBox('#eff6ff')}><ShieldCheck size={18} color="#3b82f6" /></div>
+          <div>
+            <p style={{ margin: 0, fontWeight: 700, fontSize: 15, color: '#111827' }}>Доступ в админку</p>
+            <p style={{ margin: 0, fontSize: 12, color: '#9ca3af' }}>Вход через Google</p>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 14 }}>
+          {adminEmails.length === 0 && (
+            <p style={{ color: '#9ca3af', fontSize: 13, margin: 0 }}>Нет добавленных email</p>
+          )}
+          {adminEmails.map(email => (
+            <div key={email} style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              background: '#f9fafb', border: '1px solid #e5e7eb',
+              borderRadius: 10, padding: '10px 14px',
+            }}>
+              <span style={{ fontSize: 14, color: '#111827', fontWeight: 500 }}>{email}</span>
+              <button
+                onClick={() => removeEmail(email)}
+                disabled={adminSaving}
+                style={{
+                  background: 'none', border: 'none',
+                  cursor: 'pointer', color: '#ef4444',
+                  display: 'flex', alignItems: 'center', padding: 4,
+                }}
+              >
+                <Trash2 size={15} />
+              </button>
+            </div>
+          ))}
+        </div>
+
+        <div style={{ display: 'flex', gap: 8 }}>
+          <input
+            placeholder="новый@gmail.com"
+            value={newEmail}
+            onChange={e => setNewEmail(e.target.value)}
+            onKeyDown={e => e.key === 'Enter' && addEmail()}
+            style={{ ...inp, flex: 1, fontSize: 14 }}
+          />
+          <button
+            onClick={addEmail}
+            disabled={adminSaving || !newEmail.trim()}
+            style={{
+              padding: '10px 14px',
+              background: '#c8a96e', border: 'none', borderRadius: 10,
+              color: '#111827', fontWeight: 700, fontSize: 13,
+              cursor: adminSaving || !newEmail.trim() ? 'not-allowed' : 'pointer',
+              opacity: !newEmail.trim() ? 0.5 : 1,
+              fontFamily: 'inherit',
+              display: 'flex', alignItems: 'center', gap: 5,
+            }}
+          >
+            <Plus size={15} /> Добавить
+          </button>
+        </div>
       </div>
 
       {/* Stock reset */}
@@ -105,18 +193,15 @@ export function SettingsPage() {
         </p>
         {lastReset && (
           <p style={{ color: '#9ca3af', fontSize: 12, marginBottom: 14 }}>
-            Последний сброс:{' '}
-            <span style={{ color: '#6b7280', fontWeight: 600 }}>{lastReset}</span>
+            Последний сброс: <span style={{ color: '#6b7280', fontWeight: 600 }}>{lastReset}</span>
           </p>
         )}
         <button
           onClick={forceReset}
           style={{
-            padding: '9px 18px',
-            background: '#f9fafb',
-            border: '1px solid #e5e7eb',
-            borderRadius: 10, color: '#374151',
-            fontSize: 13, fontWeight: 600,
+            padding: '9px 18px', background: '#f9fafb',
+            border: '1px solid #e5e7eb', borderRadius: 10,
+            color: '#374151', fontSize: 13, fontWeight: 600,
             cursor: 'pointer', fontFamily: 'inherit',
           }}
         >
@@ -128,11 +213,8 @@ export function SettingsPage() {
 }
 
 const card: React.CSSProperties = {
-  background: '#ffffff',
-  border: '1px solid #e5e7eb',
-  borderRadius: 16,
-  padding: '20px',
-  marginBottom: 16,
+  background: '#ffffff', border: '1px solid #e5e7eb',
+  borderRadius: 16, padding: '20px', marginBottom: 16,
   boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
 }
 
@@ -152,9 +234,7 @@ const labelStyle: React.CSSProperties = {
 
 function iconBox(bg: string): React.CSSProperties {
   return {
-    width: 38, height: 38,
-    background: bg,
-    borderRadius: 10,
+    width: 38, height: 38, background: bg, borderRadius: 10,
     display: 'flex', alignItems: 'center', justifyContent: 'center',
     fontSize: 18, flexShrink: 0,
   }
