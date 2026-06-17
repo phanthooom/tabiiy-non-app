@@ -1,4 +1,4 @@
-import { collection, doc, getDocs, updateDoc, query, orderBy, limit, deleteDoc, addDoc, onSnapshot, where } from 'firebase/firestore'
+import { collection, doc, getDocs, updateDoc, query, orderBy, limit, deleteDoc, addDoc, onSnapshot } from 'firebase/firestore'
 import { signInWithEmailAndPassword } from 'firebase/auth'
 import { db, auth } from '../../shared/lib/firebase'
 import type { Order, Product, User, PaginatedList, CallDeliveryResult } from '../types/index'
