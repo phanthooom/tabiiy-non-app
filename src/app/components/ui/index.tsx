@@ -445,7 +445,7 @@ export function ProductCard({ product, onSetQty, onQtyChange, cartQty, addLabel,
                 <div style={{ padding: '0 20px 16px' }}>
                   <div style={{
                     borderRadius: 16, overflow: 'hidden',
-                    height: 190, background: '#f8fafb',
+                    height: 240, background: '#f8fafb',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                   }}>
                     {imgNode}
