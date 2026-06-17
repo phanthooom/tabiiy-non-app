@@ -257,9 +257,9 @@ export function ProductCard({ product, onSetQty, onQtyChange, cartQty, addLabel,
   }
 
   const imgNode = product.image_url ? (
-    <img src={product.image_url} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center bottom' }} />
+    <img src={product.image_url} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
   ) : product.photo_file_id ? (
-    <ProductPhoto fileId={product.photo_file_id} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center bottom' }} fallback={<span style={{ fontSize: 56 }}>🍞</span>} />
+    <ProductPhoto fileId={product.photo_file_id} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'contain' }} fallback={<span style={{ fontSize: 56 }}>🍞</span>} />
   ) : (
     <span style={{ fontSize: 56 }}>🍞</span>
   )
@@ -275,7 +275,7 @@ export function ProductCard({ product, onSetQty, onQtyChange, cartQty, addLabel,
         <div
           onClick={() => setShowSheet(true)}
           style={{
-            height: 190, background: '#f8fafb', overflow: 'hidden',
+            height: 220, background: '#f8fafb', overflow: 'hidden',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             cursor: 'pointer', position: 'relative',
           }}
