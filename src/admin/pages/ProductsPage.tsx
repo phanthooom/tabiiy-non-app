@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { productsApi } from '../api/index'
 import type { Product } from '../types/index'
+import { Package, Pencil, Eye, EyeOff, Trash2, Plus, RotateCcw, Check } from 'lucide-react'
 
 const DESC_TABIIY_UZ = `🍞 Tabiiy non
 
@@ -218,8 +219,10 @@ export function ProductsPage() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
           <div style={{
             width: 36, height: 36, background: '#fef9ec',
-            borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18,
-          }}>📦</div>
+            borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <Package size={18} color="#d97706" />
+          </div>
           <h3 style={{ margin: 0, color: '#111827', fontWeight: 800, fontSize: 16 }}>Запас на сегодня</h3>
           <span style={{ marginLeft: 'auto', fontSize: 11, color: '#9ca3af', fontWeight: 600 }}>
             обновляется мгновенно
@@ -305,25 +308,27 @@ export function ProductsPage() {
         <button
           onClick={() => { resetForm(); setEditing(empty); setIsNew(true) }}
           style={{
-            padding: '9px 20px', background: '#c8a96e',
+            padding: '9px 18px', background: '#c8a96e',
             border: 'none', borderRadius: 10, color: '#111827',
             fontWeight: 700, fontSize: 13, cursor: 'pointer', fontFamily: 'inherit',
+            display: 'inline-flex', alignItems: 'center', gap: 6,
           }}
         >
-          + Добавить
+          <Plus size={15} /> Добавить
         </button>
         <button
           onClick={seedProducts}
           disabled={seedLoading}
           style={{
-            padding: '9px 16px', background: '#f9fafb',
+            padding: '9px 14px', background: '#f9fafb',
             border: '1px solid #e5e7eb', borderRadius: 10,
             color: '#6b7280', fontWeight: 600, fontSize: 13,
             cursor: seedLoading ? 'not-allowed' : 'pointer',
             opacity: seedLoading ? 0.5 : 1, fontFamily: 'inherit',
+            display: 'inline-flex', alignItems: 'center', gap: 6,
           }}
         >
-          {seedLoading ? '...' : '🔄 Сбросить'}
+          {seedLoading ? '...' : <><RotateCcw size={13} /> Сбросить</>}
         </button>
       </div>
 
@@ -342,7 +347,9 @@ export function ProductsPage() {
               <div style={{ position: 'relative' }}>
                 {(p as any).image_url
                   ? <img src={(p as any).image_url} alt="" style={{ width: '100%', height: 140, objectFit: 'cover', display: 'block' }} />
-                  : <div style={{ width: '100%', height: 140, background: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 40 }}>🍞</div>
+                  : <div style={{ width: '100%', height: 140, background: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Package size={32} color="#d1d5db" />
+                    </div>
                 }
                 <div style={{ position: 'absolute', top: 8, right: 8, display: 'flex', gap: 5 }}>
                   <span style={{
@@ -380,12 +387,14 @@ export function ProductsPage() {
                   }}
                   style={actionBtn('#3b82f6')}
                 >
-                  ✏️ Изменить
+                  <Pencil size={12} /> Изменить
                 </button>
                 <button onClick={() => toggle(p)} style={actionBtn('#f59e0b')}>
-                  {p.is_visible ? '🙈 Скрыть' : '👁 Показать'}
+                  {p.is_visible ? <><EyeOff size={12} /> Скрыть</> : <><Eye size={12} /> Показать</>}
                 </button>
-                <button onClick={() => del(p.id)} style={actionBtn('#ef4444')}>🗑</button>
+                <button onClick={() => del(p.id)} style={{ ...actionBtn('#ef4444'), flex: 'none', padding: '7px 10px' }}>
+                  <Trash2 size={13} />
+                </button>
               </div>
             </div>
           )
@@ -439,7 +448,7 @@ export function ProductsPage() {
 
               {/* Preset search */}
               <div style={sectionBox}>
-                <span style={fieldLabel}>🔍 Быстрый выбор</span>
+                <span style={fieldLabel}>Быстрый выбор</span>
                 <input
                   placeholder="Начните вводить название..."
                   value={nameSearch}
@@ -483,7 +492,7 @@ export function ProductsPage() {
 
               {/* Names */}
               <div style={sectionBox}>
-                <span style={fieldLabel}>📝 Название</span>
+                <span style={fieldLabel}>Название</span>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
                   <div>
                     <p style={{ margin: '0 0 6px', color: '#9ca3af', fontSize: 11, fontWeight: 600 }}>RU</p>
@@ -506,7 +515,7 @@ export function ProductsPage() {
 
               {/* Price + Quantity */}
               <div style={sectionBox}>
-                <span style={fieldLabel}>💰 Цена и количество</span>
+                <span style={fieldLabel}>Цена и количество</span>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
                   <div>
                     <p style={{ margin: '0 0 6px', color: '#9ca3af', fontSize: 11, fontWeight: 600 }}>Цена (сум)</p>
@@ -548,7 +557,7 @@ export function ProductsPage() {
 
               {/* Image */}
               <div style={sectionBox}>
-                <span style={fieldLabel}>🖼 Картинка</span>
+                <span style={fieldLabel}>Картинка</span>
                 {previewImage && (
                   <img src={previewImage} style={{ width: '100%', height: 150, objectFit: 'cover', borderRadius: 10, marginBottom: 10, display: 'block' }} />
                 )}
@@ -572,7 +581,7 @@ export function ProductsPage() {
 
               {/* Descriptions */}
               <div style={sectionBox}>
-                <span style={fieldLabel}>📄 Описание</span>
+                <span style={fieldLabel}>Описание</span>
                 <div style={{ display: 'flex', gap: 2, marginBottom: 12, background: '#f3f4f6', borderRadius: 8, padding: 3 }}>
                   {(['ru', 'uz'] as const).map(lang => (
                     <button
@@ -611,7 +620,7 @@ export function ProductsPage() {
                   background: '#fef2f2', border: '1px solid #fecaca',
                   borderRadius: 10, padding: '10px 14px', marginBottom: 12,
                 }}>
-                  <p style={{ margin: 0, color: '#dc2626', fontSize: 13 }}>⚠️ {error}</p>
+                  <p style={{ margin: 0, color: '#dc2626', fontSize: 13 }}>{error}</p>
                 </div>
               )}
             </div>
@@ -633,9 +642,10 @@ export function ProductsPage() {
                   fontWeight: 800, fontSize: 14,
                   cursor: loading ? 'not-allowed' : 'pointer',
                   transition: 'background .15s', fontFamily: 'inherit',
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 6,
                 }}
               >
-                {loading ? 'Сохраняем...' : isNew ? '✓ Создать товар' : '✓ Сохранить'}
+                {loading ? 'Сохраняем...' : <><Check size={15} /> {isNew ? 'Создать товар' : 'Сохранить'}</>}
               </button>
               <button
                 onClick={() => { setEditing(null); setIsNew(false); resetForm() }}
@@ -660,5 +670,6 @@ const actionBtn = (color: string): React.CSSProperties => ({
   flex: 1, padding: '7px 8px',
   background: color + '12', border: `1px solid ${color}30`,
   borderRadius: 8, color, fontSize: 11, fontWeight: 600,
-  cursor: 'pointer', textAlign: 'center', fontFamily: 'inherit',
+  cursor: 'pointer', fontFamily: 'inherit',
+  display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 4,
 })

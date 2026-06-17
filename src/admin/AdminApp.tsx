@@ -9,7 +9,7 @@ import { useBackButton } from '../shared/hooks/useTelegram'
 import { useNavigate } from 'react-router-dom'
 import { collection, doc, getDoc, getDocs, setDoc, updateDoc } from 'firebase/firestore'
 import { db } from '../shared/lib/firebase'
-import { ClipboardList, Package, Users, Settings } from 'lucide-react'
+import { ClipboardList, Package, Users, Settings, Wheat } from 'lucide-react'
 
 type Tab = 'orders' | 'products' | 'users' | 'settings'
 
@@ -90,7 +90,9 @@ export default function AdminApp() {
         top: 0,
         zIndex: 50,
       }}>
-        <span style={{ fontSize: 24, lineHeight: 1 }}>🍞</span>
+        <div style={{ width: 34, height: 34, background: '#fef9ec', borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <Wheat size={18} color="#c8a96e" />
+        </div>
         <div style={{ flex: 1 }}>
           <p style={{ margin: 0, fontWeight: 800, fontSize: 16, color: '#111827', lineHeight: 1.2 }}>
             Tabiiy Non

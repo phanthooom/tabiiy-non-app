@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { authApi } from '../api/index'
 import { useAuthStore } from '../store/auth'
+import { Wheat } from 'lucide-react'
 
 export function LoginPage() {
   const [username, setUsername] = useState('')
@@ -53,7 +54,9 @@ export function LoginPage() {
         boxShadow: '0 4px 24px rgba(0,0,0,0.06)',
       }}>
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
-          <div style={{ fontSize: 48, lineHeight: 1, marginBottom: 16 }}>🍞</div>
+          <div style={{ width: 60, height: 60, background: '#fef9ec', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+            <Wheat size={30} color="#c8a96e" />
+          </div>
           <h1 style={{ margin: 0, color: '#111827', fontSize: 22, fontWeight: 800 }}>Tabiiy Non</h1>
           <p style={{ margin: '6px 0 0', color: '#9ca3af', fontSize: 14 }}>Панель управления</p>
         </div>

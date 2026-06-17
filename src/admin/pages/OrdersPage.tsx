@@ -2,18 +2,18 @@ import { useEffect, useState } from 'react'
 import { ordersApi } from '../api/index'
 import type { Order, OrderStatus } from '../types/index'
 import { AddressText } from '@/app/components/ui/AddressText'
-import { MapPin, Phone, User } from 'lucide-react'
+import { MapPin, Phone, User, ClipboardList } from 'lucide-react'
 
-const STATUS_META: Record<string, { label: string; bg: string; color: string }> = {
-  accepted:         { label: '✅ Принят',          bg: '#dbeafe', color: '#1d4ed8' },
-  packing:          { label: '📦 Упаковывается',   bg: '#fef3c7', color: '#d97706' },
-  courier_assigned: { label: '🚗 Курьер в пути',   bg: '#ede9fe', color: '#7c3aed' },
-  ready:            { label: '✅ Готов',            bg: '#dcfce7', color: '#16a34a' },
-  delivered:        { label: '✅ Доставлен',        bg: '#dcfce7', color: '#16a34a' },
-  cancelled:        { label: '❌ Отменён',          bg: '#fee2e2', color: '#dc2626' },
+const STATUS_META: Record<string, { label: string; bg: string; color: string; dot: string }> = {
+  accepted:         { label: 'Принят',        bg: '#dbeafe', color: '#1d4ed8', dot: '#3b82f6' },
+  packing:          { label: 'Упаковка',       bg: '#fef3c7', color: '#d97706', dot: '#f59e0b' },
+  courier_assigned: { label: 'Курьер в пути', bg: '#ede9fe', color: '#7c3aed', dot: '#8b5cf6' },
+  ready:            { label: 'Готов',          bg: '#dcfce7', color: '#16a34a', dot: '#22c55e' },
+  delivered:        { label: 'Доставлен',      bg: '#dcfce7', color: '#16a34a', dot: '#22c55e' },
+  cancelled:        { label: 'Отменён',        bg: '#fee2e2', color: '#dc2626', dot: '#ef4444' },
 }
 
-const DEFAULT_META = { label: '• В обработке', bg: '#f3f4f6', color: '#6b7280' }
+const DEFAULT_META = { label: 'В обработке', bg: '#f3f4f6', color: '#6b7280', dot: '#9ca3af' }
 
 const FILTER_TABS = [
   { id: '',                label: 'Все' },
@@ -114,9 +114,8 @@ export function OrdersPage() {
           background: '#fef9ec',
           borderRadius: 14,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 22,
         }}>
-          📋
+          <ClipboardList size={22} color="#c8a96e" />
         </div>
       </div>
 
@@ -182,11 +181,13 @@ export function OrdersPage() {
                     <span style={{ color: '#9ca3af', fontSize: 12, marginLeft: 8 }}>{o.customer_name}</span>
                   </div>
                   <span style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 5,
                     padding: '4px 10px',
-                    borderRadius: 20, fontSize: 11, fontWeight: 700,
+                    borderRadius: 20, fontSize: 11, fontWeight: 600,
                     background: meta.bg, color: meta.color,
                     flexShrink: 0, marginLeft: 8,
                   }}>
+                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: meta.dot, flexShrink: 0 }} />
                     {meta.label}
                   </span>
                 </div>
@@ -239,27 +240,23 @@ export function OrdersPage() {
             position: 'fixed', inset: 0,
             background: 'rgba(0,0,0,0.45)',
             backdropFilter: 'blur(4px)',
-            display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
             zIndex: 100,
+            padding: '16px',
           }}
           onClick={() => setSelected(null)}
         >
           <div
             style={{
               background: '#ffffff',
-              borderRadius: '20px 20px 0 0',
-              width: '100%', maxWidth: 560,
-              maxHeight: '85vh', overflowY: 'auto',
-              paddingBottom: 'env(safe-area-inset-bottom, 20px)',
+              borderRadius: 20,
+              width: '100%', maxWidth: 520,
+              maxHeight: '90vh', overflowY: 'auto',
+              boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
             }}
             onClick={e => e.stopPropagation()}
           >
-            {/* Handle */}
-            <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 0 0' }}>
-              <div style={{ width: 40, height: 4, background: '#e5e7eb', borderRadius: 2 }} />
-            </div>
-
-            <div style={{ padding: '16px 20px 24px' }}>
+            <div style={{ padding: '20px 20px 24px' }}>
               {/* Sheet header */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
                 <h2 style={{ margin: 0, fontWeight: 800, fontSize: 20, color: '#111827' }}>
@@ -355,6 +352,7 @@ export function OrdersPage() {
                       onClick={() => changeStatus(selected, s)}
                       disabled={actionLoading || active}
                       style={{
+                        display: 'inline-flex', alignItems: 'center', gap: 6,
                         padding: '8px 14px',
                         borderRadius: 10,
                         border: active ? 'none' : '1px solid #e5e7eb',
@@ -366,6 +364,10 @@ export function OrdersPage() {
                         opacity: actionLoading && !active ? 0.6 : 1,
                       }}
                     >
+                      <span style={{
+                        width: 7, height: 7, borderRadius: '50%', flexShrink: 0,
+                        background: active ? '#ffffff' : meta.dot,
+                      }} />
                       {meta.label}
                     </button>
                   )
@@ -385,7 +387,7 @@ export function OrdersPage() {
                     fontFamily: 'inherit',
                   }}
                 >
-                  🚗 Вызвать Яндекс курьера
+                  Вызвать Яндекс курьера
                 </button>
               )}
               {selected.yandex_claim_id && (

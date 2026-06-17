@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { usersApi } from '../api/index'
 import type { User } from '../types/index'
+import { Users } from 'lucide-react'
 
 export function UsersPage() {
   const [users, setUsers] = useState<User[]>([])
@@ -48,9 +49,8 @@ export function UsersPage() {
           background: '#eff6ff',
           borderRadius: 14,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 22,
         }}>
-          👥
+          <Users size={22} color="#3b82f6" />
         </div>
       </div>
 

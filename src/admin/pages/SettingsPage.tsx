@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { doc, getDoc, setDoc } from 'firebase/firestore'
 import { db } from '../../shared/lib/firebase'
+import { Clock, RotateCcw } from 'lucide-react'
 
 export function SettingsPage() {
   const [workStart, setWorkStart] = useState(8)
@@ -43,7 +44,7 @@ export function SettingsPage() {
       {/* Working hours */}
       <div style={card}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
-          <div style={iconBox('#fef9ec')}>⏰</div>
+          <div style={iconBox('#fef9ec')}><Clock size={18} color="#d97706" /></div>
           <div>
             <p style={{ margin: 0, fontWeight: 700, fontSize: 15, color: '#111827' }}>Рабочие часы</p>
             <p style={{ margin: 0, fontSize: 12, color: '#9ca3af' }}>Ташкент UTC+5</p>
@@ -92,7 +93,7 @@ export function SettingsPage() {
       {/* Stock reset */}
       <div style={card}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-          <div style={iconBox('#f0fdf4')}>📦</div>
+          <div style={iconBox('#f0fdf4')}><RotateCcw size={17} color="#16a34a" /></div>
           <p style={{ margin: 0, fontWeight: 700, fontSize: 15, color: '#111827' }}>Авто-сброс остатков</p>
         </div>
         <p style={{ color: '#6b7280', fontSize: 13, lineHeight: 1.7, marginBottom: 12 }}>
@@ -119,7 +120,7 @@ export function SettingsPage() {
             cursor: 'pointer', fontFamily: 'inherit',
           }}
         >
-          🔄 Принудительно сбросить отметку
+          Принудительно сбросить отметку
         </button>
       </div>
     </div>
