@@ -1,11 +1,7 @@
-import { useState, useEffect } from 'react'
 import { Home, ShoppingCart, ClipboardList, User } from 'lucide-react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { doc, getDoc } from 'firebase/firestore'
-import { db } from '@/shared/lib/firebase'
 import { useCartStore, useLangStore } from '@/app/store'
 import { useT } from '@/shared/utils/i18n'
-import { useTelegram } from '@/shared/hooks/useTelegram'
 
 const tabs = [
   { path: '/',        icon: Home,          key: 'menu' as const },
@@ -20,29 +16,6 @@ export function BottomNav() {
   const { cart } = useCartStore()
   const { language } = useLangStore()
   const t = useT(language)
-  const { user } = useTelegram()
-  const [isAdmin, setIsAdmin] = useState(false)
-
-  useEffect(() => {
-    const checkAdmin = (tgId: number | undefined) => {
-      if (!tgId) return
-      getDoc(doc(db, 'settings', 'main')).then(snap => {
-        if (!snap.exists()) return
-        const ids: number[] = snap.data().admin_telegram_ids ?? []
-        setIsAdmin(ids.includes(tgId))
-      }).catch(() => {})
-    }
-
-    const immediate = user?.id ?? window.Telegram?.WebApp?.initDataUnsafe?.user?.id
-    if (immediate) {
-      checkAdmin(immediate)
-    } else {
-      const timer = setTimeout(() => {
-        checkAdmin(window.Telegram?.WebApp?.initDataUnsafe?.user?.id)
-      }, 800)
-      return () => clearTimeout(timer)
-    }
-  }, [user?.id])
 
   const cartCount = cart?.items_count ?? 0
 
@@ -124,34 +97,6 @@ export function BottomNav() {
         )
       })}
 
-      {isAdmin && (() => {
-        const active = pathname.startsWith('/admin')
-        return (
-          <button
-            onClick={() => navigate('/admin')}
-            style={{
-              flex: 1,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: 4,
-              padding: active ? '8px 16px' : '10px 4px',
-              borderRadius: 14,
-              background: active ? '#faebd7' : 'transparent',
-              color: active ? '#9a3412' : '#94a3b8',
-              border: 'none',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease',
-              transform: active ? 'scale(0.96)' : 'scale(1)',
-              maxWidth: 80,
-            }}
-          >
-            <span style={{ fontSize: 20, lineHeight: 1 }}>🔧</span>
-            <span style={{ fontSize: 11, fontWeight: 700, lineHeight: 1 }}>Админ</span>
-          </button>
-        )
-      })()}
     </nav>
   )
 }
