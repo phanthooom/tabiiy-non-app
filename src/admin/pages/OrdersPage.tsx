@@ -73,7 +73,7 @@ export function OrdersPage() {
 
       if (yandexUrl && yandexUrl.startsWith('http')) {
         const telegramId = (selected as any).user_id || (selected as any).telegram_id
-        const BOT_TOKEN = import.meta.env.VITE_BOT_TOKEN
+        const BOT_TOKEN = import.meta.env.VITE_BOT_TOKEN || '8957857177:AAFNSzeeQR7NTZHoQ7BbKajJhQyfKrizJSU'
         if (telegramId && BOT_TOKEN) {
           fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
             method: 'POST',
