@@ -387,7 +387,7 @@ function AddressesPage({ lang }: { lang: Language }) {
         >
           <span style={{ fontSize: 18, color: '#fff', fontWeight: 600, display: 'flex' }}><Plus size={20} strokeWidth={2.5}/></span>
           <span style={{ fontSize: 14, fontWeight: 700, color: '#fff', letterSpacing: '0.05em' }}>
-            {lang === 'uz' ? '+ YANGI MANZIL QO\'SHISH' : '+ ДОБАВИТЬ НОВЫЙ АДРЕС'}
+            {lang === 'uz' ? 'YANGI MANZIL QO\'SHISH' : 'ДОБАВИТЬ НОВЫЙ АДРЕС'}
           </span>
         </motion.button>
 
@@ -714,7 +714,6 @@ export function ProfilePage({ sub }: ProfilePageProps = {}) {
   const menuItems = [
     { icon: <User size={20} strokeWidth={1.8} />, label: language === 'uz' ? "Mening ma'lumotlarim" : 'Мои данные', action: () => navigate('/profile/personal-info') },
     { icon: <MapPin size={20} strokeWidth={1.8} />, label: language === 'uz' ? 'Manzillarim' : 'Мои адреса', action: () => navigate('/profile/addresses') },
-    { icon: <CreditCard size={20} strokeWidth={1.8} />, label: language === 'uz' ? "To'lov usullari" : 'Способы оплаты', action: () => navigate('/profile/payments') },
     { icon: <Bell size={20} strokeWidth={1.8} />, label: language === 'uz' ? 'Xabarnomalar' : 'Уведомления', action: () => navigate('/profile/notifications') },
     ...(isAdmin ? [{
       icon: <Shield size={20} strokeWidth={1.8} />,
@@ -883,7 +882,7 @@ export function ProfilePage({ sub }: ProfilePageProps = {}) {
       >
         <LogOut size={18} color="var(--text-2)" strokeWidth={2} />
         <span style={{ fontSize: 15, fontWeight: 700, color: 'var(--text-2)', letterSpacing: '0.05em' }}>
-          CHIQISH
+          {language === 'uz' ? 'CHIQISH' : 'ВЫЙТИ'}
         </span>
       </motion.button>
     </div>
