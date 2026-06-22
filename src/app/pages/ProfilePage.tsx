@@ -701,13 +701,25 @@ export function ProfilePage({ sub }: ProfilePageProps = {}) {
   const [showLangPicker, setShowLangPicker] = useState(false)
 
   useEffect(() => {
-    const tgId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id
-    if (!tgId) return
-    getDoc(doc(db, 'settings', 'main')).then(snap => {
-      if (!snap.exists()) return
-      const ids: number[] = snap.data().admin_telegram_ids ?? []
-      setIsAdmin(ids.includes(tgId))
-    }).catch(() => {})
+    const check = (tgId: number | undefined) => {
+      if (!tgId) return
+      getDoc(doc(db, 'settings', 'main')).then(snap => {
+        if (!snap.exists()) return
+        const ids: number[] = snap.data().admin_telegram_ids ?? []
+        setIsAdmin(ids.includes(tgId))
+      }).catch(() => {})
+    }
+
+    const immediate = window.Telegram?.WebApp?.initDataUnsafe?.user?.id
+    if (immediate) {
+      check(immediate)
+    } else {
+      // Fallback: Telegram SDK might not be fully ready at mount
+      const t = setTimeout(() => {
+        check(window.Telegram?.WebApp?.initDataUnsafe?.user?.id)
+      }, 800)
+      return () => clearTimeout(t)
+    }
   }, [])
 
   if (sub === 'personal-info') return <PersonalInfoPage lang={language} />
