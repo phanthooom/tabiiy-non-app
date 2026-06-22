@@ -80,8 +80,8 @@ export function OrdersPage() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               chat_id: telegramId,
-              text: `🚚 Buyurtma #${selected.id} yo'lda!\n\nSizning noningiz yetkazib berishga yuborildi.\n\n<a href="${yandexUrl}">📍 Dostavkani kuzatish</a>\n\n💰 ${(selected.total_amount ?? 0).toLocaleString('ru-RU')} so'm`,
-              parse_mode: 'HTML',
+              text: `🚚 Buyurtma #${selected.id} yo'lda!\n\nSizning noningiz yetkazib berishga yuborildi.\n\n[📍 Dostavkani kuzatish](${yandexUrl})\n\n💰 ${(selected.total_amount ?? 0).toLocaleString('ru-RU')} so'm`,
+              parse_mode: 'Markdown',
             })
           }).catch(() => {})
         }

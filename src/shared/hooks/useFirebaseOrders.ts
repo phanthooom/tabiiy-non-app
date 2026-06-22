@@ -92,11 +92,11 @@ export async function updateFirebaseOrderStatus(docId: string, status: string, l
         let parse_mode: string
 
         if (yandexUrl && yandexUrl.startsWith('http')) {
-          message = `🚚 <b>Buyurtma #${order.id} yo'lda!</b>\n\nSizning noningiz yetkazib berishga yuborildi.\n\n<a href="${yandexUrl}">📍 Dostavkani kuzatish</a>\n\nJami: ${order.total_amount?.toLocaleString('ru-RU')} so'm`
-          parse_mode = 'HTML'
+          message = `🚚 Buyurtma #${order.id} yo'lda!\n\nSizning noningiz yetkazib berishga yuborildi.\n\n[📍 Dostavkani kuzatish](${yandexUrl})\n\nJami: ${order.total_amount?.toLocaleString('ru-RU')} so'm`
+          parse_mode = 'Markdown'
         } else {
-          message = `📦 <b>Buyurtma #${order.id} holati o'zgardi</b>\n\nYangi holat: ${label}\nJami: ${order.total_amount?.toLocaleString('ru-RU')} so'm\n\nTabiiy Non bilan qolganingiz uchun rahmat! 🍞`
-          parse_mode = 'HTML'
+          message = `📦 Buyurtma #${order.id} holati o'zgardi\n\nYangi holat: ${label}\nJami: ${order.total_amount?.toLocaleString('ru-RU')} so'm\n\nTabiiy Non bilan qolganingiz uchun rahmat! 🍞`
+          parse_mode = ''
         }
 
         fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
@@ -105,7 +105,7 @@ export async function updateFirebaseOrderStatus(docId: string, status: string, l
           body: JSON.stringify({
             chat_id: telegramId,
             text: message,
-            parse_mode,
+            ...(parse_mode ? { parse_mode } : {}),
           })
         }).catch(err => console.error("Telegram notification fetch error:", err))
       }
