@@ -178,7 +178,7 @@ export const firestoreCart = {
 
     const existing = items.find(i => String(i.product_id) === String(product.id))
     if (existing) {
-      existing.quantity += quantity
+      existing.quantity = quantity
       existing.subtotal = existing.price * existing.quantity
     } else {
       items.push({

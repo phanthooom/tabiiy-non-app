@@ -203,8 +203,9 @@ export function ProductCard({ product, onSetQty, onQtyChange, cartQty, addLabel,
   const soldOut = product.quantity === 0
   const available = product.is_available && !soldOut && !addDisabled
 
-  // When server confirms, sync ref + state
+  // Sync from server only when user is not actively tapping
   useEffect(() => {
+    if (debounceRef.current) return
     qtyRef.current = cartQty
     setLocalQty(cartQty)
   }, [cartQty])
@@ -229,7 +230,10 @@ export function ProductCard({ product, onSetQty, onQtyChange, cartQty, addLabel,
   // Unified handlers — ref-based so rapid taps never see stale value
   const scheduleSync = (qty: number) => {
     if (debounceRef.current) clearTimeout(debounceRef.current)
-    debounceRef.current = setTimeout(() => { onSetQty(product, qty) }, 400)
+    debounceRef.current = setTimeout(() => {
+      debounceRef.current = null
+      onSetQty(product, qty)
+    }, 400)
   }
 
   const inc = (e?: React.MouseEvent) => {
