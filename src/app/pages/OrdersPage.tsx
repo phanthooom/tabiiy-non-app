@@ -498,16 +498,6 @@ export function OrderDetailPage() {
 
     return (
       <div style={{ position: 'fixed', inset: 0, zIndex: 50, overflow: 'hidden', background: '#f8fafc', display: 'flex', flexDirection: 'column' }}>
-        {/* Back button */}
-        <div style={{ padding: 'calc(env(safe-area-inset-top, 20px) + 12px) 16px 0', flexShrink: 0 }}>
-          <button
-            onClick={() => navigate('/orders')}
-            style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: 10, padding: '8px 14px', fontSize: 13, fontWeight: 700, color: '#0f172a', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}
-          >
-            ← {language === 'uz' ? 'Orqaga' : 'Назад'}
-          </button>
-        </div>
-
         {/* Store icon area */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 24px' }}>
           <motion.div
