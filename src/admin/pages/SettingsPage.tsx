@@ -12,6 +12,9 @@ export function SettingsPage() {
   const [adminEmails, setAdminEmails] = useState<string[]>([])
   const [newEmail, setNewEmail]     = useState('')
   const [adminSaving, setAdminSaving] = useState(false)
+  const [adminTgIds, setAdminTgIds] = useState<number[]>([])
+  const [newTgId, setNewTgId]       = useState('')
+  const [tgSaving, setTgSaving]     = useState(false)
 
   useEffect(() => {
     getDoc(doc(db, 'settings', 'main')).then(snap => {
@@ -21,6 +24,7 @@ export function SettingsPage() {
         setWorkEnd(d.work_end_hour ?? 22)
         setLastReset(d.last_stock_reset ?? null)
         setAdminEmails(d.admin_emails ?? [])
+        setAdminTgIds(d.admin_telegram_ids ?? [])
       }
     })
   }, [])
@@ -64,6 +68,29 @@ export function SettingsPage() {
   const removeEmail = async (email: string) => {
     if (!confirm(`Убрать доступ для ${email}?`)) return
     await saveAdminEmails(adminEmails.filter(e => e !== email))
+  }
+
+  const saveTgIds = async (ids: number[]) => {
+    setTgSaving(true)
+    try {
+      await setDoc(doc(db, 'settings', 'main'), { admin_telegram_ids: ids }, { merge: true })
+      setAdminTgIds(ids)
+    } finally {
+      setTgSaving(false)
+    }
+  }
+
+  const addTgId = async () => {
+    const id = Number(newTgId.trim())
+    if (!id || isNaN(id)) return
+    if (adminTgIds.includes(id)) { setNewTgId(''); return }
+    await saveTgIds([...adminTgIds, id])
+    setNewTgId('')
+  }
+
+  const removeTgId = async (id: number) => {
+    if (!confirm(`Убрать доступ для ID ${id}?`)) return
+    await saveTgIds(adminTgIds.filter(x => x !== id))
   }
 
   return (
@@ -171,6 +198,62 @@ export function SettingsPage() {
               opacity: !newEmail.trim() ? 0.5 : 1,
               fontFamily: 'inherit',
               display: 'flex', alignItems: 'center', gap: 5,
+            }}
+          >
+            <Plus size={15} /> Добавить
+          </button>
+        </div>
+      </div>
+
+      {/* Miniapp admin button access */}
+      <div style={card}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+          <div style={iconBox('#f0fdf4')}><ShieldCheck size={18} color="#16a34a" /></div>
+          <div>
+            <p style={{ margin: 0, fontWeight: 700, fontSize: 15, color: '#111827' }}>Кнопка «Админ» в мини-апп</p>
+            <p style={{ margin: 0, fontSize: 12, color: '#9ca3af' }}>Telegram ID пользователей</p>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 14 }}>
+          {adminTgIds.length === 0 && (
+            <p style={{ color: '#9ca3af', fontSize: 13, margin: 0 }}>Нет добавленных ID</p>
+          )}
+          {adminTgIds.map(id => (
+            <div key={id} style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              background: '#f9fafb', border: '1px solid #e5e7eb',
+              borderRadius: 10, padding: '10px 14px',
+            }}>
+              <span style={{ fontSize: 14, color: '#111827', fontWeight: 600, fontFamily: 'monospace' }}>{id}</span>
+              <button
+                onClick={() => removeTgId(id)}
+                disabled={tgSaving}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444', display: 'flex', alignItems: 'center', padding: 4 }}
+              >
+                <Trash2 size={15} />
+              </button>
+            </div>
+          ))}
+        </div>
+
+        <div style={{ display: 'flex', gap: 8 }}>
+          <input
+            placeholder="638384527"
+            value={newTgId}
+            onChange={e => setNewTgId(e.target.value.replace(/\D/g, ''))}
+            onKeyDown={e => e.key === 'Enter' && addTgId()}
+            style={{ ...inp, flex: 1, fontSize: 14 }}
+          />
+          <button
+            onClick={addTgId}
+            disabled={tgSaving || !newTgId.trim()}
+            style={{
+              padding: '10px 14px', background: '#c8a96e', border: 'none', borderRadius: 10,
+              color: '#111827', fontWeight: 700, fontSize: 13,
+              cursor: tgSaving || !newTgId.trim() ? 'not-allowed' : 'pointer',
+              opacity: !newTgId.trim() ? 0.5 : 1,
+              fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 5,
             }}
           >
             <Plus size={15} /> Добавить

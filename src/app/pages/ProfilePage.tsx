@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   User, MapPin, Bell, Globe, LogOut, ChevronRight, Shield, ArrowLeft, Trash2,
@@ -9,6 +9,8 @@ import { useAuthStore, useLangStore, useDeliveryStore, useCartStore, SavedAddres
 import { BYPASS_MODE, mockUser } from '@/shared/lib/mock-data'
 import { AddressMapModal } from '@/app/components/ui/AddressMapModal'
 import { firestoreUsers } from '@/shared/lib/firestore-service'
+import { doc, getDoc } from 'firebase/firestore'
+import { db } from '@/shared/lib/firebase'
 import type { Language } from '@/shared/types'
 
 interface ProfilePageProps {
@@ -695,9 +697,18 @@ export function ProfilePage({ sub }: ProfilePageProps = {}) {
   const { setDeliveryType } = useDeliveryStore()
   const displayUser = BYPASS_MODE ? mockUser : user
 
-  const isAdmin = window.Telegram?.WebApp?.initDataUnsafe?.user?.id === 638384527 || import.meta.env.VITE_BYPASS_AUTH === 'true'
-
+  const [isAdmin, setIsAdmin] = useState(import.meta.env.VITE_BYPASS_AUTH === 'true')
   const [showLangPicker, setShowLangPicker] = useState(false)
+
+  useEffect(() => {
+    const tgId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id
+    if (!tgId) return
+    getDoc(doc(db, 'settings', 'main')).then(snap => {
+      if (!snap.exists()) return
+      const ids: number[] = snap.data().admin_telegram_ids ?? []
+      setIsAdmin(ids.includes(tgId))
+    }).catch(() => {})
+  }, [])
 
   if (sub === 'personal-info') return <PersonalInfoPage lang={language} />
   if (sub === 'addresses') return <AddressesPage lang={language} />
