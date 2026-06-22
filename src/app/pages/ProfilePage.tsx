@@ -45,20 +45,43 @@ function SubPageShell({ title, children }: { title: string; children: React.Reac
   )
 }
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
+
 function PersonalInfoPage({ lang }: { lang: Language }) {
   const { user } = useAuthStore()
   const displayUser = BYPASS_MODE ? mockUser : user
   const title = lang === 'uz' ? "Mening ma'lumotlarim" : 'Мои данные'
-  const [email, setEmail] = useState('')
+  const [email, setEmail] = useState(displayUser?.email ?? '')
+  const [emailError, setEmailError] = useState('')
+  const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
   const [avatarSrc, setAvatarSrc] = useState<string | null>(
     window.Telegram?.WebApp?.initDataUnsafe?.user?.photo_url ?? null
   )
 
-  const handleSave = () => {
-    setSaved(true)
-    setTimeout(() => setSaved(false), 2000)
+  const validate = (): boolean => {
+    if (email && !EMAIL_RE.test(email)) {
+      setEmailError(lang === 'uz' ? 'Email noto\'g\'ri formatda' : 'Неверный формат email')
+      return false
+    }
+    setEmailError('')
+    return true
+  }
+
+  const handleSave = async () => {
+    if (!validate()) return
+    if (!displayUser?.id) return
+    setSaving(true)
+    try {
+      await firestoreUsers.upsert(Number(displayUser.id), { email: email.trim() || null })
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2500)
+    } catch {
+      setEmailError(lang === 'uz' ? 'Xatolik yuz berdi' : 'Ошибка сохранения')
+    } finally {
+      setSaving(false)
+    }
   }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -124,31 +147,47 @@ function PersonalInfoPage({ lang }: { lang: Language }) {
             value={displayUser?.phone ?? ''}
             readOnly
           />
-          <FormField
-            label={lang === 'uz' ? 'Elektron pochta' : 'Эл. почта'}
-            icon={<Mail size={18} color="#475569" strokeWidth={2} />}
-            value={email}
-            placeholder={lang === 'uz' ? 'Emailingizni kiriting' : 'Введите email'}
-            onChange={setEmail}
-          />
+          <div>
+            <FormField
+              label={lang === 'uz' ? 'Elektron pochta' : 'Эл. почта'}
+              icon={<Mail size={18} color={emailError ? '#ef4444' : '#475569'} strokeWidth={2} />}
+              value={email}
+              placeholder={lang === 'uz' ? 'Emailingizni kiriting' : 'Введите email'}
+              onChange={(v) => { setEmail(v); setEmailError('') }}
+              error={!!emailError}
+            />
+            {emailError && (
+              <p style={{ fontSize: 12, color: '#ef4444', marginTop: 6, paddingLeft: 4 }}>
+                {emailError}
+              </p>
+            )}
+          </div>
         </div>
 
         {/* Save button */}
         <motion.button
           whileTap={{ scale: 0.97 }}
           onClick={handleSave}
+          disabled={saving}
           style={{
             width: '100%', padding: '16px',
-            background: saved ? '#22c55e' : '#e8751a',
+            background: saved ? '#22c55e' : saving ? '#94a3b8' : '#e8751a',
             border: 'none', borderRadius: 14,
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-            cursor: 'pointer', fontFamily: 'var(--font-body)',
+            cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'var(--font-body)',
             transition: 'background 0.25s',
+            opacity: saving ? 0.8 : 1,
           }}
         >
-          <Save size={18} color="#fff" strokeWidth={2.5} />
+          {saving
+            ? <span className="spinner" style={{ width: 18, height: 18, borderTopColor: '#fff' }} />
+            : <Save size={18} color="#fff" strokeWidth={2.5} />}
           <span style={{ fontSize: 15, fontWeight: 800, color: '#fff', letterSpacing: '0.06em' }}>
-            {saved ? (lang === 'uz' ? 'SAQLANDI ✓' : 'СОХРАНЕНО ✓') : (lang === 'uz' ? 'SAQLASH' : 'СОХРАНИТЬ')}
+            {saved
+              ? (lang === 'uz' ? 'SAQLANDI ✓' : 'СОХРАНЕНО ✓')
+              : saving
+                ? (lang === 'uz' ? 'SAQLANMOQDA...' : 'СОХРАНЕНИЕ...')
+                : (lang === 'uz' ? 'SAQLASH' : 'СОХРАНИТЬ')}
           </span>
         </motion.button>
       </div>
@@ -156,22 +195,24 @@ function PersonalInfoPage({ lang }: { lang: Language }) {
   )
 }
 
-function FormField({ label, icon, value, readOnly, placeholder, onChange }: {
+function FormField({ label, icon, value, readOnly, placeholder, onChange, error }: {
   label: string
   icon: React.ReactNode
   value: string
   readOnly?: boolean
   placeholder?: string
   onChange?: (v: string) => void
+  error?: boolean
 }) {
   return (
     <div>
       <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>{label}</p>
       <div style={{
         display: 'flex', alignItems: 'center', gap: 12,
-        background: '#fff', border: '1px solid #cbd5e1',
+        background: '#fff', border: `1px solid ${error ? '#ef4444' : '#cbd5e1'}`,
         borderRadius: 12, padding: '14px 16px',
-        boxShadow: '0 1px 3px rgba(0,0,0,0.02)',
+        boxShadow: error ? '0 0 0 3px rgba(239,68,68,0.08)' : '0 1px 3px rgba(0,0,0,0.02)',
+        transition: 'border-color 0.2s, box-shadow 0.2s',
       }}>
         <span style={{ flexShrink: 0, display: 'flex' }}>{icon}</span>
         <input

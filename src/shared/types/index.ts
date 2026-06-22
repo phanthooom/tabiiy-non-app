@@ -138,6 +138,7 @@ export interface UserProfile {
   username: string | null
   phone: string | null
   language: 'ru' | 'uz'
+  email?: string | null
 }
 
 export type DeliveryType = 'delivery' | 'pickup'
