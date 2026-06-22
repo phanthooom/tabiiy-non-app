@@ -4,7 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { CheckCircle, Clock, MapPin, Phone, Store } from 'lucide-react'
 import { YMaps, Map as YandexMap } from '@pbe/react-yandex-maps'
 
-import { Button, Spinner } from '@/app/components/ui'
+import { Button, Spinner, ProductPhoto } from '@/app/components/ui'
 import { AddressText } from '@/app/components/ui/AddressText'
 import { BYPASS_MODE, mockOrders } from '@/shared/lib/mock-data'
 import { ordersApi } from '@/app/api'
@@ -237,11 +237,13 @@ function OrderCard({ order, onClick, language }: { order: Order; onClick: () => 
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             border: '1px solid #f1f5f9',
           }}>
-            <img
-              src="https://images.unsplash.com/photo-1509440159596-0249088772ff?q=80&w=200&auto=format&fit=crop"
-              alt="Bread"
-              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-            />
+            {firstItem.image_url ? (
+              <img src={firstItem.image_url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            ) : firstItem.photo_file_id ? (
+              <ProductPhoto fileId={firstItem.photo_file_id} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            ) : (
+              <span style={{ fontSize: 28 }}>🍞</span>
+            )}
           </div>
         )}
 

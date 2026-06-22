@@ -248,10 +248,12 @@ export const firestoreOrders = {
     params: { delivery_type: DeliveryType; address?: string }
   ): Promise<Order> => {
     const items: OrderItem[] = cart.items.map(i => ({
-      product_name: i.product_name,
-      quantity:     i.quantity,
-      unit_price:   i.price,
-      subtotal:     i.subtotal,
+      product_name:  i.product_name,
+      quantity:      i.quantity,
+      unit_price:    i.price,
+      subtotal:      i.subtotal,
+      image_url:     i.image_url ?? null,
+      photo_file_id: i.photo_file_id ?? null,
     }))
 
     const userProfile = await firestoreUsers.get(telegramId)

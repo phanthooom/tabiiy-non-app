@@ -115,6 +115,8 @@ export interface OrderItem {
   quantity: number
   unit_price: number
   subtotal: number
+  image_url: string | null
+  photo_file_id: string | null
 }
 
 export interface Order {
