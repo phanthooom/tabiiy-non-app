@@ -40,6 +40,7 @@ export const ordersApi = {
       accepted: '✅ Принят',
       packing: '📦 Упаковывается',
       courier_assigned: '🚗 Курьер в пути',
+      ready: '✅ Готов',
       delivered: '✅ Доставлен',
       cancelled: '❌ Отменён',
     }
