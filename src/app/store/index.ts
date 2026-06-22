@@ -105,7 +105,7 @@ export const useDeliveryStore = create<DeliveryState>()(
       })),
     }),
     {
-      name: 'delivery',
+      name: 'delivery-v2',
       partialize: (state) => ({
         address:        state.address,
         savedAddresses: state.savedAddresses,
