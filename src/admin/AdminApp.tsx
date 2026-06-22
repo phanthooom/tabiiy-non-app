@@ -158,7 +158,7 @@ export default function AdminApp() {
       {/* Content */}
       <div style={{
         flex: 1,
-        padding: '20px 16px 90px',
+        padding: '12px 10px 90px',
         maxWidth: 900,
         margin: '0 auto',
         width: '100%',

@@ -212,8 +212,8 @@ export function ProductsPage() {
         background: '#ffffff',
         border: '1px solid #e5e7eb',
         borderRadius: 16,
-        padding: '20px',
-        marginBottom: 24,
+        padding: '14px',
+        marginBottom: 16,
         boxShadow: '0 1px 4px rgba(0,0,0,0.04)',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
@@ -375,7 +375,7 @@ export function ProductsPage() {
                   {p.price.toLocaleString()} <span style={{ fontSize: 11, fontWeight: 500, color: '#9ca3af' }}>сум</span>
                 </p>
               </div>
-              <div style={{ padding: '0 10px 12px', display: 'flex', gap: 6 }}>
+              <div style={{ padding: '0 8px 10px', display: 'flex', gap: 6 }}>
                 <button
                   onClick={() => {
                     setEditing({ ...p })
@@ -386,14 +386,15 @@ export function ProductsPage() {
                     setIsNew(false)
                   }}
                   style={actionBtn('#3b82f6')}
+                  title="Изменить"
                 >
-                  <Pencil size={12} /> Изменить
+                  <Pencil size={14} />
                 </button>
-                <button onClick={() => toggle(p)} style={actionBtn('#f59e0b')}>
-                  {p.is_visible ? <><EyeOff size={12} /> Скрыть</> : <><Eye size={12} /> Показать</>}
+                <button onClick={() => toggle(p)} style={actionBtn('#f59e0b')} title={p.is_visible ? 'Скрыть' : 'Показать'}>
+                  {p.is_visible ? <EyeOff size={14} /> : <Eye size={14} />}
                 </button>
-                <button onClick={() => del(p.id)} style={{ ...actionBtn('#ef4444'), flex: 'none', padding: '7px 10px' }}>
-                  <Trash2 size={13} />
+                <button onClick={() => del(p.id)} style={actionBtn('#ef4444')} title="Удалить">
+                  <Trash2 size={14} />
                 </button>
               </div>
             </div>
