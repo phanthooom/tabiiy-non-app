@@ -236,28 +236,28 @@ export function ProductsPage() {
             const saving = stockSaving[id]
             return (
               <div key={id} style={{
-                display: 'flex', alignItems: 'center', gap: 14,
-                background: '#f9fafb', borderRadius: 12, padding: '12px 14px',
+                display: 'flex', alignItems: 'center', gap: 8,
+                background: '#f9fafb', borderRadius: 12, padding: '10px 10px',
                 border: `1px solid ${qty > 0 ? '#bbf7d0' : '#fecaca'}`,
               }}>
                 {(p as any).image_url && (
                   <img
                     src={(p as any).image_url}
                     alt=""
-                    style={{ width: 46, height: 46, borderRadius: 10, objectFit: 'cover', flexShrink: 0 }}
+                    style={{ width: 40, height: 40, borderRadius: 8, objectFit: 'cover', flexShrink: 0 }}
                   />
                 )}
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ margin: 0, color: '#111827', fontWeight: 700, fontSize: 14 }}>{(p as any).name_ru}</p>
-                  <p style={{ margin: '2px 0 0', color: '#9ca3af', fontSize: 12 }}>{(p as any).name_uz}</p>
+                  <p style={{ margin: 0, color: '#111827', fontWeight: 700, fontSize: 13, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{(p as any).name_ru}</p>
+                  <p style={{ margin: '1px 0 0', color: '#9ca3af', fontSize: 11, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{(p as any).name_uz}</p>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexShrink: 0 }}>
                   <button
                     onClick={() => { const n = Math.max(0, qty - 1); setStockMap(m => ({ ...m, [id]: n })); saveStock(p, n) }}
                     style={{
-                      width: 36, height: 36, background: '#ffffff',
-                      border: '1px solid #e5e7eb', borderRadius: 10,
-                      color: '#374151', fontSize: 20, cursor: 'pointer',
+                      width: 30, height: 30, background: '#ffffff',
+                      border: '1px solid #e5e7eb', borderRadius: 8,
+                      color: '#374151', fontSize: 18, cursor: 'pointer',
                       display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1,
                     }}
                   >−</button>
@@ -266,29 +266,29 @@ export function ProductsPage() {
                     onChange={e => setStockMap(m => ({ ...m, [id]: Math.max(0, Number(e.target.value)) }))}
                     onBlur={e => saveStock(p, Math.max(0, Number(e.target.value)))}
                     style={{
-                      width: 64, textAlign: 'center',
+                      width: 50, textAlign: 'center',
                       background: '#ffffff', border: '1px solid #e5e7eb',
-                      borderRadius: 10, color: '#111827',
-                      padding: '7px 4px', fontSize: 17, fontWeight: 800, outline: 'none',
+                      borderRadius: 8, color: '#111827',
+                      padding: '5px 2px', fontSize: 15, fontWeight: 800, outline: 'none',
                       fontFamily: 'inherit',
                     }}
                   />
                   <button
                     onClick={() => { const n = qty + 1; setStockMap(m => ({ ...m, [id]: n })); saveStock(p, n) }}
                     style={{
-                      width: 36, height: 36, background: '#c8a96e',
-                      border: 'none', borderRadius: 10,
-                      color: '#111827', fontSize: 20, cursor: 'pointer',
+                      width: 30, height: 30, background: '#c8a96e',
+                      border: 'none', borderRadius: 8,
+                      color: '#111827', fontSize: 18, cursor: 'pointer',
                       display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1,
                     }}
                   >+</button>
                 </div>
-                <div style={{ minWidth: 64, textAlign: 'center' }}>
+                <div style={{ flexShrink: 0, textAlign: 'center' }}>
                   {saving
-                    ? <span style={{ color: '#9ca3af', fontSize: 12 }}>сохр...</span>
+                    ? <span style={{ color: '#9ca3af', fontSize: 11 }}>...</span>
                     : <span style={{
-                        display: 'inline-block', padding: '4px 10px', borderRadius: 20,
-                        fontSize: 11, fontWeight: 700,
+                        display: 'inline-block', padding: '3px 8px', borderRadius: 20,
+                        fontSize: 10, fontWeight: 700,
                         background: qty > 0 ? '#dcfce7' : '#fee2e2',
                         color: qty > 0 ? '#16a34a' : '#dc2626',
                       }}>
@@ -333,7 +333,7 @@ export function ProductsPage() {
       </div>
 
       {/* Product grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 14 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))', gap: 12 }}>
         {products.map(p => {
           const qty = (p as any).quantity ?? 0
           return (

@@ -118,7 +118,7 @@ export default function AdminApp() {
       <div style={{
         background: '#ffffff',
         borderBottom: '1px solid #e5e7eb',
-        padding: 'max(env(safe-area-inset-top, 0px), 44px) 20px 14px',
+        padding: 'max(env(safe-area-inset-top, 0px), 12px) 16px 12px',
         display: 'flex',
         alignItems: 'center',
         gap: 12,
