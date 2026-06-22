@@ -112,8 +112,7 @@ export default function AdminApp() {
     resetStockIfNeeded()
   }, [token])
 
-  const isTelegram = !!window.Telegram?.WebApp?.initDataUnsafe?.user
-  if (!authReady || (isTelegram && !tgChecked)) return null
+  if (!authReady || !tgChecked) return null
   if (!token && !tgAdmin) return <LoginPage />
 
   return (
