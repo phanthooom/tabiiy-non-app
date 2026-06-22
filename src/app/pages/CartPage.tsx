@@ -252,12 +252,12 @@ export function CartPage() {
         }}
       >
         <p style={{ fontWeight: 700, fontSize: 18, color: '#0f172a', marginBottom: 20 }}>
-          {language === 'uz' ? 'Buyurtma xulosasi' : 'Order Summary'}
+          {language === 'uz' ? 'Buyurtma xulosasi' : 'Итог заказа'}
         </p>
 
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 12 }}>
           <span style={{ color: '#64748b', fontSize: 14 }}>
-            {language === 'uz' ? 'Jami' : 'Subtotal'}
+            {language === 'uz' ? 'Jami' : 'Сумма'}
           </span>
           <span style={{ fontWeight: 600, fontSize: 14, color: '#0f172a' }}>
             {subtotal.toLocaleString('ru-RU')} {t('sum')}
@@ -266,11 +266,11 @@ export function CartPage() {
 
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
           <span style={{ color: '#64748b', fontSize: 14 }}>
-            {language === 'uz' ? 'Yetkazib berish' : 'Delivery Fee'}
+            {language === 'uz' ? 'Yetkazib berish' : 'Доставка'}
           </span>
           <span style={{ fontWeight: 600, fontSize: 14, color: '#0f172a' }}>
             {deliveryFee === 0
-              ? (language === 'uz' ? 'Bepul' : '$0.00')
+              ? (language === 'uz' ? 'Bepul' : 'Бесплатно')
               : `${deliveryFee.toLocaleString('ru-RU')} ${t('sum')}`}
           </span>
         </div>
@@ -316,7 +316,7 @@ export function CartPage() {
           }}
         >
           {isOpen
-            ? (language === 'uz' ? 'Buyurtma berish' : 'Proceed to Checkout')
+            ? (language === 'uz' ? 'Buyurtma berish' : 'Оформить заказ')
             : (language === 'uz' ? 'Hozircha yopiq' : 'Сейчас закрыто')}
         </motion.button>
       </motion.div>
