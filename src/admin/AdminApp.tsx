@@ -52,13 +52,17 @@ export default function AdminApp() {
   const [tab, setTab]             = useState<Tab>('orders')
   const [authReady, setAuthReady] = useState(false)
   const [tgAdmin, setTgAdmin]     = useState(false)
+  const [tgChecked, setTgChecked] = useState(false)
   const navigate = useNavigate()
 
   useBackButton(() => navigate('/'), true)
 
   // Check Telegram-based admin access (no Google login needed)
   useEffect(() => {
-    checkTgAdmin().then(setTgAdmin)
+    checkTgAdmin().then(result => {
+      setTgAdmin(result)
+      setTgChecked(true)
+    })
   }, [])
 
   // Sync Firebase auth state → token (handles refresh + page reload)
@@ -102,7 +106,8 @@ export default function AdminApp() {
     resetStockIfNeeded()
   }, [token])
 
-  if (!authReady) return null
+  const isTelegram = !!window.Telegram?.WebApp?.initDataUnsafe?.user
+  if (!authReady || (isTelegram && !tgChecked)) return null
   if (!token && !tgAdmin) return <LoginPage />
 
   return (
