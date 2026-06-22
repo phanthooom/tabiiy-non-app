@@ -283,19 +283,9 @@ export function ProductsPage() {
                     }}
                   >+</button>
                 </div>
-                <div style={{ flexShrink: 0, textAlign: 'center' }}>
-                  {saving
-                    ? <span style={{ color: '#9ca3af', fontSize: 11 }}>...</span>
-                    : <span style={{
-                        display: 'inline-block', padding: '3px 8px', borderRadius: 20,
-                        fontSize: 10, fontWeight: 700,
-                        background: qty > 0 ? '#dcfce7' : '#fee2e2',
-                        color: qty > 0 ? '#16a34a' : '#dc2626',
-                      }}>
-                        {qty > 0 ? `${qty} шт` : 'Нет'}
-                      </span>
-                  }
-                </div>
+                {saving && (
+                  <span style={{ color: '#9ca3af', fontSize: 11, flexShrink: 0 }}>...</span>
+                )}
               </div>
             )
           })}
