@@ -4,16 +4,18 @@ const APP_URL = 'https://tabiiy-non-app.vercel.app/';
 
 const TEXTS = {
   ru: {
-    welcome:    'Добро пожаловать в Tabiiy Non! 🍞\n\nДля того чтобы делать заказы, нам нужен ваш номер телефона. Пожалуйста, нажмите кнопку ниже 👇',
-    send_phone: '📱 Отправить номер',
-    thanks:     'Спасибо! Ваш номер сохранен. ✅\n\nТеперь вы можете открыть магазин и сделать заказ.',
-    open_shop:  '🛒 Открыть магазин',
+    welcome:     'Добро пожаловать в Tabiiy Non! 🍞\n\nДля того чтобы делать заказы, нам нужен ваш номер телефона. Пожалуйста, нажмите кнопку ниже 👇',
+    send_phone:  '📱 Отправить номер',
+    thanks:      'Спасибо! Ваш номер сохранен. ✅\n\nТеперь вы можете открыть магазин и сделать заказ.',
+    open_shop:   '🛒 Открыть магазин',
+    menu_button: 'Магазин',
   },
   uz: {
-    welcome:    'Tabiiy Non\'ga xush kelibsiz! 🍞\n\nBuyurtma berish uchun telefon raqamingiz kerak. Iltimos, quyidagi tugmani bosing 👇',
-    send_phone: '📱 Raqamni yuborish',
-    thanks:     'Rahmat! Raqamingiz saqlandi. ✅\n\nEndi do\'konga kirib buyurtma berishingiz mumkin.',
-    open_shop:  '🛒 Do\'konni ochish',
+    welcome:     'Tabiiy Non\'ga xush kelibsiz! 🍞\n\nBuyurtma berish uchun telefon raqamingiz kerak. Iltimos, quyidagi tugmani bosing 👇',
+    send_phone:  '📱 Raqamni yuborish',
+    thanks:      'Rahmat! Raqamingiz saqlandi. ✅\n\nEndi do\'konga kirib buyurtma berishingiz mumkin.',
+    open_shop:   '🛒 Do\'konni ochish',
+    menu_button: 'Buyurtma',
   },
 }
 
@@ -76,6 +78,15 @@ module.exports = async function handler(req, res) {
         await saveLang(String(chatId), lang);
 
         await tg('answerCallbackQuery', { callback_query_id: update.callback_query.id });
+
+        await tg('setChatMenuButton', {
+          chat_id: chatId,
+          menu_button: {
+            type:    'web_app',
+            text:    t.menu_button,
+            web_app: { url: APP_URL },
+          }
+        });
 
         await tg('sendMessage', {
           chat_id: chatId,
