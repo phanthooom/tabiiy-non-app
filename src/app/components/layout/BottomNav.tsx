@@ -1,10 +1,11 @@
+import { useState, useEffect } from 'react'
 import { Home, ShoppingCart, ClipboardList, User } from 'lucide-react'
 import { useNavigate, useLocation } from 'react-router-dom'
+import { doc, getDoc } from 'firebase/firestore'
+import { db } from '@/shared/lib/firebase'
 import { useCartStore, useLangStore } from '@/app/store'
 import { useT } from '@/shared/utils/i18n'
 import { useTelegram } from '@/shared/hooks/useTelegram'
-
-const ADMIN_IDS = [1213781907, 5008138452]
 
 const tabs = [
   { path: '/',        icon: Home,          key: 'menu' as const },
@@ -20,7 +21,28 @@ export function BottomNav() {
   const { language } = useLangStore()
   const t = useT(language)
   const { user } = useTelegram()
-  const isAdmin = user?.id ? ADMIN_IDS.includes(user.id) : false
+  const [isAdmin, setIsAdmin] = useState(false)
+
+  useEffect(() => {
+    const checkAdmin = (tgId: number | undefined) => {
+      if (!tgId) return
+      getDoc(doc(db, 'settings', 'main')).then(snap => {
+        if (!snap.exists()) return
+        const ids: number[] = snap.data().admin_telegram_ids ?? []
+        setIsAdmin(ids.includes(tgId))
+      }).catch(() => {})
+    }
+
+    const immediate = user?.id ?? window.Telegram?.WebApp?.initDataUnsafe?.user?.id
+    if (immediate) {
+      checkAdmin(immediate)
+    } else {
+      const timer = setTimeout(() => {
+        checkAdmin(window.Telegram?.WebApp?.initDataUnsafe?.user?.id)
+      }, 800)
+      return () => clearTimeout(timer)
+    }
+  }, [user?.id])
 
   const cartCount = cart?.items_count ?? 0
 
@@ -103,10 +125,10 @@ export function BottomNav() {
       })}
 
       {isAdmin && (() => {
-        const active = pathname.startsWith('/admin')
+        const active = pathname === '/admin-orders'
         return (
           <button
-            onClick={() => navigate('/admin')}
+            onClick={() => navigate('/admin-orders')}
             style={{
               flex: 1,
               display: 'flex',

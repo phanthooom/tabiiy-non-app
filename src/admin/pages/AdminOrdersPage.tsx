@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { Search, User, MapPin, ChevronDown, Truck, Store } from 'lucide-react'
+import { doc, getDoc } from 'firebase/firestore'
+import { db } from '@/shared/lib/firebase'
 import { useFirebaseOrders, updateFirebaseOrderStatus } from '@/shared/hooks/useFirebaseOrders'
 import { useBackButton } from '@/shared/hooks/useTelegram'
 import { AddressText } from '@/app/components/ui/AddressText'
@@ -40,15 +42,17 @@ export function AdminOrdersPage() {
   const [password, setPassword] = useState('')
 
   useEffect(() => {
-    // Check if in Telegram
-    const isTg = window.Telegram?.WebApp?.initDataUnsafe?.user;
-    if (isTg) {
-      setIsAuthenticated(true)
+    const tgId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id
+    if (tgId) {
+      getDoc(doc(db, 'settings', 'main')).then(snap => {
+        const ids: number[] = snap.exists() ? (snap.data().admin_telegram_ids ?? []) : []
+        if (ids.includes(tgId)) {
+          setIsAuthenticated(true)
+        }
+      }).catch(() => {})
     } else {
       const saved = localStorage.getItem('admin_auth')
-      if (saved === 'true') {
-        setIsAuthenticated(true)
-      }
+      if (saved === 'true') setIsAuthenticated(true)
     }
   }, [])
 
