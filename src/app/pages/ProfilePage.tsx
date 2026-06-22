@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  User, MapPin, CreditCard, Bell, Globe, LogOut, ChevronRight, Shield, ArrowLeft, Trash2,
+  User, MapPin, Bell, Globe, LogOut, ChevronRight, Shield, ArrowLeft, Trash2,
   Phone, Mail, Save, Pencil, Home, Briefcase, Plus, Map
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
