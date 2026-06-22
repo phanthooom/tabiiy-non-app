@@ -59,6 +59,11 @@ export class ErrorBoundary extends React.Component<Props, State> {
         <p style={{ color: 'var(--text-2)', fontSize: 14, maxWidth: 320, lineHeight: 1.5 }}>
           Произошла непредвиденная ошибка. Попробуйте снова или перезагрузите приложение.
         </p>
+        {this.state.error && (
+          <p style={{ color: '#dc2626', fontSize: 11, maxWidth: 360, wordBreak: 'break-all', textAlign: 'left', background: '#fef2f2', padding: '8px 12px', borderRadius: 8, lineHeight: 1.5 }}>
+            {String(this.state.error)}
+          </p>
+        )}
         <div style={{ display: 'flex', gap: 12, marginTop: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
           <Button variant="ghost" onClick={this.handleRetry}>
             Повторить
