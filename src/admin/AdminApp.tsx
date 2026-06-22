@@ -59,19 +59,25 @@ export default function AdminApp() {
 
   // Check Telegram-based admin access (no Google login needed)
   useEffect(() => {
-    checkTgAdmin().then(result => {
-      setTgAdmin(result)
-      setTgChecked(true)
-    })
+    checkTgAdmin()
+      .then(result => {
+        setTgAdmin(result)
+        setTgChecked(true)
+      })
+      .catch(() => setTgChecked(true))
   }, [])
 
   // Sync Firebase auth state → token (handles refresh + page reload)
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, async user => {
-      if (user) {
-        const t = await user.getIdToken()
-        setToken(t)
-      } else {
+      try {
+        if (user) {
+          const t = await user.getIdToken()
+          setToken(t)
+        } else {
+          logout()
+        }
+      } catch {
         logout()
       }
       setAuthReady(true)
