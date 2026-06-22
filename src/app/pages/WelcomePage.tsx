@@ -1,12 +1,35 @@
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
-import { useDeliveryStore } from '@/app/store'
+import { useDeliveryStore, useLangStore } from '@/app/store'
 import type { DeliveryType } from '@/shared/types'
 import { Bike, Store, Croissant } from 'lucide-react'
+
+const T = {
+  uz: {
+    title:    'Xush kelibsiz',
+    subtitle: 'Buyurtma berish usulini tanlang. Biz sizga eng yangi nonlarni yetkazib beramiz.',
+    delivery: 'Yetkazib berish',
+    deliverySub: 'Manzilga eltish',
+    pickup:   'Olib ketish',
+    pickupSub: 'Filialdan olish',
+    skip:     'Keyinroq tanlash',
+  },
+  ru: {
+    title:    'Добро пожаловать',
+    subtitle: 'Выберите способ получения. Мы доставим свежий хлеб прямо к вам.',
+    delivery: 'Доставка',
+    deliverySub: 'Привезём по адресу',
+    pickup:   'Самовывоз',
+    pickupSub: 'Из нашего филиала',
+    skip:     'Выбрать позже',
+  },
+}
 
 export function WelcomePage() {
   const navigate = useNavigate()
   const { setDeliveryType } = useDeliveryStore()
+  const { language } = useLangStore()
+  const t = T[language] ?? T.uz
 
   const handleSelect = (type: DeliveryType) => {
     setDeliveryType(type)
@@ -102,30 +125,30 @@ export function WelcomePage() {
           </motion.div>
 
           {/* Title */}
-          <motion.h1 
+          <motion.h1
             variants={itemVariants}
             style={{
-              fontSize: 22, 
+              fontSize: 22,
               fontWeight: 700,
               color: '#0f172a',
               marginBottom: 12,
               textAlign: 'center',
             }}>
-            Xush kelibsiz
+            {t.title}
           </motion.h1>
 
           {/* Subtitle */}
-          <motion.p 
+          <motion.p
             variants={itemVariants}
             style={{
-              fontSize: 14, 
+              fontSize: 14,
               color: '#64748b',
-              lineHeight: 1.5, 
+              lineHeight: 1.5,
               textAlign: 'center',
-              marginBottom: 32, 
+              marginBottom: 32,
               maxWidth: '280px',
             }}>
-            Buyurtma berish usulini tanlang. Biz sizga eng yangi nonlarni yetkazib beramiz.
+            {t.subtitle}
           </motion.p>
 
           {/* Option cards */}
@@ -149,12 +172,8 @@ export function WelcomePage() {
             >
               <Bike size={32} color="#0f172a" strokeWidth={1.5} />
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-                <span style={{ fontSize: 16, fontWeight: 600, color: '#0f172a' }}>
-                  Yetkazib berish
-                </span>
-                <span style={{ fontSize: 13, color: '#64748b', fontWeight: 400 }}>
-                  Manzilga eltish
-                </span>
+                <span style={{ fontSize: 16, fontWeight: 600, color: '#0f172a' }}>{t.delivery}</span>
+                <span style={{ fontSize: 13, color: '#64748b', fontWeight: 400 }}>{t.deliverySub}</span>
               </div>
             </motion.button>
 
@@ -177,12 +196,8 @@ export function WelcomePage() {
             >
               <Store size={32} color="#0f172a" strokeWidth={1.5} />
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
-                <span style={{ fontSize: 16, fontWeight: 600, color: '#0f172a' }}>
-                  Olib ketish
-                </span>
-                <span style={{ fontSize: 13, color: '#64748b', fontWeight: 400 }}>
-                  Filialdan olish
-                </span>
+                <span style={{ fontSize: 16, fontWeight: 600, color: '#0f172a' }}>{t.pickup}</span>
+                <span style={{ fontSize: 13, color: '#64748b', fontWeight: 400 }}>{t.pickupSub}</span>
               </div>
             </motion.button>
           </div>
@@ -194,14 +209,14 @@ export function WelcomePage() {
             onClick={handleSkip}
             style={{
               marginTop: 24,
-              fontSize: 13, 
+              fontSize: 13,
               fontWeight: 500,
               color: '#94a3b8',
               background: 'none', border: 'none',
               cursor: 'pointer', padding: '8px 16px',
             }}
           >
-            Keyinroq tanlash
+            {t.skip}
           </motion.button>
         </motion.div>
       </motion.div>

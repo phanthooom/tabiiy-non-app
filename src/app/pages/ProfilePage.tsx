@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuthStore, useLangStore, useDeliveryStore, useCartStore, SavedAddress } from '@/app/store'
 import { BYPASS_MODE, mockUser } from '@/shared/lib/mock-data'
 import { AddressMapModal } from '@/app/components/ui/AddressMapModal'
+import { firestoreUsers } from '@/shared/lib/firestore-service'
 import type { Language } from '@/shared/types'
 
 interface ProfilePageProps {
@@ -789,7 +790,11 @@ export function ProfilePage({ sub }: ProfilePageProps = {}) {
                   {(['ru', 'uz'] as Language[]).map((lang, li, arr) => (
                     <button
                       key={lang}
-                      onClick={() => { setLanguage(lang); setShowLangPicker(false) }}
+                      onClick={() => {
+                        setLanguage(lang)
+                        setShowLangPicker(false)
+                        if (user?.id) firestoreUsers.setLanguage(Number(user.id), lang).catch(console.warn)
+                      }}
                       style={{
                         width: '100%',
                         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
