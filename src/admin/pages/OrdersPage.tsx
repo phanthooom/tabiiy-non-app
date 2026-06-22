@@ -70,6 +70,26 @@ export function OrdersPage() {
       const { doc, updateDoc } = await import('firebase/firestore')
       const { db } = await import('../../shared/lib/firebase')
       await updateDoc(doc(db, 'orders', String(selected.id)), { yandex_tracking_url: yandexUrl || null })
+
+      if (yandexUrl && yandexUrl.startsWith('http')) {
+        const telegramId = (selected as any).user_id || (selected as any).telegram_id
+        const BOT_TOKEN = import.meta.env.VITE_BOT_TOKEN
+        if (telegramId && BOT_TOKEN) {
+          fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              chat_id: telegramId,
+              text: `🚚 Buyurtma #${selected.id} yo'lda!\n\nSizning noningiz yetkazib berishga yuborildi. Quyidagi tugma orqali kuzating!\n\n💰 ${(selected.total_amount ?? 0).toLocaleString('ru-RU')} so'm`,
+              reply_markup: {
+                inline_keyboard: [[
+                  { text: '📍 Yandex orqali kuzatish', url: yandexUrl }
+                ]]
+              }
+            })
+          }).catch(() => {})
+        }
+      }
     } finally {
       setYandexSaving(false)
     }

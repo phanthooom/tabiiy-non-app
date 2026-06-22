@@ -74,7 +74,7 @@ export async function updateFirebaseOrderStatus(docId: string, status: string, l
       status_label: label
     }
     if (yandexUrl) {
-      updateData.yandex_url = yandexUrl
+      updateData.yandex_tracking_url = yandexUrl
     }
     await updateDoc(ref, updateData)
   } catch (err) {
