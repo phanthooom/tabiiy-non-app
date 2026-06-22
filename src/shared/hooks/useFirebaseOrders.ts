@@ -88,27 +88,24 @@ export async function updateFirebaseOrderStatus(docId: string, status: string, l
       const telegramId = order.telegram_id || order.user_id || order.customer_id;
       if (telegramId) {
         const BOT_TOKEN = '8957857177:AAFNSzeeQR7NTZHoQ7BbKajJhQyfKrizJSU'
-        let message = `📦 *Buyurtma #${order.id} holati o'zgardi*\n\nYangi holat: *${label}*\nJami: ${order.total_amount?.toLocaleString('ru-RU')} so'm\n\nTabiiy Non bilan qolganingiz uchun rahmat! 🍞`
-        
-        let reply_markup: any = undefined;
-        
+        let message: string
+        let parse_mode: string
+
         if (yandexUrl && yandexUrl.startsWith('http')) {
-          message = `🚚 *Buyurtma #${order.id} yo'lda!*\n\nSizning noningiz yandex orqali yuborildi.\nQuyidagi tugma orqali kuzatib borishingiz mumkin:\n\nJami: ${order.total_amount?.toLocaleString('ru-RU')} so'm`
-          reply_markup = {
-            inline_keyboard: [[
-              { text: '📍 Yandex orqali kuzatish', url: yandexUrl }
-            ]]
-          }
+          message = `🚚 <b>Buyurtma #${order.id} yo'lda!</b>\n\nSizning noningiz yetkazib berishga yuborildi.\n\n<a href="${yandexUrl}">📍 Dostavkani kuzatish</a>\n\nJami: ${order.total_amount?.toLocaleString('ru-RU')} so'm`
+          parse_mode = 'HTML'
+        } else {
+          message = `📦 <b>Buyurtma #${order.id} holati o'zgardi</b>\n\nYangi holat: ${label}\nJami: ${order.total_amount?.toLocaleString('ru-RU')} so'm\n\nTabiiy Non bilan qolganingiz uchun rahmat! 🍞`
+          parse_mode = 'HTML'
         }
-        
+
         fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             chat_id: telegramId,
             text: message,
-            parse_mode: 'Markdown',
-            reply_markup
+            parse_mode,
           })
         }).catch(err => console.error("Telegram notification fetch error:", err))
       }
