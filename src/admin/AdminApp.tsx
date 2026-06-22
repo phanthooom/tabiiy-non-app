@@ -12,6 +12,18 @@ import { collection, doc, getDoc, getDocs, setDoc, updateDoc } from 'firebase/fi
 import { db, auth } from '../shared/lib/firebase'
 import { ClipboardList, Package, Users, Settings, Wheat } from 'lucide-react'
 
+async function checkTgAdmin(): Promise<boolean> {
+  const tgId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id
+  if (!tgId) return false
+  try {
+    const snap = await getDoc(doc(db, 'settings', 'main'))
+    const ids: number[] = snap.exists() ? (snap.data().admin_telegram_ids ?? []) : []
+    return ids.includes(tgId)
+  } catch {
+    return false
+  }
+}
+
 type Tab = 'orders' | 'products' | 'users' | 'settings'
 
 function todayDate(): string {
@@ -37,11 +49,17 @@ export default function AdminApp() {
   const token    = useAuthStore(s => s.token)
   const setToken = useAuthStore(s => s.setToken)
   const logout   = useAuthStore(s => s.logout)
-  const [tab, setTab]           = useState<Tab>('orders')
+  const [tab, setTab]             = useState<Tab>('orders')
   const [authReady, setAuthReady] = useState(false)
+  const [tgAdmin, setTgAdmin]     = useState(false)
   const navigate = useNavigate()
 
   useBackButton(() => navigate('/'), true)
+
+  // Check Telegram-based admin access (no Google login needed)
+  useEffect(() => {
+    checkTgAdmin().then(setTgAdmin)
+  }, [])
 
   // Sync Firebase auth state → token (handles refresh + page reload)
   useEffect(() => {
@@ -85,7 +103,7 @@ export default function AdminApp() {
   }, [token])
 
   if (!authReady) return null
-  if (!token) return <LoginPage />
+  if (!token && !tgAdmin) return <LoginPage />
 
   return (
     <div style={{

@@ -125,10 +125,10 @@ export function BottomNav() {
       })}
 
       {isAdmin && (() => {
-        const active = pathname === '/admin-orders'
+        const active = pathname.startsWith('/admin')
         return (
           <button
-            onClick={() => navigate('/admin-orders')}
+            onClick={() => navigate('/admin')}
             style={{
               flex: 1,
               display: 'flex',

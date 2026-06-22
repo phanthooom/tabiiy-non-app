@@ -741,7 +741,7 @@ export function ProfilePage({ sub }: ProfilePageProps = {}) {
     ...(isAdmin ? [{
       icon: <Shield size={20} strokeWidth={1.8} />,
       label: 'Admin paneli',
-      action: () => navigate('/admin-orders')
+      action: () => navigate('/admin')
     }] : []),
     {
       icon: <Globe size={20} strokeWidth={1.8} />,
