@@ -104,7 +104,13 @@ export const useDeliveryStore = create<DeliveryState>()(
         savedAddresses: state.savedAddresses.filter(a => a.id !== id)
       })),
     }),
-    { name: 'delivery' }
+    {
+      name: 'delivery',
+      partialize: (state) => ({
+        address:        state.address,
+        savedAddresses: state.savedAddresses,
+      }),
+    }
   )
 )
 
