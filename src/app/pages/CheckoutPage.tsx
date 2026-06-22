@@ -15,6 +15,16 @@ import { useTelegram } from '@/shared/hooks/useTelegram'
 import type { DeliveryType, Order } from '@/shared/types'
 import { AddressMapModal } from '@/app/components/ui/AddressMapModal'
 
+const COMMENT_MAX = 255
+
+function sanitizeText(str: string): string {
+  return str
+    .replace(/[<>]/g, '')          // strip XSS vectors
+    .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '') // strip control chars
+    .trim()
+    .slice(0, COMMENT_MAX)
+}
+
 export function CheckoutPage() {
   const navigate = useNavigate()
   const { language } = useLangStore()
@@ -81,10 +91,12 @@ export function CheckoutPage() {
       return withRetry(
         async () => {
           // 1. Create order in backend (Telegram bot notification + Yandex delivery)
+          const cleanComment = sanitizeText(comment)
+          const cleanAddress = deliveryType === 'delivery' ? sanitizeText(address) : undefined
           const order = await ordersApi.create({
             delivery_type: deliveryType,
-            address: deliveryType === 'delivery' ? address : undefined,
-            address_comment: comment.trim() || undefined,
+            address: cleanAddress,
+            address_comment: cleanComment || undefined,
           })
           return order
         },
@@ -317,8 +329,12 @@ export function CheckoutPage() {
         style={{ ...inputStyle, minHeight: 90, resize: 'none' }}
         placeholder={t('commentPlaceholder')}
         value={comment}
-        onChange={e => setComment(e.target.value)}
+        maxLength={COMMENT_MAX}
+        onChange={e => setComment(e.target.value.replace(/[<>]/g, ''))}
       />
+      <p style={{ fontSize: 11, color: comment.length > COMMENT_MAX * 0.9 ? '#ef4444' : '#94a3b8', textAlign: 'right', marginTop: 4 }}>
+        {comment.length}/{COMMENT_MAX}
+      </p>
 
       {/* Order summary */}
       <div style={{
