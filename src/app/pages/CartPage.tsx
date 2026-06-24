@@ -282,16 +282,14 @@ export function CartPage() {
 
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
           <span style={{ color: '#64748b', fontSize: 14 }}>
-            {activeYandexUrl ? (
-              <a href={activeYandexUrl} target="_blank" rel="noreferrer" style={{ color: '#e8751a', fontWeight: 600, textDecoration: 'underline' }}>
-                {language === 'uz' ? 'Yetkazib berish 📍' : 'Доставка 📍'}
-              </a>
-            ) : (
-              language === 'uz' ? 'Yetkazib berish' : 'Доставка'
-            )}
+            {language === 'uz' ? 'Yetkazib berish' : 'Доставка'}
           </span>
           <span style={{ fontWeight: 600, fontSize: 14, color: '#0f172a' }}>
-            {deliveryFee === 0
+            {activeYandexUrl ? (
+              <a href={activeYandexUrl} target="_blank" rel="noreferrer" style={{ color: '#e8751a', fontWeight: 700, textDecoration: 'none' }}>
+                {language === 'uz' ? '📍 Kuzatish' : '📍 Отследить'}
+              </a>
+            ) : deliveryFee === 0
               ? (language === 'uz' ? 'Bepul' : 'Бесплатно')
               : `${deliveryFee.toLocaleString('ru-RU')} ${t('sum')}`}
           </span>
