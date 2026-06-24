@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import { useNavigate, useParams } from 'react-router-dom'
 import { CheckCircle, MapPin, Phone, Store } from 'lucide-react'
@@ -436,6 +436,14 @@ export function OrderDetailPage() {
   const SHOP: [number, number] = [41.320463, 69.234749]
   const [deliveryCoords, setDeliveryCoords] = useState<[number, number] | null>(null)
   const [mapLoaded, setMapLoaded] = useState(false)
+  const firstBoundsRef = useRef(false)
+
+  const handleBoundsChange = useCallback(() => {
+    if (!firstBoundsRef.current) {
+      firstBoundsRef.current = true
+      setMapLoaded(true)
+    }
+  }, [])
 
   useEffect(() => {
     if (!idValid) return
@@ -671,7 +679,7 @@ export function OrderDetailPage() {
             width="100%"
             height="100%"
             options={{ suppressMapOpenBlock: true, yandexMapDisablePoiInteractivity: true }}
-            onLoad={() => setMapLoaded(true)}
+            onBoundsChange={handleBoundsChange}
           >
             <Placemark
               geometry={SHOP}
