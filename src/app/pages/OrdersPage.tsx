@@ -676,10 +676,10 @@ export function OrderDetailPage() {
         transition={{ type: 'spring', damping: 25, stiffness: 200, delay: 0.1 }}
         style={{
         position: 'absolute',
-        bottom: 'calc(env(safe-area-inset-bottom, 0px) + 32px)',
+        bottom: 'calc(env(safe-area-inset-bottom, 0px) + 16px)',
         left: 16, right: 16, zIndex: 10,
         background: order.status === 'cancelled' ? '#fff9f9' : '#ffffff',
-        borderRadius: 20, padding: 20,
+        borderRadius: 20, padding: '12px 16px',
         boxShadow: '0 8px 32px rgba(0,0,0,0.1)',
         border: order.status === 'cancelled' ? '1px solid #fca5a5' : 'none',
       }}>
@@ -707,103 +707,65 @@ export function OrderDetailPage() {
         ) : (
           /* ── Active / delivered state ── */
           <>
+            {/* Status + progress bar */}
             {(() => {
               const step = order.status === 'delivered' ? 3 : order.status === 'courier_assigned' ? 2 : 1;
-              const statusTextUz = step === 3 ? 'Yetkazildi' : step === 2 ? 'Yetkazib berishda' : 'Tayyorlanmoqda';
-              const statusTextRu = step === 3 ? 'Доставлено' : step === 2 ? 'В доставке' : 'Готовится';
+              const statusRu = step === 3 ? 'Доставлено' : step === 2 ? 'В пути' : 'Готовится';
+              const statusUz = step === 3 ? 'Yetkazildi' : step === 2 ? "Yo'lda" : 'Tayyorlanmoqda';
               return (
-                <p style={{ fontSize: 11, fontWeight: 800, color: '#e8751a', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>
-                  {language === 'uz' ? statusTextUz : statusTextRu}
-                </p>
-              )
-            })()}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              {order.status !== 'delivered' ? (
                 <>
-                  <h2 style={{ fontSize: 24, fontWeight: 700, color: '#0f172a', margin: 0 }}>15-20 {language === 'uz' ? 'daqiqa' : 'минут'}</h2>
-                  <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#fff6ef', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Clock size={20} color="#e8751a" strokeWidth={2.5} />
+                  <p style={{ fontSize: 10, fontWeight: 800, color: '#e8751a', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 3 }}>
+                    {language === 'uz' ? statusUz : statusRu}
+                  </p>
+                  <div style={{ display: 'flex', gap: 4, marginBottom: 4 }}>
+                    <div style={{ height: 3, flex: 1, background: step >= 1 ? '#e8751a' : '#e2e8f0', borderRadius: 2 }} />
+                    <div style={{ height: 3, flex: 1, background: step >= 2 ? '#e8751a' : '#e2e8f0', borderRadius: 2 }} />
+                    <div style={{ height: 3, flex: 1, background: step >= 3 ? '#e8751a' : '#e2e8f0', borderRadius: 2 }} />
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: '#94a3b8', marginBottom: 10 }}>
+                    <span>{language === 'uz' ? 'Tayyorlandi' : 'Готовится'}</span>
+                    <span>{language === 'uz' ? "Yo'lda" : 'В пути'}</span>
+                    <span>{language === 'uz' ? 'Yetkazildi' : 'Доставлен'}</span>
                   </div>
                 </>
-              ) : (
-                <h2 style={{ fontSize: 24, fontWeight: 700, color: '#10b981', margin: 0 }}>{language === 'uz' ? 'Yetkazib berildi' : 'Успешно доставлено'}</h2>
-              )}
-            </div>
-
-            {(() => {
-              const step = order.status === 'delivered' ? 3 : order.status === 'courier_assigned' ? 2 : 1;
-              return (
-                <div style={{ display: 'flex', gap: 4, marginBottom: 8 }}>
-                  <div style={{ height: 4, flex: 1, background: step >= 1 ? '#e8751a' : '#e2e8f0', borderRadius: 2 }} />
-                  <div style={{ height: 4, flex: 1, background: step >= 2 ? '#e8751a' : '#e2e8f0', borderRadius: 2 }} />
-                  <div style={{ height: 4, flex: 1, background: step >= 3 ? '#e8751a' : '#e2e8f0', borderRadius: 2 }} />
-                </div>
               )
             })()}
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, fontWeight: 600, color: '#64748b', marginBottom: 20 }}>
-              <span>{language === 'uz' ? 'Tayyorlandi' : 'Готовится'}</span>
-              <span style={{ textAlign: 'center' }}>{language === 'uz' ? "Yo'lda" : 'В пути'}</span>
-              <span style={{ textAlign: 'right' }}>{language === 'uz' ? 'Yetkazildi' : 'Доставлен'}</span>
-            </div>
 
-            <div style={{ height: 1, background: '#f1f5f9', marginBottom: 20 }} />
-
-            {/* Courier Info */}
+            {/* Call / track button */}
             {order.yandex_tracking_url ? (
-              <div style={{ marginBottom: 20 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-                  <div style={{ width: 48, height: 48, borderRadius: 12, background: '#fff6ef', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <span style={{ fontSize: 24 }}>🚕</span>
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <p style={{ fontWeight: 700, fontSize: 15, color: '#0f172a', marginBottom: 2 }}>Yandex Kuryer</p>
-                    <div style={{ fontSize: 12, color: '#64748b', fontWeight: 500 }}>
-                      {language === 'uz' ? 'Yandex Go orqali' : 'Через Yandex Go'}
-                    </div>
-                  </div>
-                </div>
-                <a
-                  href={order.yandex_tracking_url}
-                  target="_blank"
-                  rel="noreferrer"
-                  style={{
-                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                    background: '#e8751a', color: '#fff',
-                    borderRadius: 12, padding: '14px 16px',
-                    fontSize: 14, fontWeight: 700,
-                    textDecoration: 'none',
-                    width: '100%',
-                  }}
-                >
-                  <MapPin size={16} color="#fff" />
-                  {language === 'uz' ? 'Yandex orqali kuzatish' : 'Отследить в Яндекс'}
-                </a>
-              </div>
+              <a href={order.yandex_tracking_url} target="_blank" rel="noreferrer" style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                background: '#e8751a', color: '#fff', borderRadius: 12, padding: '11px 16px',
+                fontSize: 14, fontWeight: 700, textDecoration: 'none', width: '100%', marginBottom: 10,
+              }}>
+                <MapPin size={15} color="#fff" />
+                {language === 'uz' ? 'Yandex orqali kuzatish' : 'Отследить в Яндекс'}
+              </a>
             ) : (
               <a href="tel:+998940453900" style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                background: '#e8751a', color: '#fff',
-                borderRadius: 12, padding: '14px 16px',
-                fontSize: 14, fontWeight: 700,
-                textDecoration: 'none', width: '100%', marginBottom: 20,
-                boxShadow: '0 3px 14px rgba(232,117,26,0.35)',
+                background: '#e8751a', color: '#fff', borderRadius: 12, padding: '11px 16px',
+                fontSize: 14, fontWeight: 700, textDecoration: 'none', width: '100%', marginBottom: 10,
+                boxShadow: '0 3px 14px rgba(232,117,26,0.3)',
               }}>
-                <Phone size={16} color="#fff" />
+                <Phone size={15} color="#fff" />
                 +998 (94) 045-39-00
               </a>
             )}
 
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-              <MapPin size={20} color="#64748b" style={{ marginTop: 2, flexShrink: 0 }} />
-              <div>
-                <p style={{ fontSize: 11, color: '#64748b', fontWeight: 600, marginBottom: 2 }}>{language === 'uz' ? 'Yetkazib berish manzili' : 'Адрес доставки'}</p>
-                <p style={{ fontSize: 13, color: '#0f172a', fontWeight: 500, lineHeight: 1.4 }}>
-                  {order.address ? (
-                    <AddressText address={order.address} language={language} clickable={true} />
-                  ) : (language === 'uz' ? 'Manzil kiritilmagan' : 'Адрес не указан')}
-                </p>
-              </div>
-            </div>
+            {/* Short address */}
+            {order.address && (() => {
+              const raw = typeof order.address === 'string' ? order.address : (order.address as any)?.full_address ?? (order.address as any)?.street ?? ''
+              const short = raw.split(',').slice(0, 2).join(',').trim()
+              return (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <MapPin size={13} color="#94a3b8" style={{ flexShrink: 0 }} />
+                  <p style={{ fontSize: 12, color: '#64748b', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {short}
+                  </p>
+                </div>
+              )
+            })()}
           </>
         )}
       </motion.div>
