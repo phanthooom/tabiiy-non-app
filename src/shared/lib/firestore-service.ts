@@ -68,6 +68,7 @@ function toUserProfile(telegramId: string, data: DocumentData): UserProfile {
     phone:     data.phone ?? null,
     language:  data.language ?? 'ru',
     email:     data.email ?? null,
+    photo_url: data.photo_url ?? null,
   }
 }
 

@@ -9,6 +9,7 @@ import { useAuthStore, useLangStore, useDeliveryStore, useCartStore, SavedAddres
 import { BYPASS_MODE, mockUser } from '@/shared/lib/mock-data'
 import { AddressMapModal } from '@/app/components/ui/AddressMapModal'
 import { firestoreUsers } from '@/shared/lib/firestore-service'
+import { fileToCompressedDataUrl } from '@/shared/lib/image'
 import { doc, getDoc } from 'firebase/firestore'
 import { db } from '@/shared/lib/firebase'
 import type { Language } from '@/shared/types'
@@ -51,7 +52,7 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
 const PHONE_RE = /^\+998[0-9]{9}$/
 
 function PersonalInfoPage({ lang }: { lang: Language }) {
-  const { user } = useAuthStore()
+  const { user, token, setAuth } = useAuthStore()
   const displayUser = BYPASS_MODE ? mockUser : user
   const title = lang === 'uz' ? "Mening ma'lumotlarim" : 'Мои данные'
   const [name, setName] = useState(displayUser?.full_name ?? '')
@@ -64,8 +65,12 @@ function PersonalInfoPage({ lang }: { lang: Language }) {
   const [saved, setSaved] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
   const [avatarSrc, setAvatarSrc] = useState<string | null>(
-    window.Telegram?.WebApp?.initDataUnsafe?.user?.photo_url ?? null
+    displayUser?.photo_url
+      ?? window.Telegram?.WebApp?.initDataUnsafe?.user?.photo_url
+      ?? null
   )
+  const [avatarFailed, setAvatarFailed] = useState(false)
+  const [uploadingAvatar, setUploadingAvatar] = useState(false)
 
   const validate = (): boolean => {
     let ok = true
@@ -100,6 +105,14 @@ function PersonalInfoPage({ lang }: { lang: Language }) {
         phone: phone.trim() || null,
         email: email.trim() || null,
       })
+      if (user && !BYPASS_MODE) {
+        setAuth(token ?? '', {
+          ...user,
+          full_name: name.trim(),
+          phone: phone.trim() || null,
+          email: email.trim() || null,
+        })
+      }
       setSaved(true)
       setTimeout(() => setSaved(false), 2500)
     } catch {
@@ -109,11 +122,25 @@ function PersonalInfoPage({ lang }: { lang: Language }) {
     }
   }
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
+    e.target.value = '' // allow re-picking same file
     if (!file) return
-    const url = URL.createObjectURL(file)
-    setAvatarSrc(url)
+    setUploadingAvatar(true)
+    try {
+      const dataUrl = await fileToCompressedDataUrl(file, 256, 0.82)
+      setAvatarSrc(dataUrl)
+      setAvatarFailed(false)
+      if (displayUser?.id && !BYPASS_MODE) {
+        await firestoreUsers.upsert(Number(displayUser.id), { photo_url: dataUrl })
+        // sync to auth store so all screens (profile card, etc.) update instantly
+        if (user) setAuth(token ?? '', { ...user, photo_url: dataUrl })
+      }
+    } catch {
+      setAvatarFailed(true)
+    } finally {
+      setUploadingAvatar(false)
+    }
   }
 
   return (
@@ -128,11 +155,27 @@ function PersonalInfoPage({ lang }: { lang: Language }) {
               overflow: 'hidden', background: '#fff',
               border: '3px solid #fff',
               boxShadow: '0 6px 16px rgba(0,0,0,0.06)',
+              position: 'relative',
             }}>
-              {avatarSrc
-                ? <img src={avatarSrc} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              {avatarSrc && !avatarFailed
+                ? <img
+                    src={avatarSrc}
+                    alt=""
+                    referrerPolicy="no-referrer"
+                    onError={() => setAvatarFailed(true)}
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  />
                 : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 44, background: 'var(--surface-2)' }}>🧑</div>
               }
+              {uploadingAvatar && (
+                <div style={{
+                  position: 'absolute', inset: 0,
+                  background: 'rgba(255,255,255,0.6)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}>
+                  <span className="spinner" style={{ width: 24, height: 24 }} />
+                </div>
+              )}
             </div>
             <button
               onClick={() => fileRef.current?.click()}
@@ -589,6 +632,11 @@ export function ProfilePage({ sub }: ProfilePageProps = {}) {
 
   const [isAdmin, setIsAdmin] = useState(import.meta.env.VITE_BYPASS_AUTH === 'true')
   const [showLangPicker, setShowLangPicker] = useState(false)
+  const [avatarFailed, setAvatarFailed] = useState(false)
+
+  const avatarSrc = displayUser?.photo_url
+    ?? window.Telegram?.WebApp?.initDataUnsafe?.user?.photo_url
+    ?? null
 
   useEffect(() => {
     const check = (tgId: number | undefined) => {
@@ -669,10 +717,12 @@ export function ProfilePage({ sub }: ProfilePageProps = {}) {
           fontSize: 30, flexShrink: 0,
           overflow: 'hidden',
         }}>
-          {window.Telegram?.WebApp?.initDataUnsafe?.user?.photo_url ? (
+          {avatarSrc && !avatarFailed ? (
             <img
-              src={window.Telegram.WebApp.initDataUnsafe.user.photo_url}
+              src={avatarSrc}
               alt="Profile"
+              referrerPolicy="no-referrer"
+              onError={() => setAvatarFailed(true)}
               style={{ width: '100%', height: '100%', objectFit: 'cover' }}
             />
           ) : '🧑'}

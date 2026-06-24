@@ -140,6 +140,7 @@ export interface UserProfile {
   phone: string | null
   language: 'ru' | 'uz'
   email?: string | null
+  photo_url?: string | null
 }
 
 export type DeliveryType = 'delivery' | 'pickup'

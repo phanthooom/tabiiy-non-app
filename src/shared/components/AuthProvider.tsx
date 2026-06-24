@@ -106,6 +106,8 @@ export function AuthProvider({ children }: Props) {
             username: firestoreUser?.username || (user.username ?? null),
             phone: firestoreUser?.phone || null,
             language: firestoreUser?.language || 'uz' as 'uz' | 'ru',
+            email: firestoreUser?.email ?? null,
+            photo_url: firestoreUser?.photo_url || (user.photo_url ?? null),
           }
           setAuth(fakeToken, userProfile as any)
           setLanguage(userProfile.language)
