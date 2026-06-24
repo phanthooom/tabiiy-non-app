@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
@@ -78,6 +78,12 @@ export function CheckoutPage() {
       { timeout: 10000, enableHighAccuracy: true }
     )
   }
+
+  useEffect(() => {
+    if (deliveryType === 'delivery' && !address.trim()) {
+      detectLocation()
+    }
+  }, [])
 
   useBackButton(() => navigate('/cart'))
 
