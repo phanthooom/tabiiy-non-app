@@ -9,6 +9,7 @@ import { BottomNav } from '@/app/components/layout/BottomNav'
 import { TopAppBar } from '@/app/components/layout/TopAppBar'
 import { SplashScreen } from '@/shared/components/SplashScreen'
 import { queryClient } from '@/shared/lib/query-client'
+import { installGlobalHaptics } from '@/shared/lib/haptic'
 
 
 import { CatalogPage } from '@/app/pages/CatalogPage'
@@ -70,6 +71,9 @@ function AppShell() {
       }
     }
   }, [])
+
+  // Глобальный вибро-отклик на любой тап по кнопкам/ссылкам
+  useEffect(() => installGlobalHaptics(), [])
 
   const isAdmin = pathname.startsWith('/admin')
   const isWelcome = pathname === '/welcome'
