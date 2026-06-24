@@ -19,6 +19,7 @@ import { AdminOrdersPage } from '@/admin/pages/AdminOrdersPage'
 import { ProfilePage } from '@/app/pages/ProfilePage'
 import { WelcomePage } from '@/app/pages/WelcomePage'
 import { DeliveryLocationPage } from '@/app/pages/DeliveryLocationPage'
+import { TrackingPage } from '@/app/pages/TrackingPage'
 import { useDeliveryStore } from '@/app/store'
 
 const AdminApp = lazy(() => import('./admin/AdminApp'))
@@ -73,9 +74,10 @@ function AppShell() {
   const isAdmin = pathname.startsWith('/admin')
   const isWelcome = pathname === '/welcome'
   const isDeliveryLocation = pathname === '/delivery-location'
-  const isOrderTracking = pathname.startsWith('/orders/') && pathname !== '/orders'
+  const isOrderTracking = (pathname.startsWith('/orders/') && pathname !== '/orders') || pathname.startsWith('/tracking/')
   const isProfileSub = pathname.startsWith('/profile/')
-  const isPreAuth = isWelcome || isDeliveryLocation
+  const isTracking = pathname.startsWith('/tracking/')
+  const isPreAuth = isWelcome || isDeliveryLocation || isTracking
   const showNav = !isAdmin && !isPreAuth && !isOrderTracking && !isProfileSub
 
   if (!isAdmin && deliveryType === null && !isPreAuth) {
@@ -120,6 +122,7 @@ function AppShell() {
             <Route path="/orders" element={<OrdersPage />} />
             <Route path="/orders/:id" element={<OrderDetailPage />} />
             <Route path="/order-success/:id" element={<OrderSuccessPage />} />
+            <Route path="/tracking/:id" element={<TrackingPage />} />
             <Route path="/admin-orders" element={<AdminOrdersPage />} />
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/profile/personal-info" element={<ProfilePage sub="personal-info" />} />

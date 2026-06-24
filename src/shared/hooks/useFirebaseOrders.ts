@@ -90,8 +90,12 @@ export async function updateFirebaseOrderStatus(docId: string, status: string, l
         const BOT_TOKEN = '8957857177:AAFNSzeeQR7NTZHoQ7BbKajJhQyfKrizJSU'
         let message: string
 
-        const replyMarkup = yandexUrl && yandexUrl.startsWith('http')
-          ? { inline_keyboard: [[{ text: '📍 Dostavkani kuzatish', url: yandexUrl }]] }
+        const APP_URL = 'https://tabiiy-non-app.vercel.app'
+        const trackingPageUrl = yandexUrl && yandexUrl.startsWith('http')
+          ? `${APP_URL}/tracking/${order.id}`
+          : null
+        const replyMarkup = trackingPageUrl
+          ? { inline_keyboard: [[{ text: '📍 Kuzatish', url: trackingPageUrl }]] }
           : null
 
         if (yandexUrl && yandexUrl.startsWith('http')) {

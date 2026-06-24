@@ -75,7 +75,9 @@ export function OrdersPage() {
         const telegramId = (selected as any).user_id || (selected as any).telegram_id
         const tgMsgId = (selected as any).telegram_message_id
         const BOT_TOKEN = import.meta.env.VITE_BOT_TOKEN || '8957857177:AAFNSzeeQR7NTZHoQ7BbKajJhQyfKrizJSU'
-        const replyMarkup = { inline_keyboard: [[{ text: '📍 Dostavkani kuzatish', url: yandexUrl }]] }
+        const APP_URL = import.meta.env.VITE_APP_URL || 'https://tabiiy-non-app.vercel.app'
+        const trackingUrl = `${APP_URL}/tracking/${selected.id}`
+        const replyMarkup = { inline_keyboard: [[{ text: '📍 Kuzatish', url: trackingUrl }]] }
         if (telegramId && BOT_TOKEN) {
           if (tgMsgId) {
             // Edit the original order confirmation message to add tracking button
