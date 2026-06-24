@@ -171,7 +171,9 @@ function OrderCard({ order, onClick, language }: { order: Order; onClick: () => 
       <div style={{ marginBottom: 16 }}>
         <p style={{ fontWeight: 700, fontSize: 20, color: '#0f172a' }}>
           {order.items.length > 0
-            ? (order.items.length === 1 ? order.items[0].product_name : (language === 'uz' ? 'Tabiiy Non Buyurtmasi' : 'Заказ Tabiiy Non'))
+            ? (order.items.length === 1
+                ? (language === 'uz' ? ((order.items[0] as any).product_name_uz || order.items[0].product_name) : order.items[0].product_name)
+                : (language === 'uz' ? 'Tabiiy Non Buyurtmasi' : 'Заказ Tabiiy Non'))
             : (language === 'uz' ? 'Buyurtma' : 'Заказ')}
         </p>
       </div>
@@ -250,7 +252,10 @@ function OrderCard({ order, onClick, language }: { order: Order; onClick: () => 
         {/* Items text */}
         <div style={{ flex: 1, minWidth: 0 }}>
           <p style={{ fontSize: 13, color: '#334155', lineHeight: 1.6, fontWeight: 500 }}>
-            {order.items.map(i => `${i.product_name} x${i.quantity}`).join('\n').split('\n').map((line, idx) => (
+            {order.items.map(i => {
+              const name = language === 'uz' ? ((i as any).product_name_uz || i.product_name) : i.product_name
+              return `${name} x${i.quantity}`
+            }).join('\n').split('\n').map((line, idx) => (
               <span key={idx} style={{ display: 'block' }}>{line}</span>
             ))}
           </p>

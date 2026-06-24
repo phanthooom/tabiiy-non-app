@@ -363,7 +363,7 @@ export function CheckoutPage() {
               borderBottom: i < arr.length - 1 ? '1px solid #f1f5f9' : 'none',
               paddingBottom: i < arr.length - 1 ? 16 : 0,
             }}>
-              <span style={{ color: '#0f172a', fontWeight: 500 }}>{item.product_name} × {item.quantity}</span>
+              <span style={{ color: '#0f172a', fontWeight: 500 }}>{language === 'uz' ? (item.product_name_uz || item.product_name) : item.product_name} × {item.quantity}</span>
               <span style={{ fontWeight: 600, color: '#0f172a' }}>{item.subtotal.toLocaleString('ru-RU')} {t('sum')}</span>
             </div>
           ))}

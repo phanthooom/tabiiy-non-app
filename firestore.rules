@@ -6,50 +6,37 @@ service cloud.firestore {
     // ── Products ─────────────────────────────────────────────────────────
     match /products/{productId} {
       allow read: if true;
-      allow write: if false; // managed only via Firebase Console / Admin SDK
+      allow write: if false;
     }
 
     // ── Users ─────────────────────────────────────────────────────────────
     match /users/{userId} {
-      // Anyone can read/write own profile (Telegram ID = document ID)
-      // At minimum validate required fields and size
       allow read: if true;
-      allow write: if request.resource.data.keys().hasOnly([
-        'full_name', 'username', 'phone', 'language', 'email',
-        'fcm_token', 'updated_at'
-      ])
-      && request.resource.data.size() < 10240; // 10KB max
+      allow write: if request.resource.data.size() < 50;
     }
 
     // ── Carts ─────────────────────────────────────────────────────────────
     match /carts/{userId} {
       allow read: if true;
-      allow write: if request.resource.data.size() < 51200; // 50KB max
+      allow write: if true;
     }
 
     // ── Settings ──────────────────────────────────────────────────────────
     match /settings/{settingId} {
       allow read: if true;
-      allow write: if false; // managed only via Firebase Console
+      allow write: if false;
     }
 
     // ── Orders ────────────────────────────────────────────────────────────
     match /orders/{orderId} {
       allow read: if true;
-
-      // Create: must have required fields, no delete
-      allow create: if request.resource.data.keys().hasAll(['telegram_id', 'items', 'total_amount', 'delivery_type', 'created_at'])
+      allow create: if request.resource.data.keys().hasAll(['items', 'total_amount', 'delivery_type'])
         && request.resource.data.total_amount is number
         && request.resource.data.total_amount > 0
         && request.resource.data.items is list
-        && request.resource.data.items.size() > 0
-        && request.resource.data.size() < 51200; // 50KB max
-
-      // Update: only status fields can be changed, not telegram_id or items
-      allow update: if request.resource.data.telegram_id == resource.data.telegram_id
-        && request.resource.data.items == resource.data.items
+        && request.resource.data.items.size() > 0;
+      allow update: if request.resource.data.items == resource.data.items
         && request.resource.data.total_amount == resource.data.total_amount;
-
       allow delete: if false;
     }
   }
