@@ -1,4 +1,4 @@
-const BOT_TOKEN = '8957857177:AAFNSzeeQR7NTZHoQ7BbKajJhQyfKrizJSU';
+const BOT_TOKEN = process.env.VITE_BOT_TOKEN || process.env.BOT_TOKEN;
 const FIRESTORE_PROJECT_ID = 'tabiiy-non';
 const APP_URL = 'https://tabiiy-non-app.vercel.app/';
 
