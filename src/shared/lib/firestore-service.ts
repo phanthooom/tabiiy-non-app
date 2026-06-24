@@ -53,6 +53,7 @@ function toProduct(id: string, data: DocumentData): Product {
     quantity:        data.quantity ?? 0,
     photo_file_id:   data.photo_file_id ?? null,
     image_url:       imageUrl,
+    image_position:  data.image_position ?? null,
     is_available:    data.is_available ?? true,
     description:     descRu,
     description_ru:  descRu,

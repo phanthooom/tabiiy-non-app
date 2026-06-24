@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { productsApi } from '../api/index'
 import type { Product } from '../types/index'
 import { Package, Pencil, Eye, EyeOff, Trash2, Plus, RotateCcw, Check, Upload } from 'lucide-react'
@@ -131,6 +131,8 @@ export function ProductsPage() {
   const [stockSaving, setStockSaving]     = useState<Record<string, boolean>>({})
   const [descTab, setDescTab]             = useState<'ru' | 'uz'>('ru')
   const [uploadLoading, setUploadLoading] = useState(false)
+  const [confirmDel, setConfirmDel]       = useState<Product | null>(null)
+  const [delLoading, setDelLoading]       = useState(false)
 
   const load = async () => {
     const res = await productsApi.list()
@@ -197,10 +199,18 @@ export function ProductsPage() {
     }
   }
 
-  const del = async (id: number | string) => {
-    if (!confirm('Удалить товар?')) return
-    await productsApi.delete(id)
-    await load()
+  const doDelete = async () => {
+    if (!confirmDel) return
+    setDelLoading(true)
+    try {
+      await productsApi.delete(confirmDel.id)
+      await load()
+      setConfirmDel(null)
+    } catch (e: any) {
+      setError(e?.message ?? 'Не удалось удалить')
+    } finally {
+      setDelLoading(false)
+    }
   }
 
   const toggle = async (p: Product) => {
@@ -355,7 +365,7 @@ export function ProductsPage() {
             }}>
               <div style={{ position: 'relative' }}>
                 {(p as any).image_url
-                  ? <img src={(p as any).image_url} alt="" style={{ width: '100%', height: 140, objectFit: 'cover', display: 'block' }} />
+                  ? <img src={(p as any).image_url} alt="" style={{ width: '100%', height: 140, objectFit: 'cover', objectPosition: (p as any).image_position || 'center 55%', display: 'block' }} />
                   : <div style={{ width: '100%', height: 140, background: '#f3f4f6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <Package size={32} color="#d1d5db" />
                     </div>
@@ -402,7 +412,7 @@ export function ProductsPage() {
                 <button onClick={() => toggle(p)} style={actionBtn('#f59e0b')} title={p.is_visible ? 'Скрыть' : 'Показать'}>
                   {p.is_visible ? <EyeOff size={14} /> : <Eye size={14} />}
                 </button>
-                <button onClick={() => del(p.id)} style={actionBtn('#ef4444')} title="Удалить">
+                <button onClick={() => setConfirmDel(p)} style={actionBtn('#ef4444')} title="Удалить">
                   <Trash2 size={14} />
                 </button>
               </div>
@@ -430,7 +440,8 @@ export function ProductsPage() {
             <div style={{
               position: 'sticky', top: 0, zIndex: 10,
               background: '#ffffff', borderBottom: '1px solid #e5e7eb',
-              padding: '18px 20px', display: 'flex', alignItems: 'center', gap: 12,
+              padding: 'calc(var(--tg-content-safe-area-inset-top, var(--tg-safe-area-inset-top, env(safe-area-inset-top, 0px))) + 18px) 20px 18px',
+              display: 'flex', alignItems: 'center', gap: 12,
             }}>
               {previewImage && (
                 <img src={previewImage} style={{ width: 42, height: 42, borderRadius: 10, objectFit: 'cover', flexShrink: 0 }} />
@@ -570,7 +581,11 @@ export function ProductsPage() {
               <div style={sectionBox}>
                 <span style={fieldLabel}>Картинка</span>
                 {previewImage && (
-                  <img src={previewImage} style={{ width: '100%', height: 140, objectFit: 'cover', borderRadius: 10, marginBottom: 10, display: 'block' }} />
+                  <ImagePositioner
+                    src={previewImage}
+                    value={(editing as any).image_position}
+                    onChange={(p) => setEditing(prev => ({ ...prev, image_position: p } as any))}
+                  />
                 )}
                 <label style={{
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
@@ -646,7 +661,8 @@ export function ProductsPage() {
             <div style={{
               position: 'sticky', bottom: 0,
               background: '#ffffff', borderTop: '1px solid #e5e7eb',
-              padding: '14px 20px', display: 'flex', gap: 10,
+              padding: '14px 20px calc(14px + env(safe-area-inset-bottom, 0px))',
+              display: 'flex', gap: 10,
             }}>
               <button
                 onClick={save}
@@ -679,6 +695,63 @@ export function ProductsPage() {
           </div>
         </div>
       )}
+
+      {/* Delete confirmation modal */}
+      {confirmDel && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 400,
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24,
+        }}>
+          <div
+            onClick={() => !delLoading && setConfirmDel(null)}
+            style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.45)', backdropFilter: 'blur(3px)' }}
+          />
+          <div style={{
+            position: 'relative', zIndex: 1, width: '100%', maxWidth: 360,
+            background: '#fff', borderRadius: 18, padding: '24px 22px',
+            boxShadow: '0 20px 50px rgba(0,0,0,0.25)', textAlign: 'center',
+          }}>
+            <div style={{
+              width: 56, height: 56, margin: '0 auto 14px', borderRadius: 16,
+              background: '#fef2f2', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}>
+              <Trash2 size={26} color="#ef4444" />
+            </div>
+            <h3 style={{ margin: '0 0 6px', color: '#111827', fontWeight: 800, fontSize: 18 }}>
+              Точно хотите удалить?
+            </h3>
+            <p style={{ margin: '0 0 20px', color: '#6b7280', fontSize: 14, lineHeight: 1.4 }}>
+              Товар «{(confirmDel as any).name_ru || (confirmDel as any).name_uz}» будет удалён без возможности восстановления.
+            </p>
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button
+                onClick={() => setConfirmDel(null)}
+                disabled={delLoading}
+                style={{
+                  flex: 1, padding: '13px', background: '#f3f4f6',
+                  border: 'none', borderRadius: 12, color: '#374151',
+                  fontWeight: 700, fontSize: 14, cursor: delLoading ? 'not-allowed' : 'pointer',
+                  fontFamily: 'inherit',
+                }}
+              >
+                Отмена
+              </button>
+              <button
+                onClick={doDelete}
+                disabled={delLoading}
+                style={{
+                  flex: 1, padding: '13px', background: delLoading ? '#fca5a5' : '#ef4444',
+                  border: 'none', borderRadius: 12, color: '#fff',
+                  fontWeight: 700, fontSize: 14, cursor: delLoading ? 'not-allowed' : 'pointer',
+                  fontFamily: 'inherit',
+                }}
+              >
+                {delLoading ? 'Удаляем...' : 'Удалить'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -690,3 +763,82 @@ const actionBtn = (color: string): React.CSSProperties => ({
   cursor: 'pointer', fontFamily: 'inherit',
   display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 4,
 })
+
+function parsePos(value?: string | null): { x: number; y: number } {
+  if (value) {
+    const m = value.match(/([\d.]+)%\s+([\d.]+)%/)
+    if (m) return { x: Number(m[1]), y: Number(m[2]) }
+  }
+  return { x: 50, y: 55 }
+}
+
+const clamp = (v: number) => Math.max(0, Math.min(100, v))
+
+/** Превью картинки, которое можно тащить, чтобы выбрать видимую область (object-position). */
+function ImagePositioner({ src, value, onChange }: {
+  src: string
+  value?: string | null
+  onChange: (pos: string) => void
+}) {
+  const [pos, setPos] = useState(() => parsePos(value))
+  const boxRef = useRef<HTMLDivElement>(null)
+  const drag = useRef<{ x: number; y: number; baseX: number; baseY: number } | null>(null)
+
+  // Sync when switching products / presets
+  useEffect(() => { setPos(parsePos(value)) }, [value, src])
+
+  const onDown = (e: React.PointerEvent) => {
+    e.currentTarget.setPointerCapture(e.pointerId)
+    drag.current = { x: e.clientX, y: e.clientY, baseX: pos.x, baseY: pos.y }
+  }
+  const onMove = (e: React.PointerEvent) => {
+    if (!drag.current || !boxRef.current) return
+    const w = boxRef.current.clientWidth || 1
+    const h = boxRef.current.clientHeight || 1
+    const dx = e.clientX - drag.current.x
+    const dy = e.clientY - drag.current.y
+    const nx = clamp(drag.current.baseX - (dx / w) * 100)
+    const ny = clamp(drag.current.baseY - (dy / h) * 100)
+    setPos({ x: nx, y: ny })
+  }
+  const onUp = (e: React.PointerEvent) => {
+    if (!drag.current) return
+    drag.current = null
+    onChange(`${pos.x.toFixed(0)}% ${pos.y.toFixed(0)}%`)
+    try { e.currentTarget.releasePointerCapture(e.pointerId) } catch {}
+  }
+
+  return (
+    <div style={{ marginBottom: 10 }}>
+      <div
+        ref={boxRef}
+        onPointerDown={onDown}
+        onPointerMove={onMove}
+        onPointerUp={onUp}
+        onPointerCancel={onUp}
+        style={{
+          position: 'relative', width: '100%', height: 160,
+          borderRadius: 10, overflow: 'hidden', cursor: 'grab',
+          touchAction: 'none', userSelect: 'none', background: '#f3f4f6',
+        }}
+      >
+        <img
+          src={src}
+          draggable={false}
+          style={{
+            width: '100%', height: '100%', objectFit: 'cover',
+            objectPosition: `${pos.x}% ${pos.y}%`, pointerEvents: 'none', display: 'block',
+          }}
+        />
+        <div style={{
+          position: 'absolute', left: 8, bottom: 8,
+          background: 'rgba(0,0,0,0.55)', color: '#fff',
+          fontSize: 11, fontWeight: 600, padding: '4px 8px', borderRadius: 6,
+          display: 'flex', alignItems: 'center', gap: 5, pointerEvents: 'none',
+        }}>
+          ✥ Перетащите, чтобы кадрировать
+        </div>
+      </div>
+    </div>
+  )
+}

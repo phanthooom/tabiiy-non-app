@@ -33,6 +33,8 @@ export interface Product {
   sort_order: number
   photo_file_id: string | null
   image_url: string | null
+  image_position?: string | null
+  default_quantity?: number | null
   description_uz?: string | null
   description_ru?: string | null
   description?: string | null

@@ -88,6 +88,7 @@ export interface Product {
   quantity: number
   photo_file_id: string | null
   image_url: string | null
+  image_position?: string | null
   is_available: boolean
   description: string | null
   description_uz: string | null

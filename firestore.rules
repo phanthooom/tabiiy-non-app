@@ -4,9 +4,12 @@ service cloud.firestore {
   match /databases/{database}/documents {
 
     // ── Products ─────────────────────────────────────────────────────────
+    // Запись разрешена: админ управляет товарами либо через Firebase Auth
+    // (Google-логин), либо как Telegram-админ (без Firebase Auth) — поэтому
+    // write открыт, доступ к панели ограничен на уровне UI по admin_telegram_ids.
     match /products/{productId} {
       allow read: if true;
-      allow write: if false;
+      allow write: if true;
     }
 
     // ── Users ─────────────────────────────────────────────────────────────

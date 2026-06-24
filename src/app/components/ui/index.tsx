@@ -263,10 +263,11 @@ export function ProductCard({ product, onSetQty, onQtyChange, cartQty, addLabel,
     scheduleSync(1)
   }
 
+  const imgPos = product.image_position || 'center 55%'
   const imgNode = product.image_url ? (
-    <img src={product.image_url} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 55%' }} />
+    <img src={product.image_url} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: imgPos }} />
   ) : product.photo_file_id ? (
-    <ProductPhoto fileId={product.photo_file_id} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 55%' }} fallback={<span style={{ fontSize: 56 }}>🍞</span>} />
+    <ProductPhoto fileId={product.photo_file_id} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: imgPos }} fallback={<span style={{ fontSize: 56 }}>🍞</span>} />
   ) : (
     <span style={{ fontSize: 56 }}>🍞</span>
   )
