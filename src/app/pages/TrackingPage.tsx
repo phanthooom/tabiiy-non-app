@@ -7,8 +7,9 @@ import { db } from '@/shared/lib/firebase'
 
 const COURIER_PHONE = '+998940453900'
 const COURIER_PHONE_DISPLAY = '+998 (94) 045-39-00'
-const LAT = 41.320463
-const LNG = 69.234749
+
+// Tashkent center — fallback if geocoding fails
+const TASHKENT = { lat: 41.2995, lng: 69.2401 }
 
 const STEPS = [
   { key: 'preparing', label: 'Готовится', icon: Package },
@@ -36,17 +37,25 @@ function callPhone() { window.location.href = `tel:${COURIER_PHONE}` }
 function loadLeaflet(): Promise<any> {
   return new Promise(resolve => {
     if ((window as any).L) return resolve((window as any).L)
-
     const css = document.createElement('link')
     css.rel = 'stylesheet'
     css.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css'
     document.head.appendChild(css)
-
     const js = document.createElement('script')
     js.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'
     js.onload = () => resolve((window as any).L)
     document.head.appendChild(js)
   })
+}
+
+async function geocodeAddress(address: string): Promise<{ lat: number; lng: number } | null> {
+  try {
+    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address + ', Ташкент, Узбекистан')}&limit=1`
+    const res = await fetch(url)
+    const data = await res.json()
+    if (data[0]) return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) }
+  } catch {}
+  return null
 }
 
 export function TrackingPage() {
@@ -57,6 +66,7 @@ export function TrackingPage() {
   const mapRef = useRef<HTMLDivElement>(null)
   const leafletMapRef = useRef<any>(null)
 
+  // Load order
   useEffect(() => {
     if (!id) return
     getDoc(doc(db, 'orders', id))
@@ -70,46 +80,61 @@ export function TrackingPage() {
     return () => clearTimeout(t)
   }, [])
 
-  // Init Leaflet map with flyTo zoom animation
+  // Init map once order is loaded
   useEffect(() => {
-    if (!mapRef.current) return
+    if (loading || !mapRef.current || leafletMapRef.current) return
     let destroyed = false
 
-    loadLeaflet().then(L => {
-      if (destroyed || !mapRef.current || leafletMapRef.current) return
+    const address = order
+      ? (typeof order.address === 'string' ? order.address : order?.address?.full_address ?? order?.address?.street ?? '')
+      : ''
+
+    const initMap = async () => {
+      const L = await loadLeaflet()
+      if (destroyed || !mapRef.current) return
 
       const map = L.map(mapRef.current, {
-        center: [LAT, LNG],
+        center: [TASHKENT.lat, TASHKENT.lng],
         zoom: 11,
         zoomControl: false,
         attributionControl: false,
       })
 
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map)
-
-      // Custom orange pin matching brand
-      const icon = L.divIcon({
-        html: `<div style="
-          width:22px;height:22px;
-          background:#e8751a;
-          border-radius:50% 50% 50% 0;
-          transform:rotate(-45deg);
-          border:3px solid #fff;
-          box-shadow:0 2px 10px rgba(232,117,26,0.5);
-        "></div>`,
-        iconSize: [22, 22],
-        iconAnchor: [11, 22],
-        className: '',
-      })
-      L.marker([LAT, LNG], { icon }).addTo(map)
+      // Yandex map tiles — same look as Yandex Maps
+      L.tileLayer(
+        'https://core-renderer-tiles.maps.yandex.net/tiles?l=map&v=22.07.08-0&x={x}&y={y}&z={z}&scale=1&lang=ru_RU',
+        { maxZoom: 19 }
+      ).addTo(map)
 
       leafletMapRef.current = map
 
-      // Smooth fly-in from city level → street level
+      // Geocode delivery address then fly there
+      const coords = address ? await geocodeAddress(address) : null
+      if (destroyed) return
+
+      const target = coords ?? TASHKENT
+
+      // Custom orange pin
+      const icon = L.divIcon({
+        html: `<div style="
+          position:relative;width:28px;height:28px;
+          background:#e8751a;border-radius:50% 50% 50% 0;
+          transform:rotate(-45deg);border:3px solid #fff;
+          box-shadow:0 3px 12px rgba(232,117,26,0.55);
+        "></div>`,
+        iconSize: [28, 28],
+        iconAnchor: [14, 28],
+        className: '',
+      })
+      L.marker([target.lat, target.lng], { icon }).addTo(map)
+
+      // Smooth zoom animation from city → street level
       setTimeout(() => {
-        map.flyTo([LAT, LNG], 17, { duration: 2.2, easeLinearity: 0.2 })
-      }, 350)
-    })
+        map.flyTo([target.lat, target.lng], 17, { duration: 2.4, easeLinearity: 0.18 })
+      }, 300)
+    }
+
+    initMap()
 
     return () => {
       destroyed = true
@@ -118,19 +143,19 @@ export function TrackingPage() {
         leafletMapRef.current = null
       }
     }
-  }, [])
+  }, [loading, order])
 
   const step = statusToStep(order?.status ?? '')
   const isCancelled = order?.status === 'cancelled'
   const yandexUrl = order?.yandex_tracking_url
-  const address = typeof order?.address === 'string'
-    ? order.address
-    : order?.address?.full_address ?? order?.address?.street ?? ''
+  const address = order
+    ? (typeof order.address === 'string' ? order.address : order?.address?.full_address ?? order?.address?.street ?? '')
+    : ''
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: '#e8e0d8', overflow: 'hidden' }}>
 
-      {/* Leaflet map fills top */}
+      {/* Map fills top */}
       <div
         ref={mapRef}
         style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 'calc(44vh - 20px)' }}
@@ -181,7 +206,7 @@ export function TrackingPage() {
                   )}
                 </div>
 
-                {/* Steps */}
+                {/* Progress steps */}
                 {!isCancelled && (
                   <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}>
                     {STEPS.map((s, i) => {
