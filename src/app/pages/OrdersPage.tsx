@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useNavigate, useParams } from 'react-router-dom'
-import { CheckCircle, Clock, MapPin, Phone, Store } from 'lucide-react'
+import { CheckCircle, MapPin, Phone, Store } from 'lucide-react'
 import { YMaps, Map as YandexMap, Placemark } from '@pbe/react-yandex-maps'
 
 import { Button, Spinner, ProductPhoto } from '@/app/components/ui'
