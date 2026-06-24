@@ -746,18 +746,17 @@ export function OrderDetailPage() {
                 </a>
               </div>
             ) : (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
-                <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=100&auto=format&fit=crop" alt="Courier" style={{ width: 48, height: 48, borderRadius: 12, objectFit: 'cover' }} />
-                <div style={{ flex: 1 }}>
-                  <p style={{ fontWeight: 700, fontSize: 15, color: '#0f172a', marginBottom: 2 }}>Tabiiy Non</p>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: '#64748b', fontWeight: 600 }}>
-                    <span>{language === 'uz' ? 'Shaxsiy kuryer' : 'Личный курьер'}</span>
-                  </div>
-                </div>
-                <a href="tel:+998901234567" style={{ width: 40, height: 40, borderRadius: '50%', border: '1px solid #e2e8f0', background: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', textDecoration: 'none' }}>
-                  <Phone size={18} color="#0f172a" />
-                </a>
-              </div>
+              <a href="tel:+998940453900" style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                background: '#e8751a', color: '#fff',
+                borderRadius: 12, padding: '14px 16px',
+                fontSize: 14, fontWeight: 700,
+                textDecoration: 'none', width: '100%', marginBottom: 20,
+                boxShadow: '0 3px 14px rgba(232,117,26,0.35)',
+              }}>
+                <Phone size={16} color="#fff" />
+                +998 (94) 045-39-00
+              </a>
             )}
 
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
