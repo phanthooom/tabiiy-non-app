@@ -14,7 +14,7 @@ import { db } from '@/shared/lib/firebase'
 import type { Language } from '@/shared/types'
 
 interface ProfilePageProps {
-  sub?: 'personal-info' | 'addresses' | 'payments' | 'notifications'
+  sub?: 'personal-info' | 'addresses' | 'notifications'
 }
 
 function SubPageShell({ title, children }: { title: string; children: React.ReactNode }) {
@@ -466,158 +466,6 @@ function AddressesPage({ lang }: { lang: Language }) {
   )
 }
 
-const SAVED_METHODS = [
-  { id: 'uzcard', type: 'card', label: 'Uzcard', last4: '4567', logo: 'UZCARD' },
-  { id: 'humo', type: 'card', label: 'Humo', last4: '8901', logo: 'HUMO' },
-  { id: 'cash', type: 'cash', label: 'Naqd pul', last4: null, logo: null },
-]
-
-function CardLogo({ logo }: { logo: string }) {
-  const colors: Record<string, { bg: string; color: string }> = {
-    UZCARD: { bg: '#e8f0fe', color: '#1a56db' },
-    HUMO: { bg: '#fce7f3', color: '#9d174d' },
-  }
-  const c = colors[logo] ?? { bg: '#f1f5f9', color: '#475569' }
-  return (
-    <div style={{
-      width: 52, height: 34, borderRadius: 6,
-      background: c.bg,
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      flexShrink: 0,
-    }}>
-      <span style={{ fontSize: 10, fontWeight: 800, color: c.color, letterSpacing: '0.02em' }}>{logo}</span>
-    </div>
-  )
-}
-
-function CashLogo() {
-  return (
-    <div style={{
-      width: 52, height: 34, borderRadius: 6,
-      background: '#ecfdf5',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      flexShrink: 0,
-    }}>
-      <span style={{ fontSize: 18 }}>💵</span>
-    </div>
-  )
-}
-
-function PaymentsPage({ lang }: { lang: Language }) {
-  const title = lang === 'uz' ? "To'lov usullari" : 'Способы оплаты'
-  const [selected, setSelected] = useState('uzcard')
-  const [methods, setMethods] = useState(SAVED_METHODS)
-
-  const removeMethod = (id: string) => {
-    const next = methods.filter(m => m.id !== id)
-    setMethods(next)
-    if (selected === id && next.length > 0) setSelected(next[0].id)
-  }
-
-  return (
-    <SubPageShell title={title}>
-      <div style={{ padding: '16px' }}>
-        {/* Add new card button */}
-        <button
-          style={{
-            width: '100%',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
-            padding: '16px',
-            background: 'var(--surface)',
-            border: '1.5px dashed #e8751a',
-            borderRadius: 14,
-            cursor: 'pointer',
-            fontFamily: 'var(--font-body)',
-            marginBottom: 24,
-          }}
-        >
-          <div style={{
-            width: 28, height: 28, borderRadius: '50%',
-            background: '#fff4ec',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-          }}>
-            <span style={{ fontSize: 18, lineHeight: 1, color: '#e8751a' }}>+</span>
-          </div>
-          <span style={{ fontSize: 15, fontWeight: 600, color: '#e8751a' }}>
-            {lang === 'uz' ? 'Yangi karta qo\'shish' : 'Добавить карту'}
-          </span>
-        </button>
-
-        {/* Saved methods section */}
-        {methods.length > 0 && (
-          <>
-            <p style={{
-              fontSize: 12, fontWeight: 700, color: 'var(--text-3)',
-              letterSpacing: '0.08em', marginBottom: 10,
-            }}>
-              {lang === 'uz' ? 'SAQLANGAN USULLAR' : 'СОХРАНЁННЫЕ'}
-            </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {methods.map(m => {
-                const isSelected = selected === m.id
-                return (
-                  <motion.div
-                    key={m.id}
-                    onClick={() => setSelected(m.id)}
-                    whileTap={{ scale: 0.98 }}
-                    style={{
-                      display: 'flex', alignItems: 'center', gap: 14,
-                      padding: '14px 16px',
-                      background: 'var(--surface)',
-                      border: isSelected ? '1.5px solid #e8751a' : '1.5px solid var(--border)',
-                      borderRadius: 14,
-                      cursor: 'pointer',
-                      transition: 'border-color 0.15s',
-                    }}
-                  >
-                    {/* Radio */}
-                    <div style={{
-                      width: 22, height: 22, borderRadius: '50%',
-                      border: isSelected ? '6px solid #e8751a' : '2px solid #cbd5e1',
-                      flexShrink: 0, transition: 'border 0.15s',
-                    }} />
-
-                    {/* Logo */}
-                    {m.type === 'cash' ? <CashLogo /> : <CardLogo logo={m.logo!} />}
-
-                    {/* Info */}
-                    <div style={{ flex: 1 }}>
-                      <p style={{ fontSize: 15, fontWeight: 700, color: isSelected ? '#e8751a' : 'var(--text)' }}>
-                        {m.label}
-                      </p>
-                      {m.last4 && (
-                        <p style={{ fontSize: 13, color: 'var(--text-3)' }}>**** {m.last4}</p>
-                      )}
-                      {m.type === 'cash' && (
-                        <p style={{ fontSize: 13, color: 'var(--text-3)' }}>
-                          {lang === 'uz' ? 'Yetkazib berishda to\'lash' : 'Оплата при получении'}
-                        </p>
-                      )}
-                    </div>
-
-                    {/* Delete (only cards, only selected) */}
-                    {isSelected && m.type === 'card' && (
-                      <button
-                        onClick={e => { e.stopPropagation(); removeMethod(m.id) }}
-                        style={{
-                          background: 'none', border: 'none', cursor: 'pointer',
-                          padding: 4, display: 'flex', alignItems: 'center',
-                          color: '#94a3b8',
-                        }}
-                      >
-                        <Trash2 size={18} strokeWidth={2} />
-                      </button>
-                    )}
-                  </motion.div>
-                )
-              })}
-            </div>
-          </>
-        )}
-      </div>
-    </SubPageShell>
-  )
-}
 
 function NotificationsPage({ lang }: { lang: Language }) {
   const title = lang === 'uz' ? 'Xabarnomalar' : 'Уведомления'
@@ -724,7 +572,6 @@ export function ProfilePage({ sub }: ProfilePageProps = {}) {
 
   if (sub === 'personal-info') return <PersonalInfoPage lang={language} />
   if (sub === 'addresses') return <AddressesPage lang={language} />
-  if (sub === 'payments') return <PaymentsPage lang={language} />
   if (sub === 'notifications') return <NotificationsPage lang={language} />
 
   const handleLogout = () => {

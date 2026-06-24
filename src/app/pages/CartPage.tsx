@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
@@ -10,6 +11,7 @@ import { useT } from '@/shared/utils/i18n'
 import { useTelegram } from '@/shared/hooks/useTelegram'
 import { useWorkingHours } from '@/shared/hooks/useWorkingHours'
 import { BYPASS_MODE } from '@/shared/lib/mock-data'
+import { firestoreOrders } from '@/shared/lib/firestore-service'
 import type { Cart } from '@/shared/types'
 
 export function CartPage() {
@@ -20,6 +22,20 @@ export function CartPage() {
   const { tg } = useTelegram()
   const queryClient = useQueryClient()
   const { isOpen, workStart, workEnd } = useWorkingHours()
+  const [activeYandexUrl, setActiveYandexUrl] = useState<string | null>(null)
+
+  useEffect(() => {
+    const telegramId = tg?.initDataUnsafe?.user?.id ?? window.Telegram?.WebApp?.initDataUnsafe?.user?.id
+    if (!telegramId) return
+    firestoreOrders.list(telegramId).then(orders => {
+      const active = orders.find(o =>
+        o.yandex_tracking_url &&
+        o.status !== 'delivered' &&
+        o.status !== 'cancelled'
+      )
+      setActiveYandexUrl((active as any)?.yandex_tracking_url ?? null)
+    }).catch(() => {})
+  }, [])
 
   const { isLoading, isError, isFetching, refetch } = useQuery({
     queryKey: queryKeys.cart(),
@@ -266,7 +282,13 @@ export function CartPage() {
 
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16 }}>
           <span style={{ color: '#64748b', fontSize: 14 }}>
-            {language === 'uz' ? 'Yetkazib berish' : 'Доставка'}
+            {activeYandexUrl ? (
+              <a href={activeYandexUrl} target="_blank" rel="noreferrer" style={{ color: '#e8751a', fontWeight: 600, textDecoration: 'underline' }}>
+                {language === 'uz' ? 'Yetkazib berish 📍' : 'Доставка 📍'}
+              </a>
+            ) : (
+              language === 'uz' ? 'Yetkazib berish' : 'Доставка'
+            )}
           </span>
           <span style={{ fontWeight: 600, fontSize: 14, color: '#0f172a' }}>
             {deliveryFee === 0

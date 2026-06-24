@@ -124,7 +124,6 @@ function AppShell() {
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/profile/personal-info" element={<ProfilePage sub="personal-info" />} />
             <Route path="/profile/addresses" element={<ProfilePage sub="addresses" />} />
-            <Route path="/profile/payments" element={<ProfilePage sub="payments" />} />
             <Route path="/profile/notifications" element={<ProfilePage sub="notifications" />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
