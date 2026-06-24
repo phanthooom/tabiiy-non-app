@@ -435,6 +435,7 @@ export function OrderDetailPage() {
   const mapInstanceRef = useRef<any>(null)
   const SHOP: [number, number] = [41.320463, 69.234749]
   const [deliveryCoords, setDeliveryCoords] = useState<[number, number] | null>(null)
+  const [mapLoaded, setMapLoaded] = useState(false)
 
   useEffect(() => {
     if (!idValid) return
@@ -465,7 +466,7 @@ export function OrderDetailPage() {
       ? (order as any).address
       : (order as any).address?.full_address ?? (order as any).address?.street ?? ''
     if (!addr) return
-    fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(addr)}&limit=1`)
+    fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(addr + ' Tashkent')}&limit=1`)
       .then(r => r.json())
       .then(data => {
         if (data[0]) setDeliveryCoords([parseFloat(data[0].lat), parseFloat(data[0].lon)])
@@ -473,40 +474,25 @@ export function OrderDetailPage() {
       .catch(() => {})
   }, [order])
 
-  // Fit both pins after map+geocoding ready
+  // Zoom map whenever map loaded OR delivery coords arrive
   useEffect(() => {
+    if (!mapLoaded) return
     const map = mapInstanceRef.current
     if (!map) return
-    if (deliveryCoords) {
-      // Show both shop + delivery
-      const lats = [SHOP[0], deliveryCoords[0]]
-      const lngs = [SHOP[1], deliveryCoords[1]]
-      const bounds: [[number,number],[number,number]] = [
-        [Math.min(...lats) - 0.01, Math.min(...lngs) - 0.01],
-        [Math.max(...lats) + 0.01, Math.max(...lngs) + 0.01],
-      ]
-      map.setBounds(bounds, { duration: 2200, timingFunction: 'ease-in-out' })
-    } else {
-      map.setCenter(SHOP, 16, { duration: 2200, timingFunction: 'ease-in-out' })
-    }
-  }, [deliveryCoords])
-
-  const handleMapLoad = () => {
     setTimeout(() => {
-      const map = mapInstanceRef.current
-      if (!map) return
       if (deliveryCoords) {
         const lats = [SHOP[0], deliveryCoords[0]]
         const lngs = [SHOP[1], deliveryCoords[1]]
-        map.setBounds([
-          [Math.min(...lats) - 0.01, Math.min(...lngs) - 0.01],
-          [Math.max(...lats) + 0.01, Math.max(...lngs) + 0.01],
-        ], { duration: 2200 })
+        map.setBounds(
+          [[Math.min(...lats) - 0.008, Math.min(...lngs) - 0.012],
+           [Math.max(...lats) + 0.008, Math.max(...lngs) + 0.012]],
+          { duration: 2200, timingFunction: 'ease-in-out' }
+        )
       } else {
-        map.setCenter(SHOP, 16, { duration: 2200 })
+        map.setCenter(SHOP, 16, { duration: 2200, timingFunction: 'ease-in-out' })
       }
-    }, 400)
-  }
+    }, 300)
+  }, [mapLoaded, deliveryCoords])
 
   if (!idValid) {
     return (
@@ -685,7 +671,7 @@ export function OrderDetailPage() {
             width="100%"
             height="100%"
             options={{ suppressMapOpenBlock: true, yandexMapDisablePoiInteractivity: true }}
-            onLoad={handleMapLoad}
+            onLoad={() => setMapLoaded(true)}
           >
             <Placemark
               geometry={SHOP}
