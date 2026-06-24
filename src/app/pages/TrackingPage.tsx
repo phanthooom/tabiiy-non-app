@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Phone, MapPin, ExternalLink, Package, Truck, CheckCircle } from 'lucide-react'
@@ -7,6 +7,8 @@ import { db } from '@/shared/lib/firebase'
 
 const COURIER_PHONE = '+998940453900'
 const COURIER_PHONE_DISPLAY = '+998 (94) 045-39-00'
+const LAT = 41.320463
+const LNG = 69.234749
 
 const STEPS = [
   { key: 'preparing', label: 'Готовится', icon: Package },
@@ -14,26 +16,37 @@ const STEPS = [
   { key: 'done',      label: 'Доставлен', icon: CheckCircle },
 ]
 
-function statusToStep(status: string): number {
-  if (status === 'delivered') return 2
-  if (status === 'courier_assigned') return 1
+function statusToStep(s: string) {
+  if (s === 'delivered') return 2
+  if (s === 'courier_assigned') return 1
   return 0
 }
 
-function statusLabel(status: string): string {
+function statusLabel(status: string) {
   const map: Record<string, string> = {
-    accepted:         'Принят',
-    packing:          'Упаковывается',
-    courier_assigned: 'Курьер в пути',
-    ready:            'Готов',
-    delivered:        'Доставлен',
-    cancelled:        'Отменён',
+    accepted: 'Принят', packing: 'Упаковывается',
+    courier_assigned: 'Курьер в пути', ready: 'Готов',
+    delivered: 'Доставлен', cancelled: 'Отменён',
   }
   return map[status] ?? status
 }
 
-function callPhone() {
-  window.location.href = `tel:${COURIER_PHONE}`
+function callPhone() { window.location.href = `tel:${COURIER_PHONE}` }
+
+function loadLeaflet(): Promise<any> {
+  return new Promise(resolve => {
+    if ((window as any).L) return resolve((window as any).L)
+
+    const css = document.createElement('link')
+    css.rel = 'stylesheet'
+    css.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css'
+    document.head.appendChild(css)
+
+    const js = document.createElement('script')
+    js.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js'
+    js.onload = () => resolve((window as any).L)
+    document.head.appendChild(js)
+  })
 }
 
 export function TrackingPage() {
@@ -41,6 +54,8 @@ export function TrackingPage() {
   const [order, setOrder] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [sheetOpen, setSheetOpen] = useState(false)
+  const mapRef = useRef<HTMLDivElement>(null)
+  const leafletMapRef = useRef<any>(null)
 
   useEffect(() => {
     if (!id) return
@@ -55,6 +70,56 @@ export function TrackingPage() {
     return () => clearTimeout(t)
   }, [])
 
+  // Init Leaflet map with flyTo zoom animation
+  useEffect(() => {
+    if (!mapRef.current) return
+    let destroyed = false
+
+    loadLeaflet().then(L => {
+      if (destroyed || !mapRef.current || leafletMapRef.current) return
+
+      const map = L.map(mapRef.current, {
+        center: [LAT, LNG],
+        zoom: 11,
+        zoomControl: false,
+        attributionControl: false,
+      })
+
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map)
+
+      // Custom orange pin matching brand
+      const icon = L.divIcon({
+        html: `<div style="
+          width:22px;height:22px;
+          background:#e8751a;
+          border-radius:50% 50% 50% 0;
+          transform:rotate(-45deg);
+          border:3px solid #fff;
+          box-shadow:0 2px 10px rgba(232,117,26,0.5);
+        "></div>`,
+        iconSize: [22, 22],
+        iconAnchor: [11, 22],
+        className: '',
+      })
+      L.marker([LAT, LNG], { icon }).addTo(map)
+
+      leafletMapRef.current = map
+
+      // Smooth fly-in from city level → street level
+      setTimeout(() => {
+        map.flyTo([LAT, LNG], 17, { duration: 2.2, easeLinearity: 0.2 })
+      }, 350)
+    })
+
+    return () => {
+      destroyed = true
+      if (leafletMapRef.current) {
+        leafletMapRef.current.remove()
+        leafletMapRef.current = null
+      }
+    }
+  }, [])
+
   const step = statusToStep(order?.status ?? '')
   const isCancelled = order?.status === 'cancelled'
   const yandexUrl = order?.yandex_tracking_url
@@ -63,20 +128,13 @@ export function TrackingPage() {
     : order?.address?.full_address ?? order?.address?.street ?? ''
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: '#f0ebe5', overflow: 'hidden' }}>
+    <div style={{ position: 'fixed', inset: 0, background: '#e8e0d8', overflow: 'hidden' }}>
 
-      {/* Map — fills top area, stops above sheet */}
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: '44vh' }}>
-        <iframe
-          src="https://yandex.uz/map-widget/v1/?ll=69.234749%2C41.320463&z=16&pt=69.234749%2C41.320463%2Cpm2rdm"
-          width="100%"
-          height="100%"
-          frameBorder="0"
-          allowFullScreen
-          style={{ display: 'block', border: 'none' }}
-          title="Карта"
-        />
-      </div>
+      {/* Leaflet map fills top */}
+      <div
+        ref={mapRef}
+        style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 'calc(44vh - 20px)' }}
+      />
 
       {/* Bottom sheet */}
       <AnimatePresence>
@@ -96,7 +154,6 @@ export function TrackingPage() {
               overflowY: 'auto',
             }}
           >
-            {/* Handle */}
             <div style={{ width: 32, height: 3, borderRadius: 2, background: '#e2e8f0', margin: '0 auto 12px' }} />
 
             {loading ? (
@@ -105,7 +162,7 @@ export function TrackingPage() {
               <p style={{ textAlign: 'center', color: '#94a3b8', fontSize: 13, padding: '12px 0' }}>Заказ не найден</p>
             ) : (
               <>
-                {/* Header row */}
+                {/* Header */}
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
                   <div>
                     <p style={{ fontSize: 11, color: '#94a3b8', marginBottom: 1 }}>Заказ #{order.id}</p>
@@ -114,24 +171,17 @@ export function TrackingPage() {
                     </p>
                   </div>
                   {yandexUrl && (
-                    <a
-                      href={yandexUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{
-                        display: 'flex', alignItems: 'center', gap: 4,
-                        background: '#fff7ed', borderRadius: 10, padding: '5px 9px',
-                        color: '#e8751a', fontSize: 11, fontWeight: 700,
-                        textDecoration: 'none',
-                      }}
-                    >
-                      <ExternalLink size={11} />
-                      Яндекс
+                    <a href={yandexUrl} target="_blank" rel="noopener noreferrer" style={{
+                      display: 'flex', alignItems: 'center', gap: 4,
+                      background: '#fff7ed', borderRadius: 10, padding: '5px 9px',
+                      color: '#e8751a', fontSize: 11, fontWeight: 700, textDecoration: 'none',
+                    }}>
+                      <ExternalLink size={11} />Яндекс
                     </a>
                   )}
                 </div>
 
-                {/* Progress steps */}
+                {/* Steps */}
                 {!isCancelled && (
                   <div style={{ display: 'flex', alignItems: 'center', marginBottom: 12 }}>
                     {STEPS.map((s, i) => {
@@ -186,8 +236,7 @@ export function TrackingPage() {
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                     background: '#e8751a', color: '#fff', border: 'none',
                     borderRadius: 12, padding: '13px',
-                    fontWeight: 700, fontSize: 15, fontFamily: 'inherit',
-                    cursor: 'pointer',
+                    fontWeight: 700, fontSize: 15, fontFamily: 'inherit', cursor: 'pointer',
                     boxShadow: '0 3px 14px rgba(232,117,26,0.35)',
                   }}
                 >
