@@ -742,7 +742,13 @@ export function OrderDetailPage() {
                 {language === 'uz' ? 'Yandex orqali kuzatish' : 'Отследить в Яндекс'}
               </a>
             ) : (
-              <button onClick={() => { window.location.href = 'tel:+998940453900' }} style={{
+              <button onClick={() => {
+                const a = document.createElement('a')
+                a.href = 'tel:+998940453900'
+                document.body.appendChild(a)
+                a.click()
+                document.body.removeChild(a)
+              }} style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                 background: '#e8751a', color: '#fff', border: 'none', borderRadius: 12, padding: '11px 16px',
                 fontSize: 14, fontWeight: 700, width: '100%', marginBottom: 10,
