@@ -434,6 +434,7 @@ export function OrderDetailPage() {
   const [isError, setIsError] = useState(false)
   const mapInstanceRef = useRef<any>(null)
   const SHOP: [number, number] = [41.320463, 69.234749]
+  const [deliveryCoords, setDeliveryCoords] = useState<[number, number] | null>(null)
 
   useEffect(() => {
     if (!idValid) return
@@ -457,12 +458,53 @@ export function OrderDetailPage() {
     }
   }, [idValid, orderId])
 
-  // Smooth zoom to shop after map loads
-  const handleMapLoad = () => {
+  // Geocode delivery address
+  useEffect(() => {
+    if (!order || (order as any).delivery_type === 'pickup') return
+    const addr = typeof (order as any).address === 'string'
+      ? (order as any).address
+      : (order as any).address?.full_address ?? (order as any).address?.street ?? ''
+    if (!addr) return
+    fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(addr)}&limit=1`)
+      .then(r => r.json())
+      .then(data => {
+        if (data[0]) setDeliveryCoords([parseFloat(data[0].lat), parseFloat(data[0].lon)])
+      })
+      .catch(() => {})
+  }, [order])
+
+  // Fit both pins after map+geocoding ready
+  useEffect(() => {
     const map = mapInstanceRef.current
     if (!map) return
+    if (deliveryCoords) {
+      // Show both shop + delivery
+      const lats = [SHOP[0], deliveryCoords[0]]
+      const lngs = [SHOP[1], deliveryCoords[1]]
+      const bounds: [[number,number],[number,number]] = [
+        [Math.min(...lats) - 0.01, Math.min(...lngs) - 0.01],
+        [Math.max(...lats) + 0.01, Math.max(...lngs) + 0.01],
+      ]
+      map.setBounds(bounds, { duration: 2200, timingFunction: 'ease-in-out' })
+    } else {
+      map.setCenter(SHOP, 16, { duration: 2200, timingFunction: 'ease-in-out' })
+    }
+  }, [deliveryCoords])
+
+  const handleMapLoad = () => {
     setTimeout(() => {
-      map.setCenter(SHOP, 17, { duration: 2200, timingFunction: 'ease-in-out' })
+      const map = mapInstanceRef.current
+      if (!map) return
+      if (deliveryCoords) {
+        const lats = [SHOP[0], deliveryCoords[0]]
+        const lngs = [SHOP[1], deliveryCoords[1]]
+        map.setBounds([
+          [Math.min(...lats) - 0.01, Math.min(...lngs) - 0.01],
+          [Math.max(...lats) + 0.01, Math.max(...lngs) + 0.01],
+        ], { duration: 2200 })
+      } else {
+        map.setCenter(SHOP, 16, { duration: 2200 })
+      }
     }, 400)
   }
 
@@ -648,7 +690,15 @@ export function OrderDetailPage() {
             <Placemark
               geometry={SHOP}
               options={{ preset: 'islands#redDotIcon', iconColor: '#e8751a' }}
+              properties={{ hintContent: 'Tabiiy Non' }}
             />
+            {deliveryCoords && (
+              <Placemark
+                geometry={deliveryCoords}
+                options={{ preset: 'islands#blueHomeCircleIcon' }}
+                properties={{ hintContent: 'Адрес доставки' }}
+              />
+            )}
           </YandexMap>
         </YMaps>
       </div>
