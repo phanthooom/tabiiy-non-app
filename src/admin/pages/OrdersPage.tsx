@@ -15,6 +15,8 @@ const STATUS_META: Record<string, { label: string; bg: string; color: string; do
 
 const DEFAULT_META = { label: 'В обработке', bg: '#f3f4f6', color: '#6b7280', dot: '#9ca3af' }
 
+const PAGE_SIZE = 30
+
 const FILTER_TABS = [
   { id: '',                label: 'Все' },
   { id: 'accepted',        label: 'Принят' },
@@ -53,6 +55,14 @@ export function OrdersPage() {
     )
     return () => unsubscribe()
   }, [filterStatus])
+
+  const pageCount = Math.max(1, Math.ceil(orders.length / PAGE_SIZE))
+  const visible = orders.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
+
+  // Keep page in range when the list shrinks (filter change / deletions)
+  useEffect(() => {
+    if (page > pageCount) setPage(pageCount)
+  }, [pageCount, page])
 
   const changeStatus = async (order: Order, status: OrderStatus) => {
     setActionLoading(true)
@@ -189,7 +199,7 @@ export function OrdersPage() {
         <p style={{ textAlign: 'center', color: '#9ca3af', padding: '40px 0' }}>Загрузка...</p>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {orders.map(o => {
+          {visible.map(o => {
             const meta = STATUS_META[o.status] ?? DEFAULT_META
             return (
               <div
@@ -245,23 +255,27 @@ export function OrdersPage() {
       )}
 
       {/* Pagination */}
-      <div style={{ display: 'flex', gap: 8, marginTop: 20, justifyContent: 'center' }}>
-        <button
-          onClick={() => setPage(p => Math.max(1, p - 1))}
-          disabled={page === 1}
-          style={pgBtn(page === 1)}
-        >
-          ←
-        </button>
-        <span style={{ padding: '8px 14px', color: '#6b7280', fontWeight: 600, fontSize: 14 }}>{page}</span>
-        <button
-          onClick={() => setPage(p => p + 1)}
-          disabled={orders.length < 20}
-          style={pgBtn(orders.length < 20)}
-        >
-          →
-        </button>
-      </div>
+      {pageCount > 1 && (
+        <div style={{ display: 'flex', gap: 8, marginTop: 20, justifyContent: 'center', alignItems: 'center' }}>
+          <button
+            onClick={() => setPage(p => Math.max(1, p - 1))}
+            disabled={page <= 1}
+            style={pgBtn(page <= 1)}
+          >
+            ←
+          </button>
+          <span style={{ padding: '8px 14px', color: '#6b7280', fontWeight: 600, fontSize: 14 }}>
+            {page} / {pageCount}
+          </span>
+          <button
+            onClick={() => setPage(p => Math.min(pageCount, p + 1))}
+            disabled={page >= pageCount}
+            style={pgBtn(page >= pageCount)}
+          >
+            →
+          </button>
+        </div>
+      )}
 
       {/* Detail bottom sheet */}
       {selected && (

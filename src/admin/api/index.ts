@@ -16,7 +16,7 @@ export const ordersApi = {
     onUpdate: (data: PaginatedList<Order>) => void,
     params?: { status?: string }
   ) => {
-    const q = query(collection(db, 'orders'), orderBy('created_at', 'desc'), limit(100))
+    const q = query(collection(db, 'orders'), orderBy('created_at', 'desc'), limit(1000))
     return onSnapshot(q, (snap) => {
       let items = snap.docs.map(d => ({ ...d.data(), id: d.id } as any as Order))
       if (params?.status) {
@@ -26,7 +26,7 @@ export const ordersApi = {
     })
   },
   list: async (params?: { status?: string; page?: number; size?: number }): Promise<PaginatedList<Order>> => {
-    const q = query(collection(db, 'orders'), orderBy('created_at', 'desc'), limit(100))
+    const q = query(collection(db, 'orders'), orderBy('created_at', 'desc'), limit(1000))
     const snap = await getDocs(q)
     let items = snap.docs.map(d => ({ ...d.data(), id: d.id } as any as Order))
     if (params?.status) {
