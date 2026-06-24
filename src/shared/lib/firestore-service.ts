@@ -183,13 +183,14 @@ export const firestoreCart = {
       existing.subtotal = existing.price * existing.quantity
     } else {
       items.push({
-        product_id:   product.id,
-        product_name: product.name_ru,
-        price:        product.price,
+        product_id:      product.id,
+        product_name:    product.name_ru,
+        product_name_uz: product.name_uz || null,
+        price:           product.price,
         quantity,
-        subtotal:     product.price * quantity,
-        photo_file_id: product.photo_file_id,
-        image_url:    product.image_url,
+        subtotal:        product.price * quantity,
+        photo_file_id:   product.photo_file_id,
+        image_url:       product.image_url,
       })
     }
 

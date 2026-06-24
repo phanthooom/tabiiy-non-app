@@ -322,7 +322,7 @@ export function ProductCard({ product, onSetQty, onQtyChange, cartQty, addLabel,
               fontSize: 15, fontWeight: 700, color: '#0f172a', marginBottom: 2,
               overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
             }}>
-              {product.name}
+              {lang ? (product.name_uz || product.name) : (product.name_ru || product.name)}
             </p>
             {!soldOut && product.quantity > 0 && (
               <p style={{ fontSize: 11, color: '#22c55e', fontWeight: 600, marginBottom: 3 }}>
@@ -465,7 +465,7 @@ export function ProductCard({ product, onSetQty, onQtyChange, cartQty, addLabel,
 
                 <div style={{ padding: '0 20px 8px' }}>
                   <h2 style={{ fontSize: 19, fontWeight: 800, color: '#0f172a', marginBottom: 6, lineHeight: 1.3 }}>
-                    {product.name}
+                    {lang ? (product.name_uz || product.name) : (product.name_ru || product.name)}
                   </h2>
                   <p style={{ fontSize: 21, fontWeight: 800, color: '#e8751a', marginBottom: 10 }}>
                     {price} <span style={{ fontSize: 13, fontWeight: 500, color: '#94a3b8' }}>{sumLabel}</span>

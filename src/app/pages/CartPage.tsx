@@ -212,7 +212,7 @@ export function CartPage() {
             {/* Info */}
             <div style={{ flex: 1, minWidth: 0 }}>
               <p style={{ fontWeight: 600, fontSize: 16, color: '#0f172a', marginBottom: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {item.product_name}
+                {language === 'uz' ? (item.product_name_uz || item.product_name) : item.product_name}
               </p>
               <p style={{ color: '#64748b', fontSize: 14 }}>
                 {item.subtotal.toLocaleString('ru-RU')} {t('sum')}

@@ -97,6 +97,7 @@ export interface Product {
 export interface CartItem {
   product_id: number | string
   product_name: string
+  product_name_uz?: string | null
   price: number
   quantity: number
   subtotal: number
