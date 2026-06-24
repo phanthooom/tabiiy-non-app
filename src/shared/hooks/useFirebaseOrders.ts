@@ -87,7 +87,7 @@ export async function updateFirebaseOrderStatus(docId: string, status: string, l
     if (order) {
       const telegramId = order.telegram_id || order.user_id || order.customer_id;
       if (telegramId) {
-        const BOT_TOKEN = '8957857177:AAFNSzeeQR7NTZHoQ7BbKajJhQyfKrizJSU'
+        const BOT_TOKEN = import.meta.env.VITE_BOT_TOKEN
         let message: string
 
         const APP_URL = 'https://tabiiy-non-app.vercel.app'

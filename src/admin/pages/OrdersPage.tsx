@@ -74,7 +74,7 @@ export function OrdersPage() {
       if (yandexUrl && yandexUrl.startsWith('http')) {
         const telegramId = (selected as any).user_id || (selected as any).telegram_id
         const tgMsgId = (selected as any).telegram_message_id
-        const BOT_TOKEN = import.meta.env.VITE_BOT_TOKEN || '8957857177:AAFNSzeeQR7NTZHoQ7BbKajJhQyfKrizJSU'
+        const BOT_TOKEN = import.meta.env.VITE_BOT_TOKEN
         const APP_URL = import.meta.env.VITE_APP_URL || 'https://tabiiy-non-app.vercel.app'
         const trackingUrl = `${APP_URL}/tracking/${selected.id}`
         const replyMarkup = { inline_keyboard: [[{ text: '📍 Kuzatish', url: trackingUrl }]] }

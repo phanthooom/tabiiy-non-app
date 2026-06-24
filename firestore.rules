@@ -3,39 +3,53 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Функция проверки, авторизован ли пользователь как админ
-    function isAdmin() {
-      return request.auth != null && request.auth.token.email == 'admin@tabiiy-non.uz';
-    }
-
-    // ── Products ──────────────────────────
+    // ── Products ─────────────────────────────────────────────────────────
     match /products/{productId} {
-      allow read: if true; // Все могут видеть товары
-      allow write: if isAdmin(); // Только админ может добавлять/изменять товары
+      allow read: if true;
+      allow write: if false; // managed only via Firebase Console / Admin SDK
     }
 
-    // ── Users ──────────────────────────────
+    // ── Users ─────────────────────────────────────────────────────────────
     match /users/{userId} {
-      allow read, write: if true; // Разрешаем клиентам (без Firebase Auth) читать и писать профили
+      // Anyone can read/write own profile (Telegram ID = document ID)
+      // At minimum validate required fields and size
+      allow read: if true;
+      allow write: if request.resource.data.keys().hasOnly([
+        'full_name', 'username', 'phone', 'language', 'email',
+        'fcm_token', 'updated_at'
+      ])
+      && request.resource.data.size() < 10240; // 10KB max
     }
 
-    // ── Carts ─────────────────────────────
+    // ── Carts ─────────────────────────────────────────────────────────────
     match /carts/{userId} {
-      allow read, write: if true; // Разрешаем клиентам (без Firebase Auth) обновлять корзины
+      allow read: if true;
+      allow write: if request.resource.data.size() < 51200; // 50KB max
     }
 
-    // ── Settings ──────────────────────────
+    // ── Settings ──────────────────────────────────────────────────────────
     match /settings/{settingId} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow write: if false; // managed only via Firebase Console
     }
 
-    // ── Orders ────────────────────────────
+    // ── Orders ────────────────────────────────────────────────────────────
     match /orders/{orderId} {
-      // Разрешаем всем читать, создавать и обновлять заказы
-      // Так как мы отключили Firebase Auth и Cloud Functions, 
-      // безопасность обеспечивается тем, что админка скрыта в Telegram боте.
-      allow read, create, update: if true; 
+      allow read: if true;
+
+      // Create: must have required fields, no delete
+      allow create: if request.resource.data.keys().hasAll(['telegram_id', 'items', 'total_amount', 'delivery_type', 'created_at'])
+        && request.resource.data.total_amount is number
+        && request.resource.data.total_amount > 0
+        && request.resource.data.items is list
+        && request.resource.data.items.size() > 0
+        && request.resource.data.size() < 51200; // 50KB max
+
+      // Update: only status fields can be changed, not telegram_id or items
+      allow update: if request.resource.data.telegram_id == resource.data.telegram_id
+        && request.resource.data.items == resource.data.items
+        && request.resource.data.total_amount == resource.data.total_amount;
+
       allow delete: if false;
     }
   }

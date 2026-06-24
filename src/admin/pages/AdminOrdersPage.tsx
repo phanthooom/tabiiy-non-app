@@ -127,7 +127,7 @@ export function AdminOrdersPage() {
         />
         <button 
           onClick={() => {
-            if (password === 'tabiiynon2026') {
+            if (password === import.meta.env.VITE_ADMIN_PASSWORD) {
               localStorage.setItem('admin_auth', 'true')
               setIsAuthenticated(true)
             } else {
