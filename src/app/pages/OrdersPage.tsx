@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { useNavigate, useParams } from 'react-router-dom'
 import { CheckCircle, Clock, MapPin, Phone, Store } from 'lucide-react'
-import { YMaps, Map as YandexMap } from '@pbe/react-yandex-maps'
+import { YMaps, Map as YandexMap, Placemark } from '@pbe/react-yandex-maps'
 
 import { Button, Spinner, ProductPhoto } from '@/app/components/ui'
 import { AddressText } from '@/app/components/ui/AddressText'
@@ -432,6 +432,9 @@ export function OrderDetailPage() {
   const [order, setOrder] = useState<Order | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isError, setIsError] = useState(false)
+  const [mapCenter, setMapCenter] = useState<[number, number]>([41.3111, 69.2401])
+  const [mapZoom, setMapZoom] = useState(12)
+  const [pinCoords, setPinCoords] = useState<[number, number] | null>(null)
 
   useEffect(() => {
     if (!idValid) return
@@ -454,6 +457,27 @@ export function OrderDetailPage() {
       setIsLoading(false)
     }
   }, [idValid, orderId])
+
+  // Geocode delivery address → map center + pin
+  useEffect(() => {
+    if (!order || (order as any).delivery_type === 'pickup') return
+    const addr = typeof (order as any).address === 'string'
+      ? (order as any).address
+      : (order as any).address?.full_address ?? (order as any).address?.street ?? ''
+    if (!addr) return
+    fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(addr + ', Ташкент')}&limit=1`)
+      .then(r => r.json())
+      .then(data => {
+        if (data[0]) {
+          const lat = parseFloat(data[0].lat)
+          const lng = parseFloat(data[0].lon)
+          setMapCenter([lat, lng])
+          setPinCoords([lat, lng])
+          setTimeout(() => setMapZoom(17), 600)
+        }
+      })
+      .catch(() => {})
+  }, [order])
 
   if (!idValid) {
     return (
@@ -627,11 +651,21 @@ export function OrderDetailPage() {
         {/* @ts-expect-error Yandex Maps supports uz_UZ but react-yandex-maps types do not */}
         <YMaps query={{ apikey: 'fcd5b77b-d255-480e-b530-ec10724a2275', lang: language === 'uz' ? 'uz_UZ' : 'ru_RU' }}>
           <YandexMap
-            defaultState={{ center: [41.3111, 69.2401], zoom: 12, controls: [] }}
+            state={{ center: mapCenter, zoom: mapZoom, controls: [] }}
             width="100%"
             height="100%"
             options={{ suppressMapOpenBlock: true, yandexMapDisablePoiInteractivity: true }}
-          />
+          >
+            {pinCoords && (
+              <Placemark
+                geometry={pinCoords}
+                options={{
+                  preset: 'islands#redDotIcon',
+                  iconColor: '#e8751a',
+                }}
+              />
+            )}
+          </YandexMap>
         </YMaps>
       </div>
 
