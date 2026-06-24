@@ -290,11 +290,15 @@ export const firestoreOrders = {
         const msg = lang === 'uz'
           ? `✅ Buyurtmangiz qabul qilindi!\n\n🆔 #${ref.id}\n📦 ${deliveryLabel}\n💰 ${cart.total.toLocaleString('ru-RU')} so'm\n\nTez orada tayyorlanadi! 🍞`
           : `✅ Ваш заказ принят!\n\n🆔 #${ref.id}\n📦 ${deliveryLabel}\n💰 ${cart.total.toLocaleString('ru-RU')} сум\n\nСкоро будет готов! 🍞`
-        await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+        const tgResp = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ chat_id: telegramId, text: msg }),
         })
+        const tgData = await tgResp.json()
+        if (tgData.ok && tgData.result?.message_id) {
+          await updateDoc(ref, { telegram_message_id: tgData.result.message_id })
+        }
       }
     } catch {}
 

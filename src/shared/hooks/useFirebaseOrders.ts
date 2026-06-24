@@ -90,16 +90,27 @@ export async function updateFirebaseOrderStatus(docId: string, status: string, l
         const BOT_TOKEN = '8957857177:AAFNSzeeQR7NTZHoQ7BbKajJhQyfKrizJSU'
         let message: string
 
+        const replyMarkup = yandexUrl && yandexUrl.startsWith('http')
+          ? { inline_keyboard: [[{ text: '📍 Dostavkani kuzatish', url: yandexUrl }]] }
+          : null
+
         if (yandexUrl && yandexUrl.startsWith('http')) {
-          message = `🚚 Buyurtma #${order.id} yo'lda!\n\nSizning noningiz yetkazib berishga yuborildi.\n\nJami: ${order.total_amount?.toLocaleString('ru-RU')} so'm`
+          const tgMsgId = (order as any).telegram_message_id
+          if (tgMsgId) {
+            fetch(`https://api.telegram.org/bot${BOT_TOKEN}/editMessageReplyMarkup`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ chat_id: telegramId, message_id: tgMsgId, reply_markup: replyMarkup })
+            }).catch(err => console.error("Telegram edit error:", err))
+            return
+          }
+          message = `🚚 Buyurtma #${order.id} yo'lda!\n\nJami: ${order.total_amount?.toLocaleString('ru-RU')} so'm`
         } else {
           message = `📦 Buyurtma #${order.id} holati o'zgardi\n\nYangi holat: ${label}\nJami: ${order.total_amount?.toLocaleString('ru-RU')} so'm\n\nTabiiy Non bilan qolganingiz uchun rahmat! 🍞`
         }
 
         const body: Record<string, unknown> = { chat_id: telegramId, text: message }
-        if (yandexUrl && yandexUrl.startsWith('http')) {
-          body.reply_markup = { inline_keyboard: [[{ text: '📍 Dostavkani kuzatish', url: yandexUrl }]] }
-        }
+        if (replyMarkup) body.reply_markup = replyMarkup
 
         fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
           method: 'POST',

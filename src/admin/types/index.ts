@@ -17,6 +17,7 @@ export interface Order {
   total_amount: number
   yandex_claim_id: string | null
   yandex_status: string | null
+  telegram_message_id?: number | null
   created_at: string
   user: { id: number; full_name: string; username: string | null }
   items: OrderItem[]

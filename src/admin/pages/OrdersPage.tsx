@@ -73,21 +73,29 @@ export function OrdersPage() {
 
       if (yandexUrl && yandexUrl.startsWith('http')) {
         const telegramId = (selected as any).user_id || (selected as any).telegram_id
+        const tgMsgId = (selected as any).telegram_message_id
         const BOT_TOKEN = import.meta.env.VITE_BOT_TOKEN || '8957857177:AAFNSzeeQR7NTZHoQ7BbKajJhQyfKrizJSU'
+        const replyMarkup = { inline_keyboard: [[{ text: '📍 Dostavkani kuzatish', url: yandexUrl }]] }
         if (telegramId && BOT_TOKEN) {
-          fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              chat_id: telegramId,
-              text: `🚚 Buyurtma #${selected.id} yo'lda!\n\nSizning noningiz yetkazib berishga yuborildi.\n\n💰 ${(selected.total_amount ?? 0).toLocaleString('ru-RU')} so'm`,
-              reply_markup: {
-                inline_keyboard: [[
-                  { text: '📍 Dostavkani kuzatish', url: yandexUrl }
-                ]]
-              }
-            })
-          }).catch(() => {})
+          if (tgMsgId) {
+            // Edit the original order confirmation message to add tracking button
+            fetch(`https://api.telegram.org/bot${BOT_TOKEN}/editMessageReplyMarkup`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ chat_id: telegramId, message_id: tgMsgId, reply_markup: replyMarkup })
+            }).catch(() => {})
+          } else {
+            // Fallback: send new message if no message_id stored
+            fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                chat_id: telegramId,
+                text: `🚚 Buyurtma #${selected.id} yo'lda!\n\n💰 ${(selected.total_amount ?? 0).toLocaleString('ru-RU')} so'm`,
+                reply_markup: replyMarkup
+              })
+            }).catch(() => {})
+          }
         }
       }
     } finally {
