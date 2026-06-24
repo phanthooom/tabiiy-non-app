@@ -775,21 +775,15 @@ export function OrderDetailPage() {
                 {language === 'uz' ? 'Yandex orqali kuzatish' : 'Отследить в Яндекс'}
               </a>
             ) : (
-              <button onClick={() => {
-                const a = document.createElement('a')
-                a.href = 'tel:+998940453900'
-                document.body.appendChild(a)
-                a.click()
-                document.body.removeChild(a)
-              }} style={{
+              <a href="tel:+998940453900" style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
-                background: '#e8751a', color: '#fff', border: 'none', borderRadius: 12, padding: '11px 16px',
-                fontSize: 14, fontWeight: 700, width: '100%', marginBottom: 10,
-                boxShadow: '0 3px 14px rgba(232,117,26,0.3)', cursor: 'pointer', fontFamily: 'inherit',
+                background: '#e8751a', color: '#fff', borderRadius: 12, padding: '11px 16px',
+                fontSize: 14, fontWeight: 700, width: '100%', marginBottom: 10, textDecoration: 'none',
+                boxShadow: '0 3px 14px rgba(232,117,26,0.3)', fontFamily: 'inherit', boxSizing: 'border-box',
               }}>
                 <Phone size={15} color="#fff" />
                 +998 (94) 045-39-00
-              </button>
+              </a>
             )}
 
             {/* Short address */}
