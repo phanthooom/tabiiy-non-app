@@ -373,10 +373,14 @@ export function CheckoutPage() {
           <span>{language === 'uz' ? 'Oraliq jami' : 'Сумма'}</span>
           <span style={{ fontWeight: 600 }}>{(cart?.total ?? 0).toLocaleString('ru-RU')} {t('sum')}</span>
         </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16, fontSize: 13, color: '#475569' }}>
-          <span>{language === 'uz' ? 'Yetkazib berish' : 'Доставка'}</span>
-          <span style={{ fontWeight: 600 }}>0 {t('sum')}</span>
-        </div>
+        {deliveryType === 'delivery' && (
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16, fontSize: 13, color: '#475569' }}>
+            <span>{language === 'uz' ? 'Yetkazib berish' : 'Доставка'}</span>
+            <span style={{ fontWeight: 600, color: '#e8751a' }}>
+              {language === 'uz' ? 'Yandex Delivery' : 'Яндекс Доставка'}
+            </span>
+          </div>
+        )}
 
         <div style={{ borderTop: '1px dashed #cbd5e1', marginBottom: 20 }} />
 
