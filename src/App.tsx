@@ -50,8 +50,15 @@ function AppShell() {
     if (typeof window !== 'undefined' && window.Telegram?.WebApp) {
       window.Telegram.WebApp.ready()
       window.Telegram.WebApp.expand()
-      
+
       const webAppAny = window.Telegram.WebApp as any
+
+      // Красим фон/шапку/нижний бар под цвет приложения, чтобы при оттягивании
+      // (overscroll) не проступала чёрная область за webview.
+      const APP_BG = '#eefcfd'
+      try { webAppAny.setBackgroundColor?.(APP_BG) } catch {}
+      try { webAppAny.setHeaderColor?.(APP_BG) } catch {}
+      try { webAppAny.setBottomBarColor?.(APP_BG) } catch {}
       // Попытка запустить абсолютный Fullscreen (Telegram v7.7+)
       if (typeof webAppAny.requestFullscreen === 'function') {
         try {
