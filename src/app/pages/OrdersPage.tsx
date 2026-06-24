@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { useNavigate, useParams } from 'react-router-dom'
 import { CheckCircle, MapPin, Phone, Store } from 'lucide-react'
@@ -432,9 +432,8 @@ export function OrderDetailPage() {
   const [order, setOrder] = useState<Order | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isError, setIsError] = useState(false)
-  const [mapCenter, setMapCenter] = useState<[number, number]>([41.3111, 69.2401])
-  const [mapZoom, setMapZoom] = useState(12)
-  const [pinCoords, setPinCoords] = useState<[number, number] | null>(null)
+  const mapInstanceRef = useRef<any>(null)
+  const SHOP: [number, number] = [41.320463, 69.234749]
 
   useEffect(() => {
     if (!idValid) return
@@ -458,26 +457,14 @@ export function OrderDetailPage() {
     }
   }, [idValid, orderId])
 
-  // Geocode delivery address → map center + pin
-  useEffect(() => {
-    if (!order || (order as any).delivery_type === 'pickup') return
-    const addr = typeof (order as any).address === 'string'
-      ? (order as any).address
-      : (order as any).address?.full_address ?? (order as any).address?.street ?? ''
-    if (!addr) return
-    fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(addr + ', Ташкент')}&limit=1`)
-      .then(r => r.json())
-      .then(data => {
-        if (data[0]) {
-          const lat = parseFloat(data[0].lat)
-          const lng = parseFloat(data[0].lon)
-          setMapCenter([lat, lng])
-          setPinCoords([lat, lng])
-          setTimeout(() => setMapZoom(17), 600)
-        }
-      })
-      .catch(() => {})
-  }, [order])
+  // Smooth zoom to shop after map loads
+  const handleMapLoad = () => {
+    const map = mapInstanceRef.current
+    if (!map) return
+    setTimeout(() => {
+      map.setCenter(SHOP, 17, { duration: 2200, timingFunction: 'ease-in-out' })
+    }, 400)
+  }
 
   if (!idValid) {
     return (
@@ -651,20 +638,17 @@ export function OrderDetailPage() {
         {/* @ts-expect-error Yandex Maps supports uz_UZ but react-yandex-maps types do not */}
         <YMaps query={{ apikey: 'fcd5b77b-d255-480e-b530-ec10724a2275', lang: language === 'uz' ? 'uz_UZ' : 'ru_RU' }}>
           <YandexMap
-            state={{ center: mapCenter, zoom: mapZoom, controls: [] }}
+            instanceRef={mapInstanceRef}
+            defaultState={{ center: [41.2995, 69.2401], zoom: 11, controls: [] }}
             width="100%"
             height="100%"
             options={{ suppressMapOpenBlock: true, yandexMapDisablePoiInteractivity: true }}
+            onLoad={handleMapLoad}
           >
-            {pinCoords && (
-              <Placemark
-                geometry={pinCoords}
-                options={{
-                  preset: 'islands#redDotIcon',
-                  iconColor: '#e8751a',
-                }}
-              />
-            )}
+            <Placemark
+              geometry={SHOP}
+              options={{ preset: 'islands#redDotIcon', iconColor: '#e8751a' }}
+            />
           </YandexMap>
         </YMaps>
       </div>
