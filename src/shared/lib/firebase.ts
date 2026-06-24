@@ -1,6 +1,7 @@
 import { initializeApp } from 'firebase/app'
 import { getFirestore } from 'firebase/firestore'
 import { getAuth } from 'firebase/auth'
+import { getStorage } from 'firebase/storage'
 import { getMessaging, isSupported } from 'firebase/messaging'
 import { getAnalytics } from 'firebase/analytics'
 
@@ -24,6 +25,9 @@ export const auth = getAuth(app)
 
 // Analytics (только в браузере)
 export const analytics = typeof window !== 'undefined' ? getAnalytics(app) : null
+
+// Storage
+export const storage = getStorage(app)
 
 // FCM — поддерживается не во всех браузерах (Safari, Telegram WebView)
 export const getMessagingInstance = async () => {

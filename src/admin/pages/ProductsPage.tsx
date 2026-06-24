@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { productsApi } from '../api/index'
 import type { Product } from '../types/index'
-import { Package, Pencil, Eye, EyeOff, Trash2, Plus, RotateCcw, Check } from 'lucide-react'
+import { Package, Pencil, Eye, EyeOff, Trash2, Plus, RotateCcw, Check, Upload } from 'lucide-react'
+import { storage } from '../../shared/lib/firebase'
 
 const DESC_TABIIY_UZ = `🍞 Tabiiy non
 
@@ -129,6 +130,7 @@ export function ProductsPage() {
   const [stockMap, setStockMap]           = useState<Record<string, number>>({})
   const [stockSaving, setStockSaving]     = useState<Record<string, boolean>>({})
   const [descTab, setDescTab]             = useState<'ru' | 'uz'>('ru')
+  const [uploadLoading, setUploadLoading] = useState(false)
 
   const load = async () => {
     const res = await productsApi.list()
@@ -151,6 +153,23 @@ export function ProductsPage() {
       setProducts(prev => prev.map(x => String(x.id) === id ? { ...x, quantity: qty } as any : x))
     } finally {
       setStockSaving(s => ({ ...s, [id]: false }))
+    }
+  }
+
+  const uploadImage = async (file: File) => {
+    setUploadLoading(true)
+    try {
+      setPreviewImage(URL.createObjectURL(file))
+      const { ref, uploadBytes, getDownloadURL } = await import('firebase/storage')
+      const storageRef = ref(storage, `products/${Date.now()}_${file.name}`)
+      await uploadBytes(storageRef, file)
+      const url = await getDownloadURL(storageRef)
+      setEditing(prev => ({ ...prev, image_url: url }))
+      setPreviewImage(url)
+    } catch (e: any) {
+      setError('Ошибка загрузки: ' + (e?.message ?? e))
+    } finally {
+      setUploadLoading(false)
     }
   }
 
@@ -402,8 +421,9 @@ export function ProductsPage() {
           <div style={{
             position: 'relative', zIndex: 1,
             marginLeft: 'auto', width: '100%', maxWidth: 520,
-            background: '#ffffff', overflowY: 'auto',
+            background: '#ffffff',
             display: 'flex', flexDirection: 'column',
+            height: '100%',
             boxShadow: '-8px 0 40px rgba(0,0,0,0.12)',
           }}>
             {/* Drawer header */}
@@ -435,7 +455,7 @@ export function ProductsPage() {
             </div>
 
             {/* Drawer body */}
-            <div style={{ padding: '20px', flex: 1 }}>
+            <div style={{ padding: '16px', flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch' } as React.CSSProperties}>
 
               {/* Preset search */}
               <div style={sectionBox}>
@@ -550,24 +570,30 @@ export function ProductsPage() {
               <div style={sectionBox}>
                 <span style={fieldLabel}>Картинка</span>
                 {previewImage && (
-                  <img src={previewImage} style={{ width: '100%', height: 150, objectFit: 'cover', borderRadius: 10, marginBottom: 10, display: 'block' }} />
+                  <img src={previewImage} style={{ width: '100%', height: 140, objectFit: 'cover', borderRadius: 10, marginBottom: 10, display: 'block' }} />
                 )}
+                <label style={{
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
+                  padding: '11px', background: uploadLoading ? '#f9fafb' : '#f0fdf4',
+                  border: '1.5px dashed #86efac', borderRadius: 10,
+                  cursor: uploadLoading ? 'not-allowed' : 'pointer', marginBottom: 8,
+                }}>
+                  <Upload size={16} color="#16a34a" />
+                  <span style={{ color: '#16a34a', fontWeight: 700, fontSize: 14 }}>
+                    {uploadLoading ? 'Загружаем...' : 'Добавить с устройства'}
+                  </span>
+                  <input
+                    type="file" accept="image/*" style={{ display: 'none' }}
+                    disabled={uploadLoading}
+                    onChange={e => { const f = e.target.files?.[0]; if (f) uploadImage(f) }}
+                  />
+                </label>
                 <input
-                  placeholder="/images/tabiiy-non.jpg"
+                  placeholder="или вставьте URL картинки"
                   value={(editing as any).image_url || ''}
                   onChange={e => { setEditing({ ...editing, image_url: e.target.value }); setPreviewImage(e.target.value || null) }}
                   style={inp}
                 />
-                <div style={{ marginTop: 8 }}>
-                  <p style={{ margin: '0 0 4px', color: '#9ca3af', fontSize: 11, fontWeight: 600 }}>
-                    Telegram File ID (необязательно)
-                  </p>
-                  <input
-                    value={(editing as any).photo_file_id || ''}
-                    onChange={e => setEditing({ ...editing, photo_file_id: e.target.value })}
-                    style={inp} placeholder="AgACAgI..."
-                  />
-                </div>
               </div>
 
               {/* Descriptions */}
