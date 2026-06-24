@@ -48,12 +48,17 @@ function SubPageShell({ title, children }: { title: string; children: React.Reac
 }
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
+const PHONE_RE = /^\+998[0-9]{9}$/
 
 function PersonalInfoPage({ lang }: { lang: Language }) {
   const { user } = useAuthStore()
   const displayUser = BYPASS_MODE ? mockUser : user
   const title = lang === 'uz' ? "Mening ma'lumotlarim" : 'Мои данные'
-  const [email, setEmail] = useState(displayUser?.email ?? '')
+  const [name, setName] = useState(displayUser?.full_name ?? '')
+  const [phone, setPhone] = useState(displayUser?.phone ?? '')
+  const [email, setEmail] = useState(displayUser?.email ?? '' as string)
+  const [nameError, setNameError] = useState('')
+  const [phoneError, setPhoneError] = useState('')
   const [emailError, setEmailError] = useState('')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
@@ -63,12 +68,26 @@ function PersonalInfoPage({ lang }: { lang: Language }) {
   )
 
   const validate = (): boolean => {
+    let ok = true
+    if (!name.trim() || name.trim().length < 2) {
+      setNameError(lang === 'uz' ? 'Ism kamida 2 ta harf' : 'Имя не менее 2 символов')
+      ok = false
+    } else {
+      setNameError('')
+    }
+    if (phone && !PHONE_RE.test(phone)) {
+      setPhoneError(lang === 'uz' ? 'Format: +998XXXXXXXXX' : 'Формат: +998XXXXXXXXX')
+      ok = false
+    } else {
+      setPhoneError('')
+    }
     if (email && !EMAIL_RE.test(email)) {
       setEmailError(lang === 'uz' ? 'Email noto\'g\'ri formatda' : 'Неверный формат email')
-      return false
+      ok = false
+    } else {
+      setEmailError('')
     }
-    setEmailError('')
-    return true
+    return ok
   }
 
   const handleSave = async () => {
@@ -76,7 +95,11 @@ function PersonalInfoPage({ lang }: { lang: Language }) {
     if (!displayUser?.id) return
     setSaving(true)
     try {
-      await firestoreUsers.upsert(Number(displayUser.id), { email: email.trim() || null })
+      await firestoreUsers.upsert(Number(displayUser.id), {
+        full_name: name.trim(),
+        phone: phone.trim() || null,
+        email: email.trim() || null,
+      })
       setSaved(true)
       setTimeout(() => setSaved(false), 2500)
     } catch {
@@ -137,18 +160,33 @@ function PersonalInfoPage({ lang }: { lang: Language }) {
 
         {/* Fields */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20, marginTop: 8, marginBottom: 8 }}>
-          <FormField
-            label={lang === 'uz' ? 'Ism' : 'Имя'}
-            icon={<User size={18} color="#475569" strokeWidth={2} />}
-            value={displayUser?.full_name ?? ''}
-            readOnly
-          />
-          <FormField
-            label={lang === 'uz' ? 'Telefon raqam' : 'Телефон'}
-            icon={<Phone size={18} color="#475569" strokeWidth={2} />}
-            value={displayUser?.phone ?? ''}
-            readOnly
-          />
+          <div>
+            <FormField
+              label={lang === 'uz' ? 'Ism' : 'Имя'}
+              icon={<User size={18} color={nameError ? '#ef4444' : '#475569'} strokeWidth={2} />}
+              value={name}
+              placeholder={lang === 'uz' ? 'Ismingizni kiriting' : 'Введите имя'}
+              onChange={(v) => { setName(v); setNameError('') }}
+              error={!!nameError}
+            />
+            {nameError && (
+              <p style={{ fontSize: 12, color: '#ef4444', marginTop: 6, paddingLeft: 4 }}>{nameError}</p>
+            )}
+          </div>
+          <div>
+            <FormField
+              label={lang === 'uz' ? 'Telefon raqam' : 'Телефон'}
+              icon={<Phone size={18} color={phoneError ? '#ef4444' : '#475569'} strokeWidth={2} />}
+              value={phone}
+              placeholder="+998901234567"
+              onChange={(v) => { setPhone(v); setPhoneError('') }}
+              error={!!phoneError}
+              inputMode="tel"
+            />
+            {phoneError && (
+              <p style={{ fontSize: 12, color: '#ef4444', marginTop: 6, paddingLeft: 4 }}>{phoneError}</p>
+            )}
+          </div>
           <div>
             <FormField
               label={lang === 'uz' ? 'Elektron pochta' : 'Эл. почта'}
@@ -157,6 +195,7 @@ function PersonalInfoPage({ lang }: { lang: Language }) {
               placeholder={lang === 'uz' ? 'Emailingizni kiriting' : 'Введите email'}
               onChange={(v) => { setEmail(v); setEmailError('') }}
               error={!!emailError}
+              inputMode="email"
             />
             {emailError && (
               <p style={{ fontSize: 12, color: '#ef4444', marginTop: 6, paddingLeft: 4 }}>
@@ -197,7 +236,7 @@ function PersonalInfoPage({ lang }: { lang: Language }) {
   )
 }
 
-function FormField({ label, icon, value, readOnly, placeholder, onChange, error }: {
+function FormField({ label, icon, value, readOnly, placeholder, onChange, error, inputMode }: {
   label: string
   icon: React.ReactNode
   value: string
@@ -205,13 +244,15 @@ function FormField({ label, icon, value, readOnly, placeholder, onChange, error 
   placeholder?: string
   onChange?: (v: string) => void
   error?: boolean
+  inputMode?: React.HTMLAttributes<HTMLInputElement>['inputMode']
 }) {
   return (
     <div>
       <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>{label}</p>
       <div style={{
         display: 'flex', alignItems: 'center', gap: 12,
-        background: '#fff', border: `1px solid ${error ? '#ef4444' : '#cbd5e1'}`,
+        background: readOnly ? '#f8fafc' : '#fff',
+        border: `1px solid ${error ? '#ef4444' : '#cbd5e1'}`,
         borderRadius: 12, padding: '14px 16px',
         boxShadow: error ? '0 0 0 3px rgba(239,68,68,0.08)' : '0 1px 3px rgba(0,0,0,0.02)',
         transition: 'border-color 0.2s, box-shadow 0.2s',
@@ -221,11 +262,12 @@ function FormField({ label, icon, value, readOnly, placeholder, onChange, error 
           value={value}
           readOnly={readOnly}
           placeholder={placeholder}
+          inputMode={inputMode}
           onChange={e => onChange?.(e.target.value)}
           style={{
             flex: 1, border: 'none', outline: 'none', background: 'transparent',
             fontSize: 15, fontWeight: 400,
-            color: 'var(--text)',
+            color: readOnly ? '#94a3b8' : 'var(--text)',
             fontFamily: 'var(--font-body)',
           }}
         />
